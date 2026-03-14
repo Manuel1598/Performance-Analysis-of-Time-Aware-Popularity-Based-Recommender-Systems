@@ -12,6 +12,11 @@ Used as the primary dataset for reproducing the reference paper.
 ### Source
 GroupLens Research
 
+### Dataset Version / Time Reference
+- interaction period ends in 2015
+- dataset publication/update reference: 2016
+- this thesis uses the downloaded version available at the start of the project
+
 ### Local Path
 `data/raw/movielens/`
 
@@ -36,6 +41,10 @@ Used as a second domain to test whether the findings generalize beyond movie rec
 
 ### Source
 Amazon Review Data / McAuley Lab
+
+### Dataset Version / Time Reference
+- downloaded dataset version: 2023
+- used as the product recommendation domain in this thesis
 
 ### Local Path
 `data/raw/amazon/`
@@ -62,6 +71,10 @@ Optional third domain for evaluating highly time-sensitive recommendation data.
 
 ### Source
 Microsoft News Dataset (MIND)
+
+### Dataset Version / Time Reference
+- dataset version used in this thesis: 2020
+- used as an optional news recommendation domain
 
 ### Local Path
 `data/raw/mind/`
