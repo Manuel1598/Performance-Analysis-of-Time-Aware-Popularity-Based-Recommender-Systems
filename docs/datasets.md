@@ -12,6 +12,11 @@ Used as the primary dataset for reproducing the reference paper.
 ### Source
 GroupLens Research
 
+### Dataset Version / Time Reference
+- interaction period ends in 2015
+- dataset publication/update reference: 2016
+- this thesis uses the downloaded version available at the start of the project
+
 ### Local Path
 `data/raw/movielens/`
 
@@ -27,6 +32,22 @@ GroupLens Research
 - reproduction of the baseline study
 - first benchmark for MostPop, RecentPop, and DecayPop
 
+### Preprocessing
+- reduced to implicit interactions (`user_id`, `item_id`, `timestamp`)
+- interactions sorted chronologically per user
+- users with fewer than 2 interactions were filtered (not needed for MovieLens 20M but included for consistency)
+
+### Generated Files
+- `data/processed/movielens_interactions.csv`
+- `data/processed/movielens_train.csv`
+- `data/processed/movielens_test.csv`
+
+### Split Strategy
+- chronological leave-one-out split
+- last interaction per user → test set
+- all previous interactions → training set
+
+
 ---
 
 ## 2. Amazon Reviews
@@ -36,6 +57,10 @@ Used as a second domain to test whether the findings generalize beyond movie rec
 
 ### Source
 Amazon Review Data / McAuley Lab
+
+### Dataset Version / Time Reference
+- downloaded dataset version: 2023
+- used as the product recommendation domain in this thesis
 
 ### Local Path
 `data/raw/amazon/`
@@ -63,6 +88,10 @@ Optional third domain for evaluating highly time-sensitive recommendation data.
 ### Source
 Microsoft News Dataset (MIND)
 
+### Dataset Version / Time Reference
+- dataset version used in this thesis: 2020
+- used as an optional news recommendation domain
+
 ### Local Path
 `data/raw/mind/`
 
@@ -79,3 +108,13 @@ From `behaviors.tsv`:
 ### Role in Thesis
 - optional news recommendation domain
 - evaluation under strong temporal dynamics
+
+## Preprocessing and Generated Files
+
+### File used in preprocessing
+`ratings.csv`
+
+### Processed files generated
+- `data/processed/movielens_interactions.csv`
+- `data/processed/movielens_train.csv`
+- `data/processed/movielens_test.csv`
