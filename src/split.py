@@ -29,7 +29,7 @@ def main() -> None:
     print("Sorting interactions by user and timestamp...")
     df = df.sort_values(by=["user_id", "timestamp"]).reset_index(drop=True)
 
-    print("\n--- DEBUG BEFORE SPLIT ---")
+    print("\n--- SPLIT INPUT SUMMARY ---")
     user_counts = df["user_id"].value_counts()
     print(f"Total interactions: {len(df):,}")
     print(f"Total users: {df['user_id'].nunique():,}")
@@ -51,7 +51,7 @@ def main() -> None:
     test_users = set(test_df["user_id"].unique())
     missing_in_train = test_users - train_users
 
-    print("\n--- SPLIT SUMMARY ---")
+    print("\n--- SPLIT OUTPUT SUMMARY ---")
     print(f"Train file: {train_file}")
     print(f"Test file: {test_file}")
     print(f"Train interactions: {len(train_df):,}")

@@ -33,12 +33,16 @@ def main() -> None:
 
     print("Filtering users with fewer than 2 interactions...")
     user_counts = df["user_id"].value_counts()
-    print(f"Users with exactly 1 interaction after preprocessing: {(user_counts == 1).sum():,}")
-    print(f"Minimum interactions per user after preprocessing: {user_counts.min():,}")
+    print(f"Users with exactly 1 interaction before filtering: {(user_counts == 1).sum():,}")
+    print(f"Minimum interactions per user before filtering: {user_counts.min():,}")
 
     valid_users = user_counts[user_counts >= 2].index
     removed_users = (user_counts < 2).sum()
     df = df[df["user_id"].isin(valid_users)].reset_index(drop=True)
+
+    filtered_user_counts = df["user_id"].value_counts()
+    print(f"Users after filtering: {df['user_id'].nunique():,}")
+    print(f"Minimum interactions per user after filtering: {filtered_user_counts.min():,}")
 
     print("Sorting interactions chronologically per user...")
     df = df.sort_values(by=["user_id", "timestamp"]).reset_index(drop=True)
