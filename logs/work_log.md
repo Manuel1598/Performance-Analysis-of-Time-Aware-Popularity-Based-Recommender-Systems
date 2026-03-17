@@ -21,6 +21,7 @@ This makes the project easier to understand, document, and reproduce later.
 - Renamed columns to a unified schema
 - Sorted all interactions chronologically per user
 - Saved the processed interaction file to `data/processed/movielens_interactions.csv`
+- Added a filter to remove users with fewer than 2 interactions before the leave-one-out split
 
 ### Why this was done
 This step creates a clean and unified interaction format for the recommender experiments.
@@ -41,9 +42,18 @@ Chronological ordering is necessary for the later leave-one-out split and time-a
 This step creates the time-aware offline evaluation setup used for the reproduction.
 The split ensures that future interactions are not leaked into training and that each user has exactly one held-out test interaction.
 
-- Added a filter to remove users with fewer than 2 interactions before the leave-one-out split
 
 ### Why this was done
 Users with only one interaction would appear only in the test set and not in the training set.
 Removing these users ensures that every evaluated user is present in both training and test data.
 
+
+## 2026-03-17 – MovieLens split validation
+- Verified that the test set contains exactly one interaction per user
+- Verified that all users are present in both training and test sets
+- Verified that train and test interactions sum up to the total number of interactions
+- Confirmed that no users with fewer than 2 interactions remain
+
+### Why this was done
+This validation step ensures that the leave-one-out split is correctly constructed and suitable for time-aware offline evaluation.
+It guarantees that no future interactions are used during training and that every user can be evaluated properly.
