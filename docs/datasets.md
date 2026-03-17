@@ -92,3 +92,11 @@ From `behaviors.tsv`:
 ### Role in Thesis
 - optional news recommendation domain
 - evaluation under strong temporal dynamics
+
+# Using data or change data:
+
+### File used in preprocessing
+`ratings.csv`
+
+### Processed output
+`data/processed/movielens_interactions.csv`
