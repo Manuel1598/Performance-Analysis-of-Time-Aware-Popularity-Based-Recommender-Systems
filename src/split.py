@@ -29,7 +29,15 @@ def main() -> None:
     print("Sorting interactions by user and timestamp...")
     df = df.sort_values(by=["user_id", "timestamp"]).reset_index(drop=True)
 
-    print("Creating leave-one-out split...")
+    print("\n--- DEBUG BEFORE SPLIT ---")
+    user_counts = df["user_id"].value_counts()
+    print(f"Total interactions: {len(df):,}")
+    print(f"Total users: {df['user_id'].nunique():,}")
+    print(f"Users with exactly 1 interaction: {(user_counts == 1).sum():,}")
+    print(f"Minimum interactions per user: {user_counts.min():,}")
+    print(f"Maximum interactions per user: {user_counts.max():,}")
+
+    print("\nCreating leave-one-out split...")
     test_df = df.groupby("user_id", group_keys=False).tail(1).copy()
     train_df = df.drop(test_df.index).copy()
 
@@ -39,19 +47,21 @@ def main() -> None:
     train_df.to_csv(train_file, index=False)
     test_df.to_csv(test_file, index=False)
 
-    print("\nSplit completed successfully.")
+    train_users = set(train_df["user_id"].unique())
+    test_users = set(test_df["user_id"].unique())
+    missing_in_train = test_users - train_users
+
+    print("\n--- SPLIT SUMMARY ---")
     print(f"Train file: {train_file}")
     print(f"Test file: {test_file}")
     print(f"Train interactions: {len(train_df):,}")
     print(f"Test interactions: {len(test_df):,}")
     print(f"Users in train: {train_df['user_id'].nunique():,}")
     print(f"Users in test: {test_df['user_id'].nunique():,}")
+    print(f"Users missing in train: {len(missing_in_train):,}")
 
-    users_total = df["user_id"].nunique()
-    users_test = test_df["user_id"].nunique()
-
-    print(f"Total users: {users_total:,}")
-    print(f"Users with exactly one test interaction: {users_test:,}")
+    if missing_in_train:
+        print(f"Sample missing user_ids: {list(missing_in_train)[:10]}")
 
     print("\nTrain preview:")
     print(train_df.head())

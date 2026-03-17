@@ -11,10 +11,10 @@ def main() -> None:
     if not input_file.exists():
         raise FileNotFoundError(
             f"Input file not found: {input_file}\n"
-            "Please make sure the MovieLens ratings file is located in data/raw/movielens/."
+            "Please make sure MovieLens ratings.csv is located in data/raw/movielens/."
         )
 
-    print("Loading MovieLens data...")
+    print("Loading MovieLens ratings data...")
     df = pd.read_csv(input_file)
 
     required_columns = ["userId", "movieId", "timestamp"]
@@ -28,22 +28,32 @@ def main() -> None:
     print("Selecting relevant columns...")
     df = df[required_columns].copy()
 
-    print("Renaming columns...")
+    print("Renaming columns to unified schema...")
     df.columns = ["user_id", "item_id", "timestamp"]
 
-    print("Sorting chronologically per user...")
+    print("Filtering users with fewer than 2 interactions...")
+    user_counts = df["user_id"].value_counts()
+    print(f"Users with exactly 1 interaction after preprocessing: {(user_counts == 1).sum():,}")
+    print(f"Minimum interactions per user after preprocessing: {user_counts.min():,}")
+
+    valid_users = user_counts[user_counts >= 2].index
+    removed_users = (user_counts < 2).sum()
+    df = df[df["user_id"].isin(valid_users)].reset_index(drop=True)
+
+    print("Sorting interactions chronologically per user...")
     df = df.sort_values(by=["user_id", "timestamp"]).reset_index(drop=True)
 
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
-    print("Saving processed file...")
+    print("Saving processed interactions...")
     df.to_csv(output_file, index=False)
 
-    print("\nPreprocessing completed.")
-    print(f"Saved to: {output_file}")
-    print(f"Interactions: {len(df):,}")
-    print(f"Users: {df['user_id'].nunique():,}")
-    print(f"Items: {df['item_id'].nunique():,}")
+    print("\nPreprocessing completed successfully.")
+    print(f"Saved file: {output_file}")
+    print(f"Number of interactions: {len(df):,}")
+    print(f"Number of users: {df['user_id'].nunique():,}")
+    print(f"Number of items: {df['item_id'].nunique():,}")
+    print(f"Removed users with < 2 interactions: {removed_users:,}")
     print("\nPreview:")
     print(df.head())
 
