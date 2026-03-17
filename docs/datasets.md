@@ -32,6 +32,22 @@ GroupLens Research
 - reproduction of the baseline study
 - first benchmark for MostPop, RecentPop, and DecayPop
 
+### Preprocessing
+- reduced to implicit interactions (`user_id`, `item_id`, `timestamp`)
+- interactions sorted chronologically per user
+- users with fewer than 2 interactions were filtered (not needed for MovieLens 20M but included for consistency)
+
+### Generated Files
+- `data/processed/movielens_interactions.csv`
+- `data/processed/movielens_train.csv`
+- `data/processed/movielens_test.csv`
+
+### Split Strategy
+- chronological leave-one-out split
+- last interaction per user → test set
+- all previous interactions → training set
+
+
 ---
 
 ## 2. Amazon Reviews
@@ -93,7 +109,7 @@ From `behaviors.tsv`:
 - optional news recommendation domain
 - evaluation under strong temporal dynamics
 
-# Using data or change data:
+## Preprocessing and Generated Files
 
 ### File used in preprocessing
 `ratings.csv`
