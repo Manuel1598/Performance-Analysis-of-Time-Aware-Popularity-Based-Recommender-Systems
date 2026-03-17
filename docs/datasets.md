@@ -98,5 +98,7 @@ From `behaviors.tsv`:
 ### File used in preprocessing
 `ratings.csv`
 
-### Processed output
-`data/processed/movielens_interactions.csv`
+### Processed files generated
+- `data/processed/movielens_interactions.csv`
+- `data/processed/movielens_train.csv`
+- `data/processed/movielens_test.csv`

@@ -26,3 +26,24 @@ This makes the project easier to understand, document, and reproduce later.
 This step creates a clean and unified interaction format for the recommender experiments.
 Only the information required for the popularity-based baselines was kept.
 Chronological ordering is necessary for the later leave-one-out split and time-aware evaluation.
+
+
+## 2026-03-17 – MovieLens leave-one-out split
+- Created `src/split.py`
+- Loaded the processed MovieLens interaction dataset
+- Sorted interactions by `user_id` and `timestamp`
+- Created a chronological leave-one-out split
+- Assigned the last interaction of each user to the test set
+- Assigned all previous interactions of each user to the training set
+- Saved the resulting files as `movielens_train.csv` and `movielens_test.csv`
+
+### Why this was done
+This step creates the time-aware offline evaluation setup used for the reproduction.
+The split ensures that future interactions are not leaked into training and that each user has exactly one held-out test interaction.
+
+- Added a filter to remove users with fewer than 2 interactions before the leave-one-out split
+
+### Why this was done
+Users with only one interaction would appear only in the test set and not in the training set.
+Removing these users ensures that every evaluated user is present in both training and test data.
+
