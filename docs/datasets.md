@@ -118,3 +118,19 @@ From `behaviors.tsv`:
 - `data/processed/movielens_interactions.csv`
 - `data/processed/movielens_train.csv`
 - `data/processed/movielens_test.csv`
+
+
+### Generated Recommendation Output
+- `results/movielens_mostpop_recommendations.csv`
+
+### Output Format
+The recommendation file contains one row per recommended item:
+
+- `user_id`
+- `rank`
+- `item_id`
+
+Each user receives a ranked list of top-k recommendations (k = 10).
+
+### Purpose
+This file is used as input for the evaluation step, where ranking metrics such as Hit Rate (HR@k) and NDCG@k will be computed.
