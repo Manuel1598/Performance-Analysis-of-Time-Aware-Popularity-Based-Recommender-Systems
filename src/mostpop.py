@@ -89,11 +89,35 @@ def generate_recommendations_for_test_users(
     return recommendations
 
 
+def save_recommendations(
+    recommendations: dict[int, list[int]],
+    output_file: Path
+) -> pd.DataFrame:
+    print(f"Saving recommendations to {output_file}...")
+
+    rows = []
+    for user_id, items in recommendations.items():
+        for rank, item_id in enumerate(items, start=1):
+            rows.append({
+                "user_id": user_id,
+                "rank": rank,
+                "item_id": item_id
+            })
+
+    recommendations_df = pd.DataFrame(rows)
+
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    recommendations_df.to_csv(output_file, index=False)
+
+    return recommendations_df
+
+
 def main() -> None:
     project_root = Path(__file__).resolve().parents[1]
 
     train_file = project_root / "data" / "processed" / "movielens_train.csv"
     test_file = project_root / "data" / "processed" / "movielens_test.csv"
+    output_file = project_root / "results" / "movielens_mostpop_recommendations.csv"
 
     train_df = load_data(train_file, "MovieLens training data")
     test_df = load_data(test_file, "MovieLens test data")
@@ -124,6 +148,17 @@ def main() -> None:
     for user_id in sample_user_ids:
         print(f"\nSample recommendations for user {user_id}:")
         print(all_recommendations[user_id])
+
+    recommendations_df = save_recommendations(
+        recommendations=all_recommendations,
+        output_file=output_file
+    )
+
+    print("\nRecommendation output summary:")
+    print(f"Saved file: {output_file}")
+    print(f"Rows saved: {len(recommendations_df):,}")
+    print("\nPreview:")
+    print(recommendations_df.head(10))
 
 
 if __name__ == "__main__":
