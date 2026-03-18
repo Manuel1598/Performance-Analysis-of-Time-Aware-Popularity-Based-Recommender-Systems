@@ -41,9 +41,6 @@ Chronological ordering is necessary for the later leave-one-out split and time-a
 ### Why this was done
 This step creates the time-aware offline evaluation setup used for the reproduction.
 The split ensures that future interactions are not leaked into training and that each user has exactly one held-out test interaction.
-
-
-### Why this was done
 Users with only one interaction would appear only in the test set and not in the training set.
 Removing these users ensures that every evaluated user is present in both training and test data.
 
