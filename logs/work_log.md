@@ -57,3 +57,21 @@ Removing these users ensures that every evaluated user is present in both traini
 ### Why this was done
 This validation step ensures that the leave-one-out split is correctly constructed and suitable for time-aware offline evaluation.
 It guarantees that no future interactions are used during training and that every user can be evaluated properly.
+
+
+## 2026-03-17 – MostPop baseline implementation (MovieLens)
+- Created `src/mostpop.py`
+- Loaded MovieLens training and test datasets
+- Computed item popularity based on training interactions
+- Built user-specific sets of seen items from the training data
+- Implemented MostPop recommendation logic with filtering of already seen items
+- Generated top-10 recommendations for all test users
+- Saved recommendations to `results/movielens_mostpop_recommendations.csv`
+
+### Why this was done
+This step implements the MostPop baseline as described in the reference paper.
+Items are ranked globally by their popularity in the training data.
+Already seen items are filtered per user to ensure meaningful recommendations.
+The resulting recommendation file serves as the basis for later evaluation using ranking metrics such as HR@k and NDCG@k.
+
+
