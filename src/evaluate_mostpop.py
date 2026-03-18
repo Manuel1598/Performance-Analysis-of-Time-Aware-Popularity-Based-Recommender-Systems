@@ -81,8 +81,16 @@ def evaluate(
     return results
 
 
+def save_results(results: dict[str, float], output_file: Path) -> None:
+    print(f"Saving evaluation results to {output_file}...")
+
+    df = pd.DataFrame([results])
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(output_file, index=False)
+
 def main() -> None:
     project_root = Path(__file__).resolve().parents[1]
+    output_file = project_root / "results" / "movielens_mostpop_metrics.csv"
 
     test_file = project_root / "data" / "processed" / "movielens_test.csv"
     recommendations_file = project_root / "results" / "movielens_mostpop_recommendations.csv"
@@ -104,6 +112,8 @@ def main() -> None:
     print(f"HR@10: {results['HR@10']:.4f}")
     print(f"NDCG@5: {results['NDCG@5']:.4f}")
     print(f"NDCG@10: {results['NDCG@10']:.4f}")
+
+    save_results(results, output_file)
 
 
 if __name__ == "__main__":
