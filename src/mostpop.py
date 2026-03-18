@@ -2,21 +2,20 @@ from pathlib import Path
 import pandas as pd
 
 
-def load_train_data(file_path: Path) -> pd.DataFrame:
+def load_data(file_path: Path, file_description: str) -> pd.DataFrame:
     if not file_path.exists():
         raise FileNotFoundError(
-            f"Train file not found: {file_path}\n"
-            "Please run split.py first."
+            f"{file_description} file not found: {file_path}"
         )
 
-    print("Loading MovieLens training data...")
+    print(f"Loading {file_description}...")
     df = pd.read_csv(file_path)
 
     required_columns = ["user_id", "item_id", "timestamp"]
     missing_columns = [col for col in required_columns if col not in df.columns]
     if missing_columns:
         raise ValueError(
-            f"Missing required columns: {missing_columns}\n"
+            f"Missing required columns in {file_description}: {missing_columns}\n"
             f"Available columns: {list(df.columns)}"
         )
 
@@ -68,16 +67,43 @@ def recommend_mostpop(
     return recommendations
 
 
+def generate_recommendations_for_test_users(
+    test_df: pd.DataFrame,
+    popularity_df: pd.DataFrame,
+    user_seen: dict[int, set[int]],
+    top_k: int = 10
+) -> dict[int, list[int]]:
+    print(f"Generating MostPop recommendations for all test users (top-{top_k})...")
+
+    test_user_ids = test_df["user_id"].unique()
+    recommendations = {}
+
+    for user_id in test_user_ids:
+        recommendations[user_id] = recommend_mostpop(
+            user_id=user_id,
+            popularity_df=popularity_df,
+            user_seen=user_seen,
+            top_k=top_k
+        )
+
+    return recommendations
+
+
 def main() -> None:
     project_root = Path(__file__).resolve().parents[1]
 
     train_file = project_root / "data" / "processed" / "movielens_train.csv"
+    test_file = project_root / "data" / "processed" / "movielens_test.csv"
 
-    train_df = load_train_data(train_file)
+    train_df = load_data(train_file, "MovieLens training data")
+    test_df = load_data(test_file, "MovieLens test data")
 
-    print(f"Training interactions: {len(train_df):,}")
+    print(f"\nTraining interactions: {len(train_df):,}")
     print(f"Training users: {train_df['user_id'].nunique():,}")
     print(f"Training items: {train_df['item_id'].nunique():,}")
+
+    print(f"\nTest interactions: {len(test_df):,}")
+    print(f"Test users: {test_df['user_id'].nunique():,}")
 
     popularity_df = compute_item_popularity(train_df)
     user_seen = build_user_seen_items(train_df)
@@ -85,16 +111,19 @@ def main() -> None:
     print("\nTop 10 most popular items:")
     print(popularity_df.head(10))
 
-    sample_user_id = train_df["user_id"].iloc[0]
-    recommendations = recommend_mostpop(
-        user_id=sample_user_id,
+    all_recommendations = generate_recommendations_for_test_users(
+        test_df=test_df,
         popularity_df=popularity_df,
         user_seen=user_seen,
         top_k=10
     )
 
-    print(f"\nSample recommendations for user {sample_user_id}:")
-    print(recommendations)
+    print(f"\nGenerated recommendations for {len(all_recommendations):,} users.")
+
+    sample_user_ids = list(all_recommendations.keys())[:3]
+    for user_id in sample_user_ids:
+        print(f"\nSample recommendations for user {user_id}:")
+        print(all_recommendations[user_id])
 
 
 if __name__ == "__main__":
