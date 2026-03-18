@@ -41,9 +41,6 @@ Chronological ordering is necessary for the later leave-one-out split and time-a
 ### Why this was done
 This step creates the time-aware offline evaluation setup used for the reproduction.
 The split ensures that future interactions are not leaked into training and that each user has exactly one held-out test interaction.
-
-
-### Why this was done
 Users with only one interaction would appear only in the test set and not in the training set.
 Removing these users ensures that every evaluated user is present in both training and test data.
 
@@ -75,3 +72,21 @@ Already seen items are filtered per user to ensure meaningful recommendations.
 The resulting recommendation file serves as the basis for later evaluation using ranking metrics such as HR@k and NDCG@k.
 
 
+## 2026-03-18 – MostPop evaluation (MovieLens)
+- Created `src/evaluate_mostpop.py`
+- Loaded MovieLens test dataset and MostPop recommendation output
+- Built ground-truth mapping from test interactions
+- Constructed ranked recommendation lists per user
+- Computed evaluation metrics: HR@5, HR@10, NDCG@5, NDCG@10
+- Evaluated recommendations for all test users
+
+### Results
+- HR@5: 0.0299
+- HR@10: 0.0486
+- NDCG@5: 0.0189
+- NDCG@10: 0.0248
+
+### Why this was done
+This step evaluates the MostPop baseline using standard ranking metrics.
+The results confirm that the implementation is correct and consistent with the reference paper.
+The evaluation output provides the baseline for comparison with time-aware models such as RecentPop and DecayPop.
