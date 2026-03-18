@@ -134,3 +134,17 @@ Each user receives a ranked list of top-k recommendations (k = 10).
 
 ### Purpose
 This file is used as input for the evaluation step, where ranking metrics such as Hit Rate (HR@k) and NDCG@k will be computed.
+
+
+### Evaluation Results
+- `results/movielens_mostpop_metrics.csv`
+
+### Stored Metrics
+The following ranking metrics are computed and stored:
+
+- Hit Rate at k (HR@5, HR@10)
+- Normalized Discounted Cumulative Gain (NDCG@5, NDCG@10)
+
+### Purpose
+These metrics quantify the recommendation quality of the MostPop baseline.
+They serve as a reference point for comparing time-aware models such as RecentPop and DecayPop.
