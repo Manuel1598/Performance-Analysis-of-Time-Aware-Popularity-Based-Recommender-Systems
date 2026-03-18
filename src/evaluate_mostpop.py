@@ -115,6 +115,8 @@ def main() -> None:
 
     save_results(results, output_file)
 
+    print(f"Saved metrics file: {output_file}")
+
 
 if __name__ == "__main__":
     main()
