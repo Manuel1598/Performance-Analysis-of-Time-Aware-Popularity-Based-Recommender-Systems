@@ -15,13 +15,13 @@ This repository contains the implementation and experiments for the master thesi
 
 The goal of this work is to analyze the performance of popularity-based recommendation methods, with a particular focus on **temporal dynamics**, **trendiness**, and their impact on recommendation quality.
 
-The project starts with the implementation of classical popularity baselines and extends the analysis to time-aware variants and comparisons with more advanced recommendation models.
+The project considers both **Top-N recommendation scenarios** and **sequential (session-based) recommendation settings**, enabling a comprehensive comparison across different recommendation tasks and domains.
 
 ---
 
 # Research Motivation
 
-Popularity-based recommender systems are widely used as baseline methods in research due to their simplicity and surprisingly strong performance.
+Popularity-based recommender systems are widely used as baseline methods in research due to their simplicity and strong performance.
 
 The standard baseline, **MostPop**, ranks items based on their total number of interactions in the training data. However, this approach ignores that:
 
@@ -29,9 +29,7 @@ The standard baseline, **MostPop**, ranks items based on their total number of i
 * items may only be popular within specific time periods
 * evaluation without temporal awareness can be misleading
 
-Recent work has shown that incorporating time into popularity definitions can significantly improve performance and lead to more realistic evaluation setups .
-
-This thesis revisits popularity-based recommendation and investigates whether **time-aware models provide better and more realistic baselines**.
+This thesis revisits popularity-based recommendation and investigates whether **time-aware models provide better and more realistic baselines**, especially when compared to more advanced recommender systems.
 
 ---
 
@@ -51,11 +49,17 @@ The main objectives of this thesis are:
 
   * BPR
   * NeuMF
+  * SVD
+
+* Extend the analysis to **sequential recommendation models**:
+
   * GRU4Rec
+
+* Perform **systematic performance evaluation and comparison**
 
 * Analyze the impact of **popularity bias and fairness**
 
-* Evaluate whether findings generalize across **multiple domains**
+* Evaluate whether findings generalize across **multiple datasets and domains**
 
 ---
 
@@ -67,6 +71,7 @@ Sub-questions:
 
 * Do time-aware popularity models improve recommendation accuracy?
 * How do popularity-based methods compare to model-based approaches?
+* How do results differ between Top-N and sequential recommendation settings?
 * How does popularity bias influence recommendation outcomes?
 * Do results generalize across different datasets and domains?
 
@@ -76,15 +81,15 @@ Sub-questions:
 
 The project uses multiple datasets to ensure cross-domain validity.
 
-## Non-session-based datasets
+## Top-N Recommendation Datasets
 
-* **MovieLens** (primary dataset for controlled experiments)
-* **Amazon Reviews** (product recommendation domain)
+* **MovieLens (1M / 20M)**
+* **Amazon Reviews**
 
-## Session-based datasets
+## Sequential / Session-Based Datasets
 
-* **Globo dataset** (news recommendation)
-* **Yoochoose dataset** (e-commerce sessions)
+* **Yoochoose (RecSys Challenge 2015)**
+* **Globo dataset (news recommendation)**
 * Optional: **Adressa dataset**
 
 ---
@@ -94,13 +99,15 @@ The project uses multiple datasets to ensure cross-domain validity.
 The experiments follow a reproducible pipeline:
 
 1. Data preprocessing (user_id, item_id, timestamp)
-2. Chronological data splitting (leave-one-out)
+2. Chronological data splitting (leave-one-out for Top-N tasks)
 3. Implementation of popularity-based models
 4. Generation of recommendation outputs
 5. Evaluation using ranking metrics
 6. Comparison with advanced models using RecBole
 
-The setup ensures **time-aware evaluation** and avoids **future data leakage**, following best practices from prior work .
+The setup ensures **time-aware evaluation**, avoids **future data leakage**, and supports consistent comparison across datasets.
+
+Additionally, **hyperparameter tuning** is performed for all models to ensure fair comparison.
 
 ---
 
@@ -126,6 +133,7 @@ Uses a time-decay function to weight recent interactions more strongly.
 
 * BPR (Bayesian Personalized Ranking)
 * NeuMF (Neural Matrix Factorization)
+* SVD (Matrix Factorization baseline)
 * GRU4Rec (session-based recommendation)
 
 ---
@@ -140,7 +148,8 @@ The models are evaluated using standard ranking metrics:
 Additionally, the project analyzes:
 
 * popularity distribution
-* potential bias and fairness aspects
+* popularity bias
+* fairness aspects
 
 ---
 
@@ -169,15 +178,17 @@ The following components are already implemented:
 * Chronological leave-one-out split
 * MostPop baseline
 * Evaluation pipeline (HR, NDCG)
-* Initial results consistent with prior literature 
+* Initial results consistent with prior literature
 
 ---
 
 # Next Steps
 
 * Implement RecentPop and DecayPop
-* Integrate RecBole models
+* Integrate RecBole models (BPR, NeuMF, SVD, GRU4Rec)
 * Extend experiments to additional datasets
+* Perform hyperparameter tuning
+* Compare Top-N and sequential scenarios
 * Analyze trendiness and popularity bias
 
 ---
@@ -189,5 +200,6 @@ This project bridges simple popularity-based recommendation methods and modern r
 * reproducible experimentation
 * time-aware modeling
 * cross-domain evaluation
+* comparison across Top-N and sequential scenarios
 
-The goal is to better understand the role of **popularity and time in recommendation systems** and to provide a more realistic baseline for future research.
+The goal is to better understand the role of **popularity, time, and model complexity in recommender systems**, and to provide a more realistic and comprehensive evaluation framework.
