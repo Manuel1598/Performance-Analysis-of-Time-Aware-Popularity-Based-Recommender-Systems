@@ -89,7 +89,7 @@ def save_results(results: dict[str, float], output_file: Path) -> None:
     df.to_csv(output_file, index=False)
 
 def main() -> None:
-    project_root = Path(__file__).resolve().parents[1]
+    project_root = Path(__file__).resolve().parents[3]
     output_file = project_root / "results" / "movielens_mostpop_metrics.csv"
 
     test_file = project_root / "data" / "processed" / "movielens_test.csv"
