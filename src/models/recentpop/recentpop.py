@@ -88,11 +88,68 @@ def recommend_recentpop(
     return recommendations
 
 
+
+def generate_recommendations_for_test_users(
+    test_df: pd.DataFrame,
+    train_df: pd.DataFrame,
+    user_seen: dict[int, set[int]],
+    top_k: int = 10,
+    window_days: int = 30
+) -> dict[int, list[int]]:
+
+    print(f"Generating RecentPop recommendations for all test users (top-{top_k})...")
+
+    recommendations = {}
+
+    for _, row in test_df.iterrows():
+        user_id = int(row["user_id"])
+        t0 = int(row["timestamp"])
+
+        recs = recommend_recentpop(
+            user_id=user_id,
+            reference_timestamp=t0,
+            train_df=train_df,
+            user_seen=user_seen,
+            top_k=top_k,
+            window_days=window_days
+        )
+
+        recommendations[user_id] = recs
+
+    return recommendations
+
+def save_recommendations(
+    recommendations: dict[int, list[int]],
+    output_file: Path
+) -> pd.DataFrame:
+
+    print(f"Saving recommendations to {output_file}...")
+
+    rows = []
+
+    for user_id, items in recommendations.items():
+        for rank, item_id in enumerate(items, start=1):
+            rows.append({
+                "user_id": user_id,
+                "rank": rank,
+                "item_id": item_id
+            })
+
+    df = pd.DataFrame(rows)
+
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(output_file, index=False)
+
+    return df
+
+
+
 def main() -> None:
     project_root = Path(__file__).resolve().parents[3]
 
     train_file = project_root / "data" / "processed" / "movielens_train.csv"
     test_file = project_root / "data" / "processed" / "movielens_test.csv"
+    output_file = project_root / "results" / "movielens_recentpop_recommendations.csv"
 
     train_df = load_data(train_file, "MovieLens training data")
     test_df = load_data(test_file, "MovieLens test data")
@@ -124,6 +181,25 @@ def main() -> None:
 
     print(f"\nRecentPop recommendations for user {sample_user_id}:")
     print(recommendations)
+
+    all_recommendations = generate_recommendations_for_test_users(
+        test_df=test_df,
+        train_df=train_df,
+        user_seen=user_seen,
+        top_k=10,
+        window_days=30
+    )
+
+    print(f"\nGenerated recommendations for {len(all_recommendations):,} users.")
+
+    recommendations_df = save_recommendations(
+        recommendations=all_recommendations,
+        output_file=output_file
+    )
+
+    print("\nSaved file:")
+    print(output_file)
+    print(f"Rows: {len(recommendations_df):,}")
 
 
 if __name__ == "__main__":
