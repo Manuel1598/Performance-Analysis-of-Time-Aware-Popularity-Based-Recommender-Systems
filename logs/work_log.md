@@ -90,3 +90,58 @@ The resulting recommendation file serves as the basis for later evaluation using
 This step evaluates the MostPop baseline using standard ranking metrics.
 The results confirm that the implementation is correct and consistent with the reference paper.
 The evaluation output provides the baseline for comparison with time-aware models such as RecentPop and DecayPop.
+
+
+## 2026-03-18 – Repository refactoring and structure update
+
+* Reorganized the project structure into dedicated submodules (e.g., `models/mostpop`, `models/recentpop`)
+* Adjusted file paths across scripts to match the new folder structure
+* Fixed project root resolution using `Path(...).parents[...]` where necessary
+* Ensured all preprocessing, recommendation, and evaluation scripts run correctly after refactoring
+
+### Why this was done
+
+As the project grows to include multiple models and datasets, a clear modular structure is required.
+This improves maintainability, readability, and scalability of the codebase.
+The refactoring ensures that future models (e.g., DecayPop, RecBole-based methods) can be integrated cleanly.
+
+
+
+## 2026-03-27 – RecentPop baseline implementation (MovieLens)
+
+* Created `recentpop.py`
+* Implemented time-aware popularity computation using a sliding time window (30 days)
+* Computed item popularity relative to each user's test timestamp
+* Filtered already seen items per user
+* Generated top-10 recommendations for all MovieLens test users
+* Saved recommendations to `results/movielens_recentpop_recommendations.csv`
+
+### Why this was done
+
+This step extends the static MostPop baseline by incorporating temporal dynamics.
+Instead of using all historical interactions, RecentPop only considers interactions within a recent time window before the recommendation time.
+This allows the model to better capture short-term popularity trends.
+
+
+
+## 2026-03-27 – RecentPop evaluation (MovieLens)
+
+* Created `evaluate_recentpop.py`
+* Loaded MovieLens test dataset and RecentPop recommendation output
+* Built ground-truth mapping from test interactions
+* Constructed ranked recommendation lists per user
+* Computed evaluation metrics: HR@5, HR@10, NDCG@5, NDCG@10
+* Evaluated recommendations for all test users
+* Saved evaluation results to `results/movielens_recentpop_metrics.csv`
+
+### Results
+- HR@5: 0.0558
+- HR@10: 0.0903
+- NDCG@5: 0.0365
+- NDCG@10: 0.0475
+
+### Why this was done
+
+This step evaluates the time-aware RecentPop model using standard ranking metrics.
+The results enable a direct comparison with the MostPop baseline.
+This comparison is essential for analyzing the impact of temporal information on recommendation performance.
