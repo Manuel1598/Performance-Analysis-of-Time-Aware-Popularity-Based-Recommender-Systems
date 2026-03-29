@@ -19,9 +19,9 @@ def main() -> None:
     recentpop_file = project_root / "results" / "movielens_recentpop_metrics.csv"
     decaypop_file = project_root / "results" / "movielens_decaypop_metrics.csv"
 
-    output_table = project_root / "results" / "movielens_popularity_model_comparison.csv"
-    output_plot_hr10 = project_root / "results" / "movielens_hr10_comparison.png"
-    output_plot_ndcg10 = project_root / "results" / "movielens_ndcg10_comparison.png"
+    output_table = project_root / "results" / "analysis_results" / "movielens_popularity_model_comparison.csv"
+    output_plot_hr10 = project_root / "results" / "analysis_results" / "movielens_hr10_comparison.png"
+    output_plot_ndcg10 = project_root / "results" / "analysis_results" / "movielens_ndcg10_comparison.png"
 
     mostpop_df = load_metrics(mostpop_file, "MostPop")
     recentpop_df = load_metrics(recentpop_file, "RecentPop")
