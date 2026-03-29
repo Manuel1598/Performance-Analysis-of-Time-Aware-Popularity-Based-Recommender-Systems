@@ -208,3 +208,17 @@ This comparison is central to understanding how different temporal modeling stra
 
 This milestone completes the initial Top-N experimental setup.
 It provides the foundation for analyzing the impact of temporal information and for extending the study to additional datasets and model types.
+
+
+## 2026-03-29 – Comparative analysis of popularity-based models (MovieLens)
+
+* Created a comparison script for MovieLens popularity-based models
+* Combined evaluation metrics for MostPop, RecentPop, and DecayPop
+* Saved a consolidated comparison table to `results/analysis_results/`
+* Generated visual comparisons for HR@10 and NDCG@10
+* Verified that time-aware models outperform the static MostPop baseline
+
+### Why this was done
+
+This step consolidates the results of the three implemented popularity-based models into a directly comparable format.
+It enables a structured analysis of how temporal information influences recommendation quality and provides the basis for the Results and Discussion sections of the thesis.
