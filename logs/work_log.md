@@ -145,3 +145,66 @@ This allows the model to better capture short-term popularity trends.
 This step evaluates the time-aware RecentPop model using standard ranking metrics.
 The results enable a direct comparison with the MostPop baseline.
 This comparison is essential for analyzing the impact of temporal information on recommendation performance.
+
+
+## 2026-03-29 – DecayPop baseline implementation (MovieLens)
+
+* Created `decaypop.py`
+* Implemented time-aware popularity computation using exponential time decay
+* Computed weighted item popularity relative to each user's test timestamp
+* Filtered already seen items per user
+* Generated top-10 recommendations for all MovieLens test users
+* Saved recommendations to `results/movielens_decaypop_recommendations.csv`
+
+### Why this was done
+
+This step extends the popularity-based models by introducing a continuous time-aware weighting mechanism.
+Unlike MostPop, which treats all past interactions equally, and RecentPop, which uses a fixed time window, DecayPop gradually reduces the influence of older interactions.
+This allows the model to capture temporal dynamics in a smoother and more realistic way.
+
+
+
+## 2026-03-29 – DecayPop evaluation (MovieLens)
+
+* Created `evaluate_decaypop.py`
+* Loaded MovieLens test dataset and DecayPop recommendation output
+* Built ground-truth mapping from test interactions
+* Constructed ranked recommendation lists per user
+* Computed evaluation metrics: HR@5, HR@10, NDCG@5, NDCG@10
+* Evaluated recommendations for all test users
+* Saved evaluation results to `results/movielens_decaypop_metrics.csv`
+
+### Results
+
+* HR@5: 0.0424
+* HR@10: 0.0714
+* NDCG@5: 0.0271
+* NDCG@10: 0.0364
+
+### Why this was done
+
+This step evaluates the DecayPop model using the same evaluation pipeline as MostPop and RecentPop.
+The results enable a direct comparison between static popularity, recent-window popularity, and continuous time-decayed popularity.
+This comparison is central to understanding how different temporal modeling strategies influence recommendation performance.
+
+
+
+## 2026-03-29 – Current Status (End of MovieLens experiments)
+
+* Implemented and evaluated three popularity-based models:
+
+  * MostPop
+  * RecentPop
+  * DecayPop
+* Established a complete experimental pipeline:
+
+  * preprocessing
+  * chronological splitting
+  * recommendation generation
+  * evaluation
+* Obtained comparable results across all models on MovieLens
+
+### Why this is important
+
+This milestone completes the initial Top-N experimental setup.
+It provides the foundation for analyzing the impact of temporal information and for extending the study to additional datasets and model types.
