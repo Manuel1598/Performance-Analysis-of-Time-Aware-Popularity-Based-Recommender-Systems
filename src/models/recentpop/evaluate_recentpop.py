@@ -16,8 +16,7 @@ def load_data(file_path: Path, file_description: str) -> pd.DataFrame:
 def build_ground_truth(test_df: pd.DataFrame) -> dict[int, int]:
     print("Building ground-truth dictionary from test data...")
 
-    ground_truth = dict(zip(test_df["user_id"], test_df["item_id"]))
-    return ground_truth
+    return dict(zip(test_df["user_id"], test_df["item_id"]))
 
 
 def build_recommendation_lists(recommendations_df: pd.DataFrame) -> dict[int, list[int]]:
@@ -25,13 +24,11 @@ def build_recommendation_lists(recommendations_df: pd.DataFrame) -> dict[int, li
 
     recommendations_df = recommendations_df.sort_values(by=["user_id", "rank"])
 
-    recommendation_lists = (
+    return (
         recommendations_df.groupby("user_id")["item_id"]
         .apply(list)
         .to_dict()
     )
-
-    return recommendation_lists
 
 
 def hit_rate_at_k(recommended_items: list[int], true_item: int, k: int) -> float:
@@ -52,7 +49,8 @@ def evaluate(
     ground_truth: dict[int, int],
     recommendation_lists: dict[int, list[int]]
 ) -> dict[str, float]:
-    print("Evaluating MostPop recommendations...")
+
+    print("Evaluating RecentPop recommendations...")
 
     hr_5_scores = []
     hr_10_scores = []
@@ -70,15 +68,13 @@ def evaluate(
         ndcg_5_scores.append(ndcg_at_k(recommended_items, true_item, k=5))
         ndcg_10_scores.append(ndcg_at_k(recommended_items, true_item, k=10))
 
-    results = {
+    return {
         "HR@5": sum(hr_5_scores) / len(hr_5_scores),
         "HR@10": sum(hr_10_scores) / len(hr_10_scores),
         "NDCG@5": sum(ndcg_5_scores) / len(ndcg_5_scores),
         "NDCG@10": sum(ndcg_10_scores) / len(ndcg_10_scores),
         "evaluated_users": len(common_users),
     }
-
-    return results
 
 
 def save_results(results: dict[str, float], output_file: Path) -> None:
@@ -88,15 +84,16 @@ def save_results(results: dict[str, float], output_file: Path) -> None:
     output_file.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(output_file, index=False)
 
+
 def main() -> None:
     project_root = Path(__file__).resolve().parents[3]
-    output_file = project_root / "results" / "movielens_mostpop_metrics.csv"
 
     test_file = project_root / "data" / "processed" / "movielens_test.csv"
-    recommendations_file = project_root / "results" / "movielens_mostpop_recommendations.csv"
+    recommendations_file = project_root / "results" / "movielens_recentpop_recommendations.csv"
+    output_file = project_root / "results" / "movielens_recentpop_metrics.csv"
 
     test_df = load_data(test_file, "MovieLens test data")
-    recommendations_df = load_data(recommendations_file, "MostPop recommendation output")
+    recommendations_df = load_data(recommendations_file, "RecentPop recommendation output")
 
     print(f"\nTest interactions: {len(test_df):,}")
     print(f"Recommendation rows: {len(recommendations_df):,}")
@@ -115,7 +112,7 @@ def main() -> None:
 
     save_results(results, output_file)
 
-    print(f"Saved metrics file: {output_file}")
+    print(f"\nSaved metrics file: {output_file}")
 
 
 if __name__ == "__main__":

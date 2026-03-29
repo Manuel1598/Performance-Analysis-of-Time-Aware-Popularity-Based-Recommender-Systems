@@ -7,45 +7,95 @@ This file documents all datasets used in the thesis project, including their sou
 ## 1. MovieLens 20M
 
 ### Purpose
-Used as the primary dataset for reproducing the reference paper.
+
+Used as the primary dataset for reproducing the reference paper and for the initial comparison of popularity-based recommender models.
 
 ### Source
+
 GroupLens Research
 
 ### Dataset Version / Time Reference
-- interaction period ends in 2015
-- dataset publication/update reference: 2016
-- this thesis uses the downloaded version available at the start of the project
+
+* interaction period ends in 2015
+* dataset publication/update reference: 2016
+* this thesis uses the downloaded version available at the start of the project
 
 ### Local Path
+
 `data/raw/movielens/`
 
 ### Expected Main File
+
 `ratings.csv`
 
 ### Relevant Fields
-- `userId`
-- `movieId`
-- `timestamp`
+
+* `userId`
+* `movieId`
+* `timestamp`
 
 ### Role in Thesis
-- reproduction of the baseline study
-- first benchmark for MostPop, RecentPop, and DecayPop
+
+* reproduction of the reference study
+* first benchmark for MostPop, RecentPop, and DecayPop
+* controlled Top-N recommendation setting for initial experiments
 
 ### Preprocessing
-- reduced to implicit interactions (`user_id`, `item_id`, `timestamp`)
-- interactions sorted chronologically per user
-- users with fewer than 2 interactions were filtered (not needed for MovieLens 20M but included for consistency)
+
+* reduced to implicit interactions (`user_id`, `item_id`, `timestamp`)
+* interactions sorted chronologically per user
+* users with fewer than 2 interactions were filtered (not needed for MovieLens 20M but included for consistency)
 
 ### Generated Files
-- `data/processed/movielens_interactions.csv`
-- `data/processed/movielens_train.csv`
-- `data/processed/movielens_test.csv`
+
+* `data/processed/movielens_interactions.csv`
+* `data/processed/movielens_train.csv`
+* `data/processed/movielens_test.csv`
 
 ### Split Strategy
-- chronological leave-one-out split
-- last interaction per user → test set
-- all previous interactions → training set
+
+* chronological leave-one-out split
+* last interaction per user → test set
+* all previous interactions → training set
+
+### Generated Recommendation Outputs
+
+* `results/movielens_mostpop_recommendations.csv`
+* `results/movielens_recentpop_recommendations.csv`
+* `results/movielens_decaypop_recommendations.csv`
+
+### Recommendation Output Format
+
+Each recommendation file contains one row per recommended item:
+
+* `user_id`
+* `rank`
+* `item_id`
+
+Each user receives a ranked top-k recommendation list (currently k = 10).
+
+### Evaluation Result Files
+
+* `results/movielens_mostpop_metrics.csv`
+* `results/movielens_recentpop_metrics.csv`
+* `results/movielens_decaypop_metrics.csv`
+
+
+### Stored Metrics
+
+The following ranking metrics are currently computed and stored:
+
+* HR@5
+* HR@10
+* NDCG@5
+* NDCG@10
+
+### Purpose of Generated Outputs
+
+The recommendation files and evaluation result files are used to compare the performance of popularity-based recommendation models on MovieLens.
+They serve as the basis for comparing static popularity (MostPop) and time-aware popularity models (RecentPop and DecayPop).
+This setup enables a controlled evaluation of how temporal information influences recommendation performance.
+
 
 
 ---
@@ -109,42 +159,3 @@ From `behaviors.tsv`:
 - optional news recommendation domain
 - evaluation under strong temporal dynamics
 
-## Preprocessing and Generated Files
-
-### File used in preprocessing
-`ratings.csv`
-
-### Processed files generated
-- `data/processed/movielens_interactions.csv`
-- `data/processed/movielens_train.csv`
-- `data/processed/movielens_test.csv`
-
-
-### Generated Recommendation Output
-- `results/movielens_mostpop_recommendations.csv`
-
-### Output Format
-The recommendation file contains one row per recommended item:
-
-- `user_id`
-- `rank`
-- `item_id`
-
-Each user receives a ranked list of top-k recommendations (k = 10).
-
-### Purpose
-This file is used as input for the evaluation step, where ranking metrics such as Hit Rate (HR@k) and NDCG@k will be computed.
-
-
-### Evaluation Results
-- `results/movielens_mostpop_metrics.csv`
-
-### Stored Metrics
-The following ranking metrics are computed and stored:
-
-- Hit Rate at k (HR@5, HR@10)
-- Normalized Discounted Cumulative Gain (NDCG@5, NDCG@10)
-
-### Purpose
-These metrics quantify the recommendation quality of the MostPop baseline.
-They serve as a reference point for comparing time-aware models such as RecentPop and DecayPop.
