@@ -62,6 +62,7 @@ GroupLens Research
 
 * `results/movielens_mostpop_recommendations.csv`
 * `results/movielens_recentpop_recommendations.csv`
+* `results/movielens_decaypop_recommendations.csv`
 
 ### Recommendation Output Format
 
@@ -77,6 +78,8 @@ Each user receives a ranked top-k recommendation list (currently k = 10).
 
 * `results/movielens_mostpop_metrics.csv`
 * `results/movielens_recentpop_metrics.csv`
+* `results/movielens_decaypop_metrics.csv`
+
 
 ### Stored Metrics
 
@@ -90,7 +93,8 @@ The following ranking metrics are currently computed and stored:
 ### Purpose of Generated Outputs
 
 The recommendation files and evaluation result files are used to compare the performance of popularity-based recommendation models on MovieLens.
-They form the basis for the comparison between static popularity (MostPop) and time-aware popularity (RecentPop), and will later be extended with DecayPop.
+They serve as the basis for comparing static popularity (MostPop) and time-aware popularity models (RecentPop and DecayPop).
+This setup enables a controlled evaluation of how temporal information influences recommendation performance.
 
 
 
