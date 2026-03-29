@@ -218,7 +218,10 @@ It provides the foundation for analyzing the impact of temporal information and 
 * Generated visual comparisons for HR@10 and NDCG@10
 * Verified that time-aware models outperform the static MostPop baseline
 
-### Why this was done
+### Results
+- RecentPop outperforms all models
+- DecayPop improves over MostPop but underperforms compared to RecentPop
 
+### Why this was done
 This step consolidates the results of the three implemented popularity-based models into a directly comparable format.
 It enables a structured analysis of how temporal information influences recommendation quality and provides the basis for the Results and Discussion sections of the thesis.
