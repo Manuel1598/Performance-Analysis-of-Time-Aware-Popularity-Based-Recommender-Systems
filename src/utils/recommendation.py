@@ -37,7 +37,7 @@ def generate_recommendations_for_test_users(
     use_reference_timestamp: bool = False,
     **recommend_kwargs
 ) -> dict[int, list[int]]:
-    print("Generating recommendations for all test users...")
+    print(f"Generating recommendations for all test users (n={len(test_df):,})...")
 
     recommendations = {}
 
