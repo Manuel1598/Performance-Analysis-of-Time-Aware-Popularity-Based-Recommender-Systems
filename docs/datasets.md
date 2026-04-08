@@ -97,6 +97,14 @@ They serve as the basis for comparing static popularity (MostPop) and time-aware
 This setup enables a controlled evaluation of how temporal information influences recommendation performance.
 
 
+### Analysis Outputs
+- `results/analysis_results/movielens_popularity_model_comparison.csv`
+- `results/analysis_results/movielens_hr10_comparison.png`
+- `results/analysis_results/movielens_ndcg10_comparison.png`
+
+### Purpose
+These files summarize and visualize the comparative performance of MostPop, RecentPop, and DecayPop on MovieLens.
+They are used for result interpretation and for preparing thesis figures and tables.
 
 ---
 
