@@ -2,37 +2,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-
-def load_data(file_path: Path, file_description: str) -> pd.DataFrame:
-    if not file_path.exists():
-        raise FileNotFoundError(
-            f"{file_description} file not found: {file_path}"
-        )
-
-    print(f"Loading {file_description}...")
-    df = pd.read_csv(file_path)
-
-    required_columns = ["user_id", "item_id", "timestamp"]
-    missing_columns = [col for col in required_columns if col not in df.columns]
-    if missing_columns:
-        raise ValueError(
-            f"Missing required columns in {file_description}: {missing_columns}\n"
-            f"Available columns: {list(df.columns)}"
-        )
-
-    return df
+from src.utils.io import load_data, save_recommendations, REQUIRED_INTERACTION_COLUMNS
+from src.utils.recommendation import build_user_seen_items
 
 
-def build_user_seen_items(train_df: pd.DataFrame) -> dict[int, set[int]]:
-    print("Building user seen-item sets...")
-
-    user_seen = (
-        train_df.groupby("user_id")["item_id"]
-        .apply(set)
-        .to_dict()
-    )
-
-    return user_seen
 
 
 def compute_decay_popularity(
@@ -121,30 +94,6 @@ def generate_recommendations_for_test_users(
     return recommendations
 
 
-def save_recommendations(
-    recommendations: dict[int, list[int]],
-    output_file: Path
-) -> pd.DataFrame:
-    print(f"Saving recommendations to {output_file}...")
-
-    rows = []
-
-    for user_id, items in recommendations.items():
-        for rank, item_id in enumerate(items, start=1):
-            rows.append({
-                "user_id": user_id,
-                "rank": rank,
-                "item_id": item_id
-            })
-
-    recommendations_df = pd.DataFrame(rows)
-
-    output_file.parent.mkdir(parents=True, exist_ok=True)
-    recommendations_df.to_csv(output_file, index=False)
-
-    return recommendations_df
-
-
 def main() -> None:
     project_root = Path(__file__).resolve().parents[3]
 
@@ -152,8 +101,16 @@ def main() -> None:
     test_file = project_root / "data" / "processed" / "movielens_test.csv"
     output_file = project_root / "results" / "movielens_decaypop_recommendations.csv"
 
-    train_df = load_data(train_file, "MovieLens training data")
-    test_df = load_data(test_file, "MovieLens test data")
+    train_df = load_data(
+        train_file,
+        "MovieLens training data",
+        required_columns=REQUIRED_INTERACTION_COLUMNS
+    )
+    test_df = load_data(
+        test_file,
+        "MovieLens test data",
+        required_columns=REQUIRED_INTERACTION_COLUMNS
+    )
 
     print(f"\nTraining interactions: {len(train_df):,}")
     print(f"Training users: {train_df['user_id'].nunique():,}")

@@ -2,33 +2,8 @@ from pathlib import Path
 import math
 import pandas as pd
 
-
-def load_data(file_path: Path, file_description: str) -> pd.DataFrame:
-    if not file_path.exists():
-        raise FileNotFoundError(
-            f"{file_description} file not found: {file_path}"
-        )
-
-    print(f"Loading {file_description}...")
-    return pd.read_csv(file_path)
-
-
-def build_ground_truth(test_df: pd.DataFrame) -> dict[int, int]:
-    print("Building ground-truth dictionary from test data...")
-
-    return dict(zip(test_df["user_id"], test_df["item_id"]))
-
-
-def build_recommendation_lists(recommendations_df: pd.DataFrame) -> dict[int, list[int]]:
-    print("Building ranked recommendation lists per user...")
-
-    recommendations_df = recommendations_df.sort_values(by=["user_id", "rank"])
-
-    return (
-        recommendations_df.groupby("user_id")["item_id"]
-        .apply(list)
-        .to_dict()
-    )
+from src.utils.io import load_data, save_results
+from src.utils.recommendation import build_ground_truth, build_recommendation_lists
 
 
 def hit_rate_at_k(recommended_items: list[int], true_item: int, k: int) -> float:
@@ -89,14 +64,6 @@ def evaluate(
         "MRR@10": sum(mrr_10_scores) / len(mrr_10_scores),
         "evaluated_users": len(common_users),
     }
-
-
-def save_results(results: dict[str, float], output_file: Path) -> None:
-    print(f"Saving evaluation results to {output_file}...")
-
-    df = pd.DataFrame([results])
-    output_file.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(output_file, index=False)
 
 
 def main() -> None:
