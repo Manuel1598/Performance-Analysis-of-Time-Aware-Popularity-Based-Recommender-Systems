@@ -179,12 +179,12 @@ The following components are already implemented:
 * MostPop baseline
 * Evaluation pipeline (HR, NDCG)
 * Initial results consistent with prior literature
+* Implement RecentPop and DecayPop
 
 ---
 
 # Next Steps
 
-* Implement RecentPop and DecayPop
 * Integrate RecBole models (BPR, NeuMF, SVD, GRU4Rec)
 * Extend experiments to additional datasets
 * Perform hyperparameter tuning
