@@ -4,6 +4,26 @@ This file documents all datasets used in the thesis project, including their sou
 
 ---
 
+## Current Code Structure
+
+The MovieLens experiments are currently implemented in a modular project structure:
+
+* `src/datapipeline/preprocessing_movielens.py`
+* `src/datapipeline/split.py`
+* `src/models/mostpop/mostpop.py`
+* `src/models/mostpop/evaluate_mostpop.py`
+* `src/models/recentpop/recentpop.py`
+* `src/models/recentpop/evaluate_recentpop.py`
+* `src/models/decaypop/decaypop.py`
+* `src/models/decaypop/evaluate_decaypop.py`
+* `src/utils/io.py`
+* `src/utils/recommendation.py`
+* `src/evaluation/metrics.py`
+* `src/evaluation/evaluator.py`
+
+This structure separates preprocessing, recommendation generation, shared utilities, and evaluation logic.
+It improves maintainability and prepares the codebase for future integration of additional models and frameworks.
+
 ## 1. MovieLens 20M
 
 ### Purpose
@@ -89,12 +109,22 @@ The following ranking metrics are currently computed and stored:
 * HR@10
 * NDCG@5
 * NDCG@10
+* MRR@5
+* MRR@10
 
 ### Purpose of Generated Outputs
 
 The recommendation files and evaluation result files are used to compare the performance of popularity-based recommendation models on MovieLens.
 They serve as the basis for comparing static popularity (MostPop) and time-aware popularity models (RecentPop and DecayPop).
-This setup enables a controlled evaluation of how temporal information influences recommendation performance.
+
+The current implementation uses shared utility modules for:
+- data loading and saving
+- recommendation output formatting
+- ground-truth and recommendation list construction
+- ranking metric computation
+- common evaluation
+
+This setup enables a controlled and reproducible evaluation of how temporal information influences recommendation performance.
 
 
 ### Analysis Outputs
