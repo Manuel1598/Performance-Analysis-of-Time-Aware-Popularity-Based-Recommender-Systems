@@ -126,7 +126,7 @@ def main() -> None:
         decay_lambda=1e-7
     )
 
-    print(f"\nGenerated recommendations for {len(all_recommendations):,} users.")
+    print(f"Generating recommendations for all test users (n={len(test_df):,})...")
 
     recommendations_df = save_recommendations(
         recommendations=all_recommendations,

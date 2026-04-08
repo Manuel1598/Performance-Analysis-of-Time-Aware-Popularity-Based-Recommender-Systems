@@ -82,7 +82,7 @@ def main() -> None:
         top_k=10
     )
 
-    print(f"\nGenerated recommendations for {len(all_recommendations):,} users.")
+    print(f"Generating recommendations for all test users (n={len(test_df):,})...")
 
     sample_user_ids = list(all_recommendations.keys())[:3]
     for user_id in sample_user_ids:
