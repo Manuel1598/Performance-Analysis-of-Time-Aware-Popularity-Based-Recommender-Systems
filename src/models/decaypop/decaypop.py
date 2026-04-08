@@ -3,7 +3,10 @@ import numpy as np
 import pandas as pd
 
 from src.utils.io import load_data, save_recommendations, REQUIRED_INTERACTION_COLUMNS
-from src.utils.recommendation import build_user_seen_items
+from src.utils.recommendation import (
+    build_user_seen_items,
+    generate_recommendations_for_test_users,
+)
 
 
 
@@ -65,34 +68,6 @@ def recommend_decaypop(
     return recommendations
 
 
-def generate_recommendations_for_test_users(
-    test_df: pd.DataFrame,
-    train_df: pd.DataFrame,
-    user_seen: dict[int, set[int]],
-    top_k: int = 10,
-    decay_lambda: float = 1e-7
-) -> dict[int, list[int]]:
-    print(f"Generating DecayPop recommendations for all test users (top-{top_k})...")
-
-    recommendations = {}
-
-    for _, row in test_df.iterrows():
-        user_id = int(row["user_id"])
-        t0 = int(row["timestamp"])
-
-        recs = recommend_decaypop(
-            user_id=user_id,
-            reference_timestamp=t0,
-            train_df=train_df,
-            user_seen=user_seen,
-            top_k=top_k,
-            decay_lambda=decay_lambda
-        )
-
-        recommendations[user_id] = recs
-
-    return recommendations
-
 
 def main() -> None:
     project_root = Path(__file__).resolve().parents[3]
@@ -143,6 +118,8 @@ def main() -> None:
 
     all_recommendations = generate_recommendations_for_test_users(
         test_df=test_df,
+        recommend_fn=recommend_decaypop,
+        use_reference_timestamp=True,
         train_df=train_df,
         user_seen=user_seen,
         top_k=10,

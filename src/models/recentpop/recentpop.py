@@ -2,7 +2,10 @@ from pathlib import Path
 import pandas as pd
 
 from src.utils.io import load_data, save_recommendations, REQUIRED_INTERACTION_COLUMNS
-from src.utils.recommendation import build_user_seen_items
+from src.utils.recommendation import (
+    build_user_seen_items,
+    generate_recommendations_for_test_users,
+)
 
 
 def compute_recent_popularity(
@@ -59,37 +62,6 @@ def recommend_recentpop(
     return recommendations
 
 
-
-def generate_recommendations_for_test_users(
-    test_df: pd.DataFrame,
-    train_df: pd.DataFrame,
-    user_seen: dict[int, set[int]],
-    top_k: int = 10,
-    window_days: int = 30
-) -> dict[int, list[int]]:
-
-    print(f"Generating RecentPop recommendations for all test users (top-{top_k})...")
-
-    recommendations = {}
-
-    for _, row in test_df.iterrows():
-        user_id = int(row["user_id"])
-        t0 = int(row["timestamp"])
-
-        recs = recommend_recentpop(
-            user_id=user_id,
-            reference_timestamp=t0,
-            train_df=train_df,
-            user_seen=user_seen,
-            top_k=top_k,
-            window_days=window_days
-        )
-
-        recommendations[user_id] = recs
-
-    return recommendations
-
-
 def main() -> None:
     project_root = Path(__file__).resolve().parents[3]
 
@@ -138,6 +110,8 @@ def main() -> None:
 
     all_recommendations = generate_recommendations_for_test_users(
         test_df=test_df,
+        recommend_fn=recommend_recentpop,
+        use_reference_timestamp=True,
         train_df=train_df,
         user_seen=user_seen,
         top_k=10,

@@ -2,7 +2,10 @@ from pathlib import Path
 import pandas as pd
 
 from src.utils.io import load_data, save_recommendations, REQUIRED_INTERACTION_COLUMNS
-from src.utils.recommendation import build_user_seen_items
+from src.utils.recommendation import (
+    build_user_seen_items,
+    generate_recommendations_for_test_users,
+)
 
 
 def compute_item_popularity(train_df: pd.DataFrame) -> pd.DataFrame:
@@ -38,27 +41,6 @@ def recommend_mostpop(
     return recommendations
 
 
-def generate_recommendations_for_test_users(
-    test_df: pd.DataFrame,
-    popularity_df: pd.DataFrame,
-    user_seen: dict[int, set[int]],
-    top_k: int = 10
-) -> dict[int, list[int]]:
-    print(f"Generating MostPop recommendations for all test users (top-{top_k})...")
-
-    test_user_ids = test_df["user_id"].unique()
-    recommendations = {}
-
-    for user_id in test_user_ids:
-        recommendations[user_id] = recommend_mostpop(
-            user_id=user_id,
-            popularity_df=popularity_df,
-            user_seen=user_seen,
-            top_k=top_k
-        )
-
-    return recommendations
-
 
 def main() -> None:
     project_root = Path(__file__).resolve().parents[3]
@@ -93,6 +75,8 @@ def main() -> None:
 
     all_recommendations = generate_recommendations_for_test_users(
         test_df=test_df,
+        recommend_fn=recommend_mostpop,
+        use_reference_timestamp=False,
         popularity_df=popularity_df,
         user_seen=user_seen,
         top_k=10
