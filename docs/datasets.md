@@ -4,6 +4,24 @@ This file documents all datasets used in the thesis project, including their sou
 
 ---
 
+### Current Code Structure
+
+The MovieLens popularity-based experiments are now implemented in a modular object-oriented structure:
+
+* `src/models/base.py`
+* `src/models/popularity/mostpop.py`
+* `src/models/popularity/recentpop.py`
+* `src/models/popularity/decaypop.py`
+* `src/models/popularity/run_mostpop.py`
+* `src/models/popularity/run_recentpop.py`
+* `src/models/popularity/run_decaypop.py`
+* `src/utils/io.py`
+* `src/utils/recommendation.py`
+* `src/evaluation/metrics.py`
+* `src/evaluation/evaluator.py`
+
+Legacy function-based scripts are still present temporarily for compatibility during the migration phase, especially for evaluation scripts.
+
 ## 1. MovieLens 20M
 
 ### Purpose
@@ -89,12 +107,22 @@ The following ranking metrics are currently computed and stored:
 * HR@10
 * NDCG@5
 * NDCG@10
+* MRR@5
+* MRR@10
 
 ### Purpose of Generated Outputs
 
 The recommendation files and evaluation result files are used to compare the performance of popularity-based recommendation models on MovieLens.
 They serve as the basis for comparing static popularity (MostPop) and time-aware popularity models (RecentPop and DecayPop).
-This setup enables a controlled evaluation of how temporal information influences recommendation performance.
+
+The current implementation uses shared utility modules for:
+- data loading and saving
+- recommendation output formatting
+- ground-truth and recommendation list construction
+- ranking metric computation
+- common evaluation
+
+This setup enables a controlled and reproducible evaluation of how temporal information influences recommendation performance.
 
 
 ### Analysis Outputs

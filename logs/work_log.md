@@ -15,7 +15,7 @@ This makes the project easier to understand, document, and reproduce later.
 
 
 ## 2026-03-17 – MovieLens preprocessing
-- Created `src/preprocessing_movielens.py`
+- Created `src/datapipeline/preprocessing_movielens.py`
 - Loaded the MovieLens ratings file
 - Reduced the dataset to `user_id`, `item_id`, and `timestamp`
 - Renamed columns to a unified schema
@@ -30,7 +30,7 @@ Chronological ordering is necessary for the later leave-one-out split and time-a
 
 
 ## 2026-03-17 – MovieLens leave-one-out split
-- Created `src/split.py`
+- Created `src/datapipeline/split.py`
 - Loaded the processed MovieLens interaction dataset
 - Sorted interactions by `user_id` and `timestamp`
 - Created a chronological leave-one-out split
@@ -57,7 +57,7 @@ It guarantees that no future interactions are used during training and that ever
 
 
 ## 2026-03-17 – MostPop baseline implementation (MovieLens)
-- Created `src/mostpop.py`
+- Created `src/models/mostpop/mostpop.py`
 - Loaded MovieLens training and test datasets
 - Computed item popularity based on training interactions
 - Built user-specific sets of seen items from the training data
@@ -73,7 +73,7 @@ The resulting recommendation file serves as the basis for later evaluation using
 
 
 ## 2026-03-18 – MostPop evaluation (MovieLens)
-- Created `src/evaluate_mostpop.py`
+- Created `src/models/mostpop/evaluate_mostpop.py`
 - Loaded MovieLens test dataset and MostPop recommendation output
 - Built ground-truth mapping from test interactions
 - Constructed ranked recommendation lists per user
@@ -85,6 +85,8 @@ The resulting recommendation file serves as the basis for later evaluation using
 - HR@10: 0.0486
 - NDCG@5: 0.0189
 - NDCG@10: 0.0248
+- MRR@5: 0.0152
+- MRR@10: 0.0177
 
 ### Why this was done
 This step evaluates the MostPop baseline using standard ranking metrics.
@@ -139,7 +141,8 @@ This allows the model to better capture short-term popularity trends.
 - HR@10: 0.0903
 - NDCG@5: 0.0365
 - NDCG@10: 0.0475
-
+- MRR@5: 0.0302
+- MRR@10: 0.0347
 ### Why this was done
 
 This step evaluates the time-aware RecentPop model using standard ranking metrics.
@@ -225,3 +228,67 @@ It provides the foundation for analyzing the impact of temporal information and 
 ### Why this was done
 This step consolidates the results of the three implemented popularity-based models into a directly comparable format.
 It enables a structured analysis of how temporal information influences recommendation quality and provides the basis for the Results and Discussion sections of the thesis.
+
+## 2026-04-08 – Shared utility refactoring for popularity-based models
+
+* Created `src/utils/io.py`
+* Centralized shared input/output functionality:
+  * `load_data(...)`
+  * `save_recommendations(...)`
+  * `save_results(...)`
+* Created `src/utils/recommendation.py`
+* Centralized shared recommendation-related helper functions:
+  * `build_user_seen_items(...)`
+  * `build_ground_truth(...)`
+  * `build_recommendation_lists(...)`
+* Updated `mostpop.py`, `recentpop.py`, and `decaypop.py` to use the shared utility modules
+* Updated all evaluation scripts to use shared utility modules
+* Standardized project root resolution using `Path(__file__).resolve().parents[3]`
+
+### Why this was done
+
+The three popularity-based models originally contained duplicated logic for data loading, recommendation output generation, and evaluation preparation.
+Centralizing these functions reduces redundancy and makes the code easier to maintain and extend.
+This refactoring is an important preparation step for integrating additional models and frameworks later while keeping a consistent experimental pipeline.
+
+
+## 2026-04-08 – Centralized ranking evaluation pipeline
+
+* Created `src/evaluation/metrics.py`
+* Moved shared ranking metric implementations into a central module:
+  * `hit_rate_at_k(...)`
+  * `ndcg_at_k(...)`
+  * `mrr_at_k(...)`
+* Created `src/evaluation/evaluator.py`
+* Implemented shared evaluation function:
+  * `evaluate_recommendations(...)`
+* Updated `evaluate_mostpop.py`, `evaluate_recentpop.py`, and `evaluate_decaypop.py` to use the centralized evaluation pipeline
+* Confirmed that all three evaluation scripts still run correctly after refactoring
+
+### Why this was done
+
+The evaluation logic was previously duplicated across all popularity-based models.
+Centralizing the ranking metrics and evaluation routine improves consistency and reduces the risk of implementation differences between models.
+This step also strengthens the reproducibility of the thesis experiments and prepares the codebase for future evaluation extensions such as additional cutoffs, coverage metrics, or trendiness analysis.
+
+
+## 2026-04-09 – Migration of popularity models to an object-oriented framework
+
+* Introduced `src/models/base.py` with a shared recommender base interface
+* Created a new modular popularity model structure under `src/models/popularity/`
+* Implemented:
+  * `MostPopRecommender`
+  * `RecentPopRecommender`
+  * `DecayPopRecommender`
+* Added dedicated runner scripts:
+  * `run_mostpop.py`
+  * `run_recentpop.py`
+  * `run_decaypop.py`
+* Reused the centralized utility and evaluation modules introduced earlier
+* Verified that the new object-oriented implementations reproduce the same recommendation outputs and evaluation results as the previous function-based versions
+
+### Why this was done
+
+The original popularity-based implementations were script-oriented and model-specific.
+Migrating them to a shared object-oriented structure creates a cleaner and more extensible experimental framework.
+This is an important preparation step for integrating additional recommender models, including RecBole-based methods, while keeping a unified pipeline for training, recommendation generation, and evaluation.
