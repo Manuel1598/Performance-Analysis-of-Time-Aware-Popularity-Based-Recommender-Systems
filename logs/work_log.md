@@ -272,3 +272,23 @@ Centralizing the ranking metrics and evaluation routine improves consistency and
 This step also strengthens the reproducibility of the thesis experiments and prepares the codebase for future evaluation extensions such as additional cutoffs, coverage metrics, or trendiness analysis.
 
 
+## 2026-04-09 – Migration of popularity models to an object-oriented framework
+
+* Introduced `src/models/base.py` with a shared recommender base interface
+* Created a new modular popularity model structure under `src/models/popularity/`
+* Implemented:
+  * `MostPopRecommender`
+  * `RecentPopRecommender`
+  * `DecayPopRecommender`
+* Added dedicated runner scripts:
+  * `run_mostpop.py`
+  * `run_recentpop.py`
+  * `run_decaypop.py`
+* Reused the centralized utility and evaluation modules introduced earlier
+* Verified that the new object-oriented implementations reproduce the same recommendation outputs and evaluation results as the previous function-based versions
+
+### Why this was done
+
+The original popularity-based implementations were script-oriented and model-specific.
+Migrating them to a shared object-oriented structure creates a cleaner and more extensible experimental framework.
+This is an important preparation step for integrating additional recommender models, including RecBole-based methods, while keeping a unified pipeline for training, recommendation generation, and evaluation.

@@ -4,25 +4,23 @@ This file documents all datasets used in the thesis project, including their sou
 
 ---
 
-## Current Code Structure
+### Current Code Structure
 
-The MovieLens experiments are currently implemented in a modular project structure:
+The MovieLens popularity-based experiments are now implemented in a modular object-oriented structure:
 
-* `src/datapipeline/preprocessing_movielens.py`
-* `src/datapipeline/split.py`
-* `src/models/mostpop/mostpop.py`
-* `src/models/mostpop/evaluate_mostpop.py`
-* `src/models/recentpop/recentpop.py`
-* `src/models/recentpop/evaluate_recentpop.py`
-* `src/models/decaypop/decaypop.py`
-* `src/models/decaypop/evaluate_decaypop.py`
+* `src/models/base.py`
+* `src/models/popularity/mostpop.py`
+* `src/models/popularity/recentpop.py`
+* `src/models/popularity/decaypop.py`
+* `src/models/popularity/run_mostpop.py`
+* `src/models/popularity/run_recentpop.py`
+* `src/models/popularity/run_decaypop.py`
 * `src/utils/io.py`
 * `src/utils/recommendation.py`
 * `src/evaluation/metrics.py`
 * `src/evaluation/evaluator.py`
 
-This structure separates preprocessing, recommendation generation, shared utilities, and evaluation logic.
-It improves maintainability and prepares the codebase for future integration of additional models and frameworks.
+Legacy function-based scripts are still present temporarily for compatibility during the migration phase, especially for evaluation scripts.
 
 ## 1. MovieLens 20M
 
