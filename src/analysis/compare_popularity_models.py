@@ -18,22 +18,25 @@ def main() -> None:
     mostpop_file = project_root / "results" / "movielens_mostpop_metrics.csv"
     recentpop_file = project_root / "results" / "movielens_recentpop_metrics.csv"
     decaypop_file = project_root / "results" / "movielens_decaypop_metrics.csv"
+    bpr_file = project_root / "results" / "movielens_bpr_metrics.csv"
 
-    output_table = project_root / "results" / "analysis_results" / "movielens_popularity_model_comparison.csv"
+    output_table = project_root / "results" / "analysis_results" / "movielens_topn_model_comparison.csv"
     output_plot_hr10 = project_root / "results" / "analysis_results" / "movielens_hr10_comparison.png"
     output_plot_ndcg10 = project_root / "results" / "analysis_results" / "movielens_ndcg10_comparison.png"
+    output_plot_mrr10 = project_root / "results" / "analysis_results" / "movielens_mrr10_comparison.png"
 
     mostpop_df = load_metrics(mostpop_file, "MostPop")
     recentpop_df = load_metrics(recentpop_file, "RecentPop")
     decaypop_df = load_metrics(decaypop_file, "DecayPop")
+    bpr_df = load_metrics(bpr_file, "BPR")
 
     comparison_df = pd.concat(
-        [mostpop_df, recentpop_df, decaypop_df],
+        [mostpop_df, recentpop_df, decaypop_df, bpr_df],
         ignore_index=True
     )
 
     comparison_df = comparison_df[
-        ["model", "HR@5", "HR@10", "NDCG@5", "NDCG@10", "evaluated_users"]
+        ["model", "HR@5", "HR@10", "NDCG@5", "NDCG@10", "MRR@5", "MRR@10", "evaluated_users"]
     ]
 
     print("\nComparison table:")
@@ -46,7 +49,7 @@ def main() -> None:
     # Plot HR@10
     plt.figure(figsize=(8, 5))
     plt.bar(comparison_df["model"], comparison_df["HR@10"])
-    plt.title("HR@10 Comparison of Popularity-Based Models")
+    plt.title("HR@10 Comparison of Top-N Models")
     plt.xlabel("Model")
     plt.ylabel("HR@10")
     plt.tight_layout()
@@ -57,13 +60,24 @@ def main() -> None:
     # Plot NDCG@10
     plt.figure(figsize=(8, 5))
     plt.bar(comparison_df["model"], comparison_df["NDCG@10"])
-    plt.title("NDCG@10 Comparison of Popularity-Based Models")
+    plt.title("NDCG@10 Comparison of Top-N Models")
     plt.xlabel("Model")
     plt.ylabel("NDCG@10")
     plt.tight_layout()
     plt.savefig(output_plot_ndcg10)
     plt.close()
     print(f"Saved NDCG@10 plot to: {output_plot_ndcg10}")
+
+    # Plot MRR@10
+    plt.figure(figsize=(8, 5))
+    plt.bar(comparison_df["model"], comparison_df["MRR@10"])
+    plt.title("MRR@10 Comparison of Top-N Models")
+    plt.xlabel("Model")
+    plt.ylabel("MRR@10")
+    plt.tight_layout()
+    plt.savefig(output_plot_mrr10)
+    plt.close()
+    print(f"Saved MRR@10 plot to: {output_plot_mrr10}")
 
 
 if __name__ == "__main__":
