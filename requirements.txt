@@ -4,3 +4,4 @@ tqdm
 scikit-learn
 matplotlib
 jupyter
+recbole==1.2.0
