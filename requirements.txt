@@ -4,3 +4,6 @@ tqdm
 scikit-learn
 matplotlib
 jupyter
+numpy==1.26.4
+recbole==1.2.0
+kmeans-pytorch
