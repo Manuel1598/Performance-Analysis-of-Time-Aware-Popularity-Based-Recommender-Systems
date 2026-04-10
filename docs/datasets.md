@@ -19,6 +19,10 @@ The MovieLens popularity-based experiments are now implemented in a modular obje
 * `src/utils/recommendation.py`
 * `src/evaluation/metrics.py`
 * `src/evaluation/evaluator.py`
+* `src/models/recbole/prepare_recbole_movielens.py`
+* `src/models/recbole/bpr_wrapper.py`
+* `src/models/recbole/run_bpr.py`
+* `src/models/recbole/evaluate_bpr.py`
 
 Legacy function-based scripts are still present temporarily for compatibility during the migration phase, especially for evaluation scripts.
 
@@ -57,6 +61,8 @@ GroupLens Research
 * reproduction of the reference study
 * first benchmark for MostPop, RecentPop, and DecayPop
 * controlled Top-N recommendation setting for initial experiments
+* first comparison between popularity-based models and a model-based collaborative filtering baseline via RecBole
+* initial RecBole integration for reproducible comparison under the same evaluation pipeline
 
 ### Preprocessing
 
@@ -69,6 +75,7 @@ GroupLens Research
 * `data/processed/movielens_interactions.csv`
 * `data/processed/movielens_train.csv`
 * `data/processed/movielens_test.csv`
+* `data/recbole/movielens_recbole/movielens_recbole.inter`
 
 ### Split Strategy
 
@@ -81,6 +88,7 @@ GroupLens Research
 * `results/movielens_mostpop_recommendations.csv`
 * `results/movielens_recentpop_recommendations.csv`
 * `results/movielens_decaypop_recommendations.csv`
+* `results/movielens_bpr_recommendations.csv`
 
 ### Recommendation Output Format
 
@@ -97,6 +105,7 @@ Each user receives a ranked top-k recommendation list (currently k = 10).
 * `results/movielens_mostpop_metrics.csv`
 * `results/movielens_recentpop_metrics.csv`
 * `results/movielens_decaypop_metrics.csv`
+* `results/movielens_bpr_metrics.csv`
 
 
 ### Stored Metrics
@@ -123,6 +132,9 @@ The current implementation uses shared utility modules for:
 - common evaluation
 
 This setup enables a controlled and reproducible evaluation of how temporal information influences recommendation performance.
+
+The RecBole-based BPR outputs are used as the first model-based baseline for comparison against the popularity-based methods.
+This enables a direct comparison between simple time-aware popularity models and a classical collaborative filtering approach under the same Top-N evaluation setup.
 
 
 ### Analysis Outputs

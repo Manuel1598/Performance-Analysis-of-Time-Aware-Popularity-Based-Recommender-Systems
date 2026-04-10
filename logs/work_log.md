@@ -292,3 +292,34 @@ This step also strengthens the reproducibility of the thesis experiments and pre
 The original popularity-based implementations were script-oriented and model-specific.
 Migrating them to a shared object-oriented structure creates a cleaner and more extensible experimental framework.
 This is an important preparation step for integrating additional recommender models, including RecBole-based methods, while keeping a unified pipeline for training, recommendation generation, and evaluation.
+
+
+
+## 2026-04-10 – RecBole integration and first BPR baseline (MovieLens)
+
+* Added `recbole==1.2.0` to the project environment
+* Created `src/models/recbole/prepare_recbole_movielens.py`
+* Converted `data/processed/movielens_train.csv` into RecBole atomic format
+* Generated `data/recbole/movielens_recbole/movielens_recbole.inter`
+* Created `src/models/recbole/bpr_wrapper.py`
+* Implemented a RecBole-based BPR recommender wrapper compatible with the shared project interface
+* Created `src/models/recbole/run_bpr.py`
+* Generated `results/movielens_bpr_recommendations.csv`
+* Created `src/models/recbole/evaluate_bpr.py`
+* Evaluated BPR using the shared evaluation pipeline
+* Generated `results/movielens_bpr_metrics.csv`
+
+### Results
+
+* HR@5: 0.0423
+* HR@10: 0.0718
+* NDCG@5: 0.0266
+* NDCG@10: 0.0360
+* MRR@5: 0.0214
+* MRR@10: 0.0253
+
+### Why this was done
+
+This step introduces the first model-based baseline into the experimental framework using RecBole.
+The goal is to compare the previously implemented popularity-based models with a classical collaborative filtering approach under the same Top-N evaluation setup.
+The results provide the first direct comparison between simple time-aware popularity methods and a learned recommendation model on MovieLens.
