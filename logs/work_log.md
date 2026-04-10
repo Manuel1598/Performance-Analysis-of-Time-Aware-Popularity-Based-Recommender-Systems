@@ -323,3 +323,25 @@ This is an important preparation step for integrating additional recommender mod
 This step introduces the first model-based baseline into the experimental framework using RecBole.
 The goal is to compare the previously implemented popularity-based models with a classical collaborative filtering approach under the same Top-N evaluation setup.
 The results provide the first direct comparison between simple time-aware popularity methods and a learned recommendation model on MovieLens.
+
+
+## 026-04-10 – Integration and evaluation of BPR (RecBole) baseline (MovieLens)
+* Integrated RecBole into the project pipeline
+* Implemented a wrapper for the BPR (Bayesian Personalized Ranking) model
+* Converted MovieLens data into RecBole-compatible format
+* Trained BPR model and generated top-10 recommendations for all test users
+* Evaluated BPR using the existing Top-N evaluation pipeline
+* Extended the analysis to include BPR in the comparison with MostPop, RecentPop, and DecayPop
+* Updated comparison tables and plots (HR@10, NDCG@10, MRR@10)
+
+### Results
+* BPR achieves performance comparable to DecayPop
+* RecentPop remains the best-performing model
+* Static MostPop baseline performs worst
+
+
+### Why this was done
+
+This step extends the evaluation by including a model-based collaborative filtering baseline.
+It enables a direct comparison between simple popularity-based approaches and a learned recommendation model.
+The results show that time-aware popularity models can match or outperform BPR in this setting, highlighting the importance of temporal dynamics in recommendation tasks.
