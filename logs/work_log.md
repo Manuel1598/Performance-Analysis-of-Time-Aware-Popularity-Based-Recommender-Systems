@@ -345,3 +345,27 @@ The results provide the first direct comparison between simple time-aware popula
 This step extends the evaluation by including a model-based collaborative filtering baseline.
 It enables a direct comparison between simple popularity-based approaches and a learned recommendation model.
 The results show that time-aware popularity models can match or outperform BPR in this setting, highlighting the importance of temporal dynamics in recommendation tasks.
+
+
+## 2026-04-15 – Extension of Top-N evaluation with coverage metric (MovieLens)
+
+* Extended the evaluation pipeline by adding the Coverage metric
+* Implemented a new function to compute catalog coverage based on recommended items
+* Updated the shared evaluator to include Coverage alongside HR@k, NDCG@k, and MRR@k
+* Adapted all evaluation scripts (MostPop, RecentPop, DecayPop, BPR) to compute Coverage
+* Extended the comparison analysis to include Coverage in the result table and plots
+* Generated an additional visualization comparing Coverage across all models
+
+### Results
+
+* MostPop shows the lowest Coverage, indicating strong concentration on few popular items
+* RecentPop and DecayPop increase Coverage compared to MostPop
+* BPR achieves the highest Coverage by a large margin
+
+### Why this was done
+
+This step extends the evaluation beyond accuracy-based metrics.
+While HR, NDCG, and MRR measure ranking quality, Coverage reflects how broadly the item catalog is utilized.
+
+Including Coverage enables a more comprehensive comparison between popularity-based and model-based approaches.
+It highlights the trade-off between recommendation accuracy and diversity of recommended items.
