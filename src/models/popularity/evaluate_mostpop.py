@@ -7,16 +7,21 @@ from src.evaluation.evaluator import evaluate_recommendations
 
 def main() -> None:
     project_root = Path(__file__).resolve().parents[3]
-    output_file = project_root / "results" / "movielens_mostpop_metrics.csv"
 
+    train_file = project_root / "data" / "processed" / "movielens_train.csv"
     test_file = project_root / "data" / "processed" / "movielens_test.csv"
     recommendations_file = project_root / "results" / "movielens_mostpop_recommendations.csv"
+    output_file = project_root / "results" / "movielens_mostpop_metrics.csv"
 
+    train_df = load_data(train_file, "MovieLens training data")
     test_df = load_data(test_file, "MovieLens test data")
     recommendations_df = load_data(recommendations_file, "MostPop recommendation output")
 
-    print(f"\nTest interactions: {len(test_df):,}")
+    print(f"\nTraining interactions: {len(train_df):,}")
+    print(f"Test interactions: {len(test_df):,}")
     print(f"Recommendation rows: {len(recommendations_df):,}")
+
+    total_item_count = train_df["item_id"].nunique()
 
     ground_truth = build_ground_truth(test_df)
     recommendation_lists = build_recommendation_lists(recommendations_df)
@@ -24,6 +29,7 @@ def main() -> None:
     results = evaluate_recommendations(
         ground_truth=ground_truth,
         recommendation_lists=recommendation_lists,
+        total_item_count=total_item_count,
         model_name="MostPop"
     )
 
@@ -35,10 +41,11 @@ def main() -> None:
     print(f"NDCG@10: {results['NDCG@10']:.4f}")
     print(f"MRR@5: {results['MRR@5']:.4f}")
     print(f"MRR@10: {results['MRR@10']:.4f}")
+    print(f"Coverage: {results['Coverage']:.4f}")
 
     save_results(results, output_file)
 
-    print(f"Saved metrics file: {output_file}")
+    print(f"\nSaved metrics file: {output_file}")
 
 
 if __name__ == "__main__":
