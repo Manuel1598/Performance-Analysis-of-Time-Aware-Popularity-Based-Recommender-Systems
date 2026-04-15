@@ -24,6 +24,7 @@ def main() -> None:
     output_plot_hr10 = project_root / "results" / "analysis_results" / "movielens_hr10_comparison.png"
     output_plot_ndcg10 = project_root / "results" / "analysis_results" / "movielens_ndcg10_comparison.png"
     output_plot_mrr10 = project_root / "results" / "analysis_results" / "movielens_mrr10_comparison.png"
+    output_plot_coverage = project_root / "results" / "analysis_results" / "movielens_coverage_comparison.png"
 
     mostpop_df = load_metrics(mostpop_file, "MostPop")
     recentpop_df = load_metrics(recentpop_file, "RecentPop")
@@ -36,7 +37,7 @@ def main() -> None:
     )
 
     comparison_df = comparison_df[
-        ["model", "HR@5", "HR@10", "NDCG@5", "NDCG@10", "MRR@5", "MRR@10", "evaluated_users"]
+        ["model", "HR@5", "HR@10", "NDCG@5", "NDCG@10", "MRR@5", "MRR@10", "Coverage", "evaluated_users"]
     ]
 
     print("\nComparison table:")
@@ -78,6 +79,17 @@ def main() -> None:
     plt.savefig(output_plot_mrr10)
     plt.close()
     print(f"Saved MRR@10 plot to: {output_plot_mrr10}")
+
+    # Plot Coverage
+    plt.figure(figsize=(8, 5))
+    plt.bar(comparison_df["model"], comparison_df["Coverage"])
+    plt.title("Coverage Comparison of Top-N Models")
+    plt.xlabel("Model")
+    plt.ylabel("Coverage")
+    plt.tight_layout()
+    plt.savefig(output_plot_coverage)
+    plt.close()
+    print(f"Saved Coverage plot to: {output_plot_coverage}")
 
 
 if __name__ == "__main__":

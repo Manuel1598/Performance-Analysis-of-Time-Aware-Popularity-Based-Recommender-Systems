@@ -23,3 +23,18 @@ def mrr_at_k(recommended_items: list[int], true_item: int, k: int) -> float:
 
     rank_index = top_k_items.index(true_item)
     return 1.0 / (rank_index + 1)
+
+def coverage(
+    recommendation_lists: dict[int, list[int]],
+    total_item_count: int
+) -> float:
+    if total_item_count == 0:
+        return 0.0
+
+    recommended_items = set()
+
+    for items in recommendation_lists.values():
+        recommended_items.update(items)
+
+    return len(recommended_items) / total_item_count
+
