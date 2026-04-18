@@ -406,4 +406,23 @@ The Amazon Video Games dataset is used to test whether the findings from MovieLe
 Using the same preprocessing and chronological split strategy ensures methodological consistency across datasets.
 
 
+## 2026-04-18 – Generalized MostPop pipeline for MovieLens and Amazon
 
+* Refactored the MostPop runner into a shared multi-dataset version
+* Added dataset-specific configuration for MovieLens and Amazon
+* Extended the shared recommendation pipeline to support both numeric and string-based user/item identifiers
+* Verified that MovieLens MostPop still reproduces the same results as before
+* Ran MostPop on the Amazon Video Games dataset using the same Top-N evaluation setup
+* Generated recommendation outputs and evaluation results for both datasets
+
+### Results
+
+* MovieLens MostPop results remained unchanged after refactoring
+* Amazon MostPop produced substantially lower ranking accuracy than MovieLens
+* Amazon MostPop also showed extremely low Coverage, indicating a very strong concentration on a small number of popular items
+
+### Why this was done
+
+This step extends the Top-N recommendation pipeline from a single dataset to a multi-dataset setup.
+By generalizing the runner and evaluation structure, the same baseline model can now be applied consistently across domains.
+This is important for testing whether the findings from MovieLens also generalize to Amazon.
