@@ -87,6 +87,7 @@ The resulting recommendation file serves as the basis for later evaluation using
 - NDCG@10: 0.0248
 - MRR@5: 0.0152
 - MRR@10: 0.0177
+- Coverage: 0.0154
 
 ### Why this was done
 This step evaluates the MostPop baseline using standard ranking metrics.
