@@ -369,3 +369,40 @@ While HR, NDCG, and MRR measure ranking quality, Coverage reflects how broadly t
 
 Including Coverage enables a more comprehensive comparison between popularity-based and model-based approaches.
 It highlights the trade-off between recommendation accuracy and diversity of recommended items.
+
+
+## 2026-04-18 – Amazon Video Games preprocessing and chronological split
+
+* Added `src/datapipeline/preprocessing_amazon.py`
+* Loaded the Amazon Video Games dataset from JSONL format
+* Extracted the fields `user_id`, `parent_asin`, and `timestamp`
+* Normalized timestamps from milliseconds to seconds
+* Converted the raw data into the unified interaction format:
+  * `user_id`
+  * `item_id`
+  * `timestamp`
+* Sorted interactions chronologically per user
+* Filtered users with fewer than 2 interactions
+* Saved the processed file as `data/processed/amazon_interactions.csv`
+
+* Added `src/datapipeline/split_amazon.py`
+* Created a chronological leave-one-out split for Amazon
+* Assigned the last interaction of each user to the test set
+* Assigned all previous interactions of each user to the training set
+* Saved the resulting files as:
+  * `data/processed/amazon_train.csv`
+  * `data/processed/amazon_test.csv`
+* Validated the split:
+  * exactly one test interaction per user
+  * identical user sets in train and test
+  * train and test sizes match the original interaction count
+  * no chronology violations detected
+
+### Why this was done
+
+This step extends the Top-N recommendation pipeline to a second domain beyond MovieLens.
+The Amazon Video Games dataset is used to test whether the findings from MovieLens also generalize to a different recommendation setting.
+Using the same preprocessing and chronological split strategy ensures methodological consistency across datasets.
+
+
+
