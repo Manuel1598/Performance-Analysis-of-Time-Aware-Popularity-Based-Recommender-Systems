@@ -8,52 +8,67 @@ from src.utils.recommendation import (
 from src.models.popularity.recentpop import RecentPopRecommender
 
 
-def main() -> None:
-    project_root = Path(__file__).resolve().parents[3]
+DATASET_CONFIGS = {
+    "movielens": {
+        "label": "MovieLens",
+        "train_file": "data/processed/movielens_train.csv",
+        "test_file": "data/processed/movielens_test.csv",
+        "output_file": "results/movielens_recentpop_recommendations.csv",
+    },
+    "amazon": {
+        "label": "Amazon",
+        "train_file": "data/processed/amazon_train.csv",
+        "test_file": "data/processed/amazon_test.csv",
+        "output_file": "results/amazon_recentpop_recommendations.csv",
+    },
+}
 
-    train_file = project_root / "data" / "processed" / "movielens_train.csv"
-    test_file = project_root / "data" / "processed" / "movielens_test.csv"
-    output_file = project_root / "results" / "movielens_recentpop_recommendations.csv"
+
+def run_for_dataset(dataset_name: str) -> None:
+    if dataset_name not in DATASET_CONFIGS:
+        raise ValueError(f"Unknown dataset: {dataset_name}")
+
+    project_root = Path(__file__).resolve().parents[3]
+    config = DATASET_CONFIGS[dataset_name]
 
     train_df = load_data(
-        train_file,
-        "MovieLens training data",
-        required_columns=REQUIRED_INTERACTION_COLUMNS
+        project_root / config["train_file"],
+        f"{config['label']} training data",
+        required_columns=REQUIRED_INTERACTION_COLUMNS,
     )
+
     test_df = load_data(
-        test_file,
-        "MovieLens test data",
-        required_columns=REQUIRED_INTERACTION_COLUMNS
+        project_root / config["test_file"],
+        f"{config['label']} test data",
+        required_columns=REQUIRED_INTERACTION_COLUMNS,
     )
 
-    print(f"\nTraining interactions: {len(train_df):,}")
-    print(f"Training users: {train_df['user_id'].nunique():,}")
-    print(f"Training items: {train_df['item_id'].nunique():,}")
-
-    print(f"\nTest interactions: {len(test_df):,}")
-    print(f"Test users: {test_df['user_id'].nunique():,}")
+    print(f"\nDataset: {config['label']}")
+    print(f"Training interactions: {len(train_df):,}")
+    print(f"Test interactions: {len(test_df):,}")
 
     user_seen = build_user_seen_items(train_df)
 
     model = RecentPopRecommender(window_days=30)
     model.fit(train_df)
 
+    # Sample check
     sample_row = test_df.iloc[0]
-    sample_user_id = int(sample_row["user_id"])
-    sample_timestamp = int(sample_row["timestamp"])
+    sample_user = sample_row["user_id"]
+    sample_ts = sample_row["timestamp"]
 
-    print(f"\nSample user: {sample_user_id}")
-    print(f"Reference timestamp (t0): {sample_timestamp}")
+    print(f"\nSample user: {sample_user}")
+    print(f"Reference timestamp: {sample_ts}")
 
-    sample_recommendations = model.recommend(
-        user_id=sample_user_id,
+    sample_rec = model.recommend(
+        user_id=sample_user,
         user_seen=user_seen,
         top_k=10,
-        reference_timestamp=sample_timestamp,
+        reference_timestamp=sample_ts,
     )
 
-    print(f"\nRecentPop recommendations for user {sample_user_id}:")
-    print(sample_recommendations)
+    print("\nSample recommendations:")
+    print(sample_rec)
 
     all_recommendations = generate_model_recommendations_for_test_users(
         model=model,
@@ -63,16 +78,18 @@ def main() -> None:
         top_k=10,
     )
 
-    print(f"\nGenerated recommendations for {len(all_recommendations):,} users.")
-
     recommendations_df = save_recommendations(
         recommendations=all_recommendations,
-        output_file=output_file
+        output_file=project_root / config["output_file"],
     )
 
-    print("\nSaved file:")
-    print(output_file)
-    print(f"Rows: {len(recommendations_df):,}")
+    print("\nSaved recommendations:")
+    print(recommendations_df.head())
+
+
+def main():
+    run_for_dataset("movielens")
+    run_for_dataset("amazon")
 
 
 if __name__ == "__main__":
