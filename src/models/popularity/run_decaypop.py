@@ -8,25 +8,43 @@ from src.utils.recommendation import (
 from src.models.popularity.decaypop import DecayPopRecommender
 
 
-def main() -> None:
-    project_root = Path(__file__).resolve().parents[3]
+DATASET_CONFIGS = {
+    "movielens": {
+        "label": "MovieLens",
+        "train_file": "data/processed/movielens_train.csv",
+        "test_file": "data/processed/movielens_test.csv",
+        "output_file": "results/movielens_decaypop_recommendations.csv",
+    },
+    "amazon": {
+        "label": "Amazon",
+        "train_file": "data/processed/amazon_train.csv",
+        "test_file": "data/processed/amazon_test.csv",
+        "output_file": "results/amazon_decaypop_recommendations.csv",
+    },
+}
 
-    train_file = project_root / "data" / "processed" / "movielens_train.csv"
-    test_file = project_root / "data" / "processed" / "movielens_test.csv"
-    output_file = project_root / "results" / "movielens_decaypop_recommendations.csv"
+
+def run_for_dataset(dataset_name: str) -> None:
+    if dataset_name not in DATASET_CONFIGS:
+        raise ValueError(f"Unknown dataset: {dataset_name}")
+
+    project_root = Path(__file__).resolve().parents[3]
+    config = DATASET_CONFIGS[dataset_name]
 
     train_df = load_data(
-        train_file,
-        "MovieLens training data",
-        required_columns=REQUIRED_INTERACTION_COLUMNS
-    )
-    test_df = load_data(
-        test_file,
-        "MovieLens test data",
-        required_columns=REQUIRED_INTERACTION_COLUMNS
+        project_root / config["train_file"],
+        f"{config['label']} training data",
+        required_columns=REQUIRED_INTERACTION_COLUMNS,
     )
 
-    print(f"\nTraining interactions: {len(train_df):,}")
+    test_df = load_data(
+        project_root / config["test_file"],
+        f"{config['label']} test data",
+        required_columns=REQUIRED_INTERACTION_COLUMNS,
+    )
+
+    print(f"\nDataset: {config['label']}")
+    print(f"Training interactions: {len(train_df):,}")
     print(f"Training users: {train_df['user_id'].nunique():,}")
     print(f"Training items: {train_df['item_id'].nunique():,}")
 
@@ -39,7 +57,7 @@ def main() -> None:
     model.fit(train_df)
 
     sample_row = test_df.iloc[0]
-    sample_user_id = int(sample_row["user_id"])
+    sample_user_id = sample_row["user_id"]
     sample_timestamp = int(sample_row["timestamp"])
 
     print(f"\nSample user: {sample_user_id}")
@@ -67,14 +85,18 @@ def main() -> None:
 
     recommendations_df = save_recommendations(
         recommendations=all_recommendations,
-        output_file=output_file
+        output_file=project_root / config["output_file"],
     )
 
     print("\nRecommendation output summary:")
-    print(f"Saved file: {output_file}")
     print(f"Rows saved: {len(recommendations_df):,}")
     print("\nPreview:")
     print(recommendations_df.head(10))
+
+
+def main() -> None:
+    run_for_dataset("movielens")
+    run_for_dataset("amazon")
 
 
 if __name__ == "__main__":

@@ -45,10 +45,10 @@ def preprocess_amazon(df: pd.DataFrame) -> pd.DataFrame:
     df = df.dropna(subset=["user_id", "item_id", "timestamp"])
     df["timestamp"] = df["timestamp"].astype("int64")
 
-    # chronologisch sortieren
+
     df = df.sort_values(by=["user_id", "timestamp"]).reset_index(drop=True)
 
-    # User mit weniger als 2 Interaktionen entfernen
+
     user_counts = df.groupby("user_id").size()
     valid_users = user_counts[user_counts >= 2].index
     df = df[df["user_id"].isin(valid_users)].reset_index(drop=True)
