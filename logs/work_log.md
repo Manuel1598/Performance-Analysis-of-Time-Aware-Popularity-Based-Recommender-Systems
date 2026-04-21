@@ -547,6 +547,14 @@ This step represents the **first successful transition from the prototype pipeli
 
 ---
 
+### Methodological Note
+
+The final experimental setup does not aim to exactly replicate the earlier standalone leave-one-out pipeline.  
+Instead, the project now adopts RecBole’s standardized data preparation and evaluation workflow as the main experimental framework.  
+The earlier standalone implementation remains relevant as a prototype and validation step, while the final comparison is conducted under the unified RecBole setup.
+
+---
+
 ### Next Steps
 
 * adapt RecBole evaluation to match chronological leave-one-out splitting  
@@ -555,6 +563,7 @@ This step represents the **first successful transition from the prototype pipeli
   * RecentPop  
   * DecayPop  
 * integrate additional model-based baselines (BPR, NeuMF)  
+
 
 
 
