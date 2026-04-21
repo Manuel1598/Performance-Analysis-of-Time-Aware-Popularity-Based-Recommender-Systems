@@ -10,6 +10,7 @@ class MostPopRecBole(GeneralRecommender):
     def __init__(self, config, dataset):
         super(MostPopRecBole, self).__init__(config, dataset)
 
+
         self.device = config["device"]
 
         # RecBole field names
@@ -18,6 +19,9 @@ class MostPopRecBole(GeneralRecommender):
 
         # Number of items in the RecBole dataset
         self.n_items = dataset.num(self.ITEM_ID)
+
+        # Dummy parameter so RecBole can build an optimizer
+        self.dummy_param = torch.nn.Parameter(torch.zeros(1))
 
         # Popularity scores for all item ids in RecBole's internal index space
         self.item_popularity = torch.zeros(self.n_items, dtype=torch.float32)
@@ -37,7 +41,7 @@ class MostPopRecBole(GeneralRecommender):
 
     def calculate_loss(self, interaction):
         # MostPop is non-trainable, but RecBole expects a loss tensor
-        return torch.zeros(1, device=self.device, requires_grad=True)
+        return self.dummy_param.sum() * 0.0
 
     def predict(self, interaction):
         item = interaction[self.ITEM_ID]
