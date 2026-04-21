@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from src.utils.io import load_data, save_results
-from src.utils.recommendation import build_ground_truth, build_recommendation_lists
-from src.evaluation.evaluator import evaluate_recommendations
+from src.prototype.utils.io import load_data, save_results
+from src.prototype.utils.recommendation import build_ground_truth, build_recommendation_lists
+from src.prototype.evaluation.evaluator import evaluate_recommendations
 
 
 def main() -> None:

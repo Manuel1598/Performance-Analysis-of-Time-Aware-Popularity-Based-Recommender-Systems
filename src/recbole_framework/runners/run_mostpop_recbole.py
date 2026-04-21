@@ -4,7 +4,7 @@ from recbole.config import Config
 from recbole.data import create_dataset, data_preparation
 from recbole.trainer import Trainer
 
-from src.models.recbole.custom_models.mostpop_recbole import MostPopRecBole
+from src.recbole_framework.custom_models.mostpop_recbole import MostPopRecBole
 
 
 def main() -> None:

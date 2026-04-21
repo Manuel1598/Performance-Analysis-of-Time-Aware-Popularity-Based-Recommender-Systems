@@ -1,4 +1,4 @@
-from src.evaluation.metrics import hit_rate_at_k, ndcg_at_k, mrr_at_k, coverage
+from src.prototype.evaluation.metrics import hit_rate_at_k, ndcg_at_k, mrr_at_k, coverage
 
 
 def evaluate_recommendations(

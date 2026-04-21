@@ -1,7 +1,7 @@
 from pathlib import Path
 import pandas as pd
 
-from src.utils.io import load_data, REQUIRED_INTERACTION_COLUMNS
+from src.prototype.utils.io import load_data, REQUIRED_INTERACTION_COLUMNS
 
 
 def convert_to_recbole_interaction_format(

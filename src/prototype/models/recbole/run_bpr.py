@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from src.models.recbole.bpr_wrapper import RecBoleBPRRecommender
-from src.utils.io import load_data, save_recommendations, REQUIRED_INTERACTION_COLUMNS
-from src.utils.recommendation import (
+from src.prototype.models.recbole.bpr_wrapper import RecBoleBPRRecommender
+from src.prototype.utils.io import load_data, save_recommendations, REQUIRED_INTERACTION_COLUMNS
+from src.prototype.utils.recommendation import (
     build_user_seen_items,
     generate_model_recommendations_for_test_users,
 )
