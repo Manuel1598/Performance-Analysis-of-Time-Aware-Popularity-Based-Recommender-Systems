@@ -484,3 +484,77 @@ This implementation represents the **final stage of the prototype pipeline**:
 * gradually migrate RecentPop and DecayPop into RecBole  
 * shift evaluation from custom pipeline to RecBole framework  
 
+
+
+
+
+## 2026-04-21 – First successful RecBole integration of MostPop
+
+* Implemented MostPop as a native RecBole model (`MostPopRecBole`)
+* Followed the RecBole model interface by implementing:
+  * `__init__`
+  * `calculate_loss`
+  * `predict`
+  * `full_sort_predict`
+* Adapted the model to work without trainable parameters by introducing a minimal dummy parameter for compatibility with the RecBole optimizer
+* Built a first RecBole runner using:
+  * `Config`
+  * `create_dataset`
+  * `data_preparation`
+  * `Trainer`
+* Successfully loaded the MovieLens dataset in RecBole format (`.inter`)
+* Executed a full RecBole pipeline run including training and evaluation
+* Resolved compatibility issues related to:
+  * dataset path handling
+  * PyTorch checkpoint loading
+  * non-trainable model structure
+
+### Results
+
+* RecBole successfully executed the full pipeline with the custom MostPop model  
+* Evaluation metrics were produced using RecBole’s internal evaluation framework  
+* The model behaves as expected within the RecBole environment  
+
+---
+
+### Observations
+
+* The obtained evaluation results differ from the previous standalone implementation  
+* This is due to differences in:
+  * data splitting strategy (RecBole default vs. chronological leave-one-out)  
+  * evaluation setup  
+* The current RecBole configuration uses a random split, which is not aligned with the thesis methodology  
+
+---
+
+### Interpretation
+
+This step confirms that:
+
+* custom popularity-based models can be fully integrated into RecBole  
+* RecBole can be used as the central framework for model execution and evaluation  
+* additional work is required to align the evaluation setup with the intended experimental design  
+
+---
+
+### Role of This Step
+
+This step represents the **first successful transition from the prototype pipeline to the RecBole-based framework**:
+
+* validates the technical feasibility of custom model integration  
+* establishes the foundation for all further RecBole-based experiments  
+* enables direct comparison with built-in RecBole models  
+
+---
+
+### Next Steps
+
+* adapt RecBole evaluation to match chronological leave-one-out splitting  
+* ensure comparability with previous experimental results  
+* extend RecBole implementation to:
+  * RecentPop  
+  * DecayPop  
+* integrate additional model-based baselines (BPR, NeuMF)  
+
+
+
