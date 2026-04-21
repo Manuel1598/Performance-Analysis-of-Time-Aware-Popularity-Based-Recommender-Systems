@@ -1,4 +1,5 @@
 from pathlib import Path
+import pandas as pd
 
 from src.utils.io import load_data, save_recommendations, REQUIRED_INTERACTION_COLUMNS
 from src.utils.recommendation import (
@@ -8,25 +9,49 @@ from src.utils.recommendation import (
 from src.models.popularity.mostpop import MostPopRecommender
 
 
-def main() -> None:
-    project_root = Path(__file__).resolve().parents[3]
+DATASET_CONFIGS = {
+    "movielens": {
+        "label": "MovieLens",
+        "train_file": "data/processed/movielens_train.csv",
+        "test_file": "data/processed/movielens_test.csv",
+        "output_file": "results/movielens_mostpop_recommendations.csv",
+    },
+    "amazon": {
+        "label": "Amazon",
+        "train_file": "data/processed/amazon_train.csv",
+        "test_file": "data/processed/amazon_test.csv",
+        "output_file": "results/amazon_mostpop_recommendations.csv",
+    },
+}
 
-    train_file = project_root / "data" / "processed" / "movielens_train.csv"
-    test_file = project_root / "data" / "processed" / "movielens_test.csv"
-    output_file = project_root / "results" / "movielens_mostpop_recommendations.csv"
+
+def run_for_dataset(dataset_name: str) -> None:
+    if dataset_name not in DATASET_CONFIGS:
+        raise ValueError(
+            f"Unknown dataset: {dataset_name}. "
+            f"Available datasets: {list(DATASET_CONFIGS.keys())}"
+        )
+
+    project_root = Path(__file__).resolve().parents[3]
+    config = DATASET_CONFIGS[dataset_name]
+
+    train_file = project_root / config["train_file"]
+    test_file = project_root / config["test_file"]
+    output_file = project_root / config["output_file"]
 
     train_df = load_data(
         train_file,
-        "MovieLens training data",
-        required_columns=REQUIRED_INTERACTION_COLUMNS,
+        f"{config['label']} training data",
+        required_columns=REQUIRED_INTERACTION_COLUMNS
     )
     test_df = load_data(
         test_file,
-        "MovieLens test data",
-        required_columns=REQUIRED_INTERACTION_COLUMNS,
+        f"{config['label']} test data",
+        required_columns=REQUIRED_INTERACTION_COLUMNS
     )
 
-    print(f"\nTraining interactions: {len(train_df):,}")
+    print(f"\nDataset: {config['label']}")
+    print(f"Training interactions: {len(train_df):,}")
     print(f"Training users: {train_df['user_id'].nunique():,}")
     print(f"Training items: {train_df['item_id'].nunique():,}")
 
@@ -64,6 +89,13 @@ def main() -> None:
     print(f"Rows saved: {len(recommendations_df):,}")
     print("\nPreview:")
     print(recommendations_df.head(10))
+
+
+def main() -> None:
+
+    run_for_dataset("movielens")
+    run_for_dataset("amazon")
+
 
 
 if __name__ == "__main__":

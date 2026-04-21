@@ -5,19 +5,48 @@ from src.utils.recommendation import build_ground_truth, build_recommendation_li
 from src.evaluation.evaluator import evaluate_recommendations
 
 
-def main() -> None:
+DATASET_CONFIGS = {
+    "movielens": {
+        "label": "MovieLens",
+        "train_file": "data/processed/movielens_train.csv",
+        "test_file": "data/processed/movielens_test.csv",
+        "recommendations_file": "results/movielens_mostpop_recommendations.csv",
+        "output_file": "results/movielens_mostpop_metrics.csv",
+    },
+    "amazon": {
+        "label": "Amazon",
+        "train_file": "data/processed/amazon_train.csv",
+        "test_file": "data/processed/amazon_test.csv",
+        "recommendations_file": "results/amazon_mostpop_recommendations.csv",
+        "output_file": "results/amazon_mostpop_metrics.csv",
+    },
+}
+
+
+def evaluate_for_dataset(dataset_name: str) -> None:
+    if dataset_name not in DATASET_CONFIGS:
+        raise ValueError(
+            f"Unknown dataset: {dataset_name}. "
+            f"Available datasets: {list(DATASET_CONFIGS.keys())}"
+        )
+
     project_root = Path(__file__).resolve().parents[3]
+    config = DATASET_CONFIGS[dataset_name]
 
-    train_file = project_root / "data" / "processed" / "movielens_train.csv"
-    test_file = project_root / "data" / "processed" / "movielens_test.csv"
-    recommendations_file = project_root / "results" / "movielens_mostpop_recommendations.csv"
-    output_file = project_root / "results" / "movielens_mostpop_metrics.csv"
+    train_file = project_root / config["train_file"]
+    test_file = project_root / config["test_file"]
+    recommendations_file = project_root / config["recommendations_file"]
+    output_file = project_root / config["output_file"]
 
-    train_df = load_data(train_file, "MovieLens training data")
-    test_df = load_data(test_file, "MovieLens test data")
-    recommendations_df = load_data(recommendations_file, "MostPop recommendation output")
+    train_df = load_data(train_file, f"{config['label']} training data")
+    test_df = load_data(test_file, f"{config['label']} test data")
+    recommendations_df = load_data(
+        recommendations_file,
+        f"{config['label']} MostPop recommendation output"
+    )
 
-    print(f"\nTraining interactions: {len(train_df):,}")
+    print(f"\nDataset: {config['label']}")
+    print(f"Training interactions: {len(train_df):,}")
     print(f"Test interactions: {len(test_df):,}")
     print(f"Recommendation rows: {len(recommendations_df):,}")
 
@@ -46,6 +75,13 @@ def main() -> None:
     save_results(results, output_file)
 
     print(f"\nSaved metrics file: {output_file}")
+
+
+def main() -> None:
+
+    evaluate_for_dataset("movielens")
+    evaluate_for_dataset("amazon")
+
 
 
 if __name__ == "__main__":

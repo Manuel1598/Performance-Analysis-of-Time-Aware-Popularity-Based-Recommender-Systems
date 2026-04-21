@@ -66,17 +66,17 @@ def generate_recommendations_for_test_users(
 def generate_model_recommendations_for_test_users(
     model,
     test_df: pd.DataFrame,
-    user_seen: dict[int, set[int]],
+    user_seen: dict,
     use_reference_timestamp: bool = False,
     top_k: int = 10,
-) -> dict[int, list[int]]:
+) -> dict:
     print(f"Generating recommendations for all test users (n={len(test_df):,})...")
 
     recommendations = {}
 
     if use_reference_timestamp:
         for _, row in test_df.iterrows():
-            user_id = int(row["user_id"])
+            user_id = row["user_id"]
             reference_timestamp = int(row["timestamp"])
 
             recommendations[user_id] = model.recommend(
@@ -89,8 +89,8 @@ def generate_model_recommendations_for_test_users(
         test_user_ids = test_df["user_id"].unique()
 
         for user_id in test_user_ids:
-            recommendations[int(user_id)] = model.recommend(
-                user_id=int(user_id),
+            recommendations[user_id] = model.recommend(
+                user_id=user_id,
                 user_seen=user_seen,
                 top_k=top_k,
             )

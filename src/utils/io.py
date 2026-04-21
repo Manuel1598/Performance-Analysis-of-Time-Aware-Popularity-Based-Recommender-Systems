@@ -30,7 +30,7 @@ def load_data(
 
 
 def save_recommendations(
-    recommendations: dict[int, list[int]],
+    recommendations: dict,
     output_file: Path
 ) -> pd.DataFrame:
     print(f"Saving recommendations to {output_file}...")

@@ -87,6 +87,7 @@ The resulting recommendation file serves as the basis for later evaluation using
 - NDCG@10: 0.0248
 - MRR@5: 0.0152
 - MRR@10: 0.0177
+- Coverage: 0.0154
 
 ### Why this was done
 This step evaluates the MostPop baseline using standard ranking metrics.
@@ -369,3 +370,59 @@ While HR, NDCG, and MRR measure ranking quality, Coverage reflects how broadly t
 
 Including Coverage enables a more comprehensive comparison between popularity-based and model-based approaches.
 It highlights the trade-off between recommendation accuracy and diversity of recommended items.
+
+
+## 2026-04-18 – Amazon Video Games preprocessing and chronological split
+
+* Added `src/datapipeline/preprocessing_amazon.py`
+* Loaded the Amazon Video Games dataset from JSONL format
+* Extracted the fields `user_id`, `parent_asin`, and `timestamp`
+* Normalized timestamps from milliseconds to seconds
+* Converted the raw data into the unified interaction format:
+  * `user_id`
+  * `item_id`
+  * `timestamp`
+* Sorted interactions chronologically per user
+* Filtered users with fewer than 2 interactions
+* Saved the processed file as `data/processed/amazon_interactions.csv`
+
+* Added `src/datapipeline/split_amazon.py`
+* Created a chronological leave-one-out split for Amazon
+* Assigned the last interaction of each user to the test set
+* Assigned all previous interactions of each user to the training set
+* Saved the resulting files as:
+  * `data/processed/amazon_train.csv`
+  * `data/processed/amazon_test.csv`
+* Validated the split:
+  * exactly one test interaction per user
+  * identical user sets in train and test
+  * train and test sizes match the original interaction count
+  * no chronology violations detected
+
+### Why this was done
+
+This step extends the Top-N recommendation pipeline to a second domain beyond MovieLens.
+The Amazon Video Games dataset is used to test whether the findings from MovieLens also generalize to a different recommendation setting.
+Using the same preprocessing and chronological split strategy ensures methodological consistency across datasets.
+
+
+## 2026-04-18 – Generalized MostPop pipeline for MovieLens and Amazon
+
+* Refactored the MostPop runner into a shared multi-dataset version
+* Added dataset-specific configuration for MovieLens and Amazon
+* Extended the shared recommendation pipeline to support both numeric and string-based user/item identifiers
+* Verified that MovieLens MostPop still reproduces the same results as before
+* Ran MostPop on the Amazon Video Games dataset using the same Top-N evaluation setup
+* Generated recommendation outputs and evaluation results for both datasets
+
+### Results
+
+* MovieLens MostPop results remained unchanged after refactoring
+* Amazon MostPop produced substantially lower ranking accuracy than MovieLens
+* Amazon MostPop also showed extremely low Coverage, indicating a very strong concentration on a small number of popular items
+
+### Why this was done
+
+This step extends the Top-N recommendation pipeline from a single dataset to a multi-dataset setup.
+By generalizing the runner and evaluation structure, the same baseline model can now be applied consistently across domains.
+This is important for testing whether the findings from MovieLens also generalize to Amazon.
