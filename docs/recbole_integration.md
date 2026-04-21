@@ -156,3 +156,135 @@ Custom model integration in RecBole follows a clear and structured process:
 * reproducibility
 * comparability across models
 * extensibility for future work
+
+
+
+
+
+## RecBole Execution Pipeline
+
+To run experiments within RecBole, a standardized execution pipeline is used.
+
+A typical workflow consists of the following steps:
+
+```python
+config = Config(...)
+dataset = create_dataset(config)
+train_data, valid_data, test_data = data_preparation(config, dataset)
+
+model = MostPopRecBole(config, dataset)
+trainer = Trainer(config, model)
+
+trainer.fit(train_data, valid_data)
+trainer.evaluate(test_data)
+```
+
+These components form the core building blocks of the RecBole framework.
+
+---
+
+## Key RecBole Components
+
+### 1. Config
+
+The configuration object defines all relevant settings for an experiment:
+
+* model selection
+* dataset
+* field mappings (user, item, timestamp)
+* evaluation settings
+* top-k values
+* metrics
+
+This allows flexible and reproducible experimentation.
+
+---
+
+### 2. create_dataset(config)
+
+This function loads the dataset in RecBole format.
+
+**Important:**
+
+* the dataset must be provided as a `.inter` file
+* raw CSV files are not directly used in the RecBole pipeline
+
+---
+
+### 3. data_preparation(config, dataset)
+
+This step handles:
+
+* dataset splitting
+* creation of training, validation, and test loaders
+* internal data structures
+
+**Important:**
+
+For this project, it is necessary to ensure that the splitting strategy
+(e.g., chronological leave-one-out) is aligned with the thesis methodology.
+
+---
+
+### 4. Trainer
+
+The Trainer component manages:
+
+* model training
+* evaluation
+* logging
+
+Even for non-learning models such as **MostPop**, this step is required for compatibility with the RecBole framework.
+
+---
+
+## Implications for Model Design
+
+Custom models in this project are designed to follow a strict separation of responsibilities.
+
+### Model Responsibilities
+
+The model (e.g., `MostPopRecBole`) is responsible for:
+
+* receiving config and dataset
+* computing internal statistics (e.g., item popularity)
+* generating prediction scores
+
+**It does not:**
+
+* load raw files
+* handle preprocessing
+* perform data splitting
+
+---
+
+### Responsibilities Outside the Model
+
+The surrounding pipeline is responsible for:
+
+* preparing `.inter` files
+* defining configuration settings
+* running experiments via RecBole
+
+---
+
+### Responsibilities of RecBole
+
+RecBole handles:
+
+* dataset loading
+* data splitting and data loaders
+* training and evaluation
+* metric computation
+
+---
+
+## Summary
+
+This separation ensures:
+
+* clean architecture
+* reproducibility
+* compatibility with RecBole
+* easy extension to additional models and datasets
+
