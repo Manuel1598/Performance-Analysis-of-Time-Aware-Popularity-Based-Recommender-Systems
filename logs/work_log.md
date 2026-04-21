@@ -426,3 +426,61 @@ Using the same preprocessing and chronological split strategy ensures methodolog
 This step extends the Top-N recommendation pipeline from a single dataset to a multi-dataset setup.
 By generalizing the runner and evaluation structure, the same baseline model can now be applied consistently across domains.
 This is important for testing whether the findings from MovieLens also generalize to Amazon.
+
+
+
+
+
+## 2026-04-21 – Generalized MostPop pipeline for MovieLens and Amazon
+
+* Refactored the MostPop runner into a shared multi-dataset version  
+* Added dataset-specific configuration for MovieLens and Amazon  
+* Extended the shared recommendation pipeline to support both numeric and string-based user/item identifiers  
+* Verified that MovieLens MostPop still reproduces the same results as before  
+* Ran MostPop on the Amazon Video Games dataset using the same Top-N evaluation setup  
+* Generated recommendation outputs and evaluation results for both datasets  
+
+### Results
+
+* MovieLens MostPop results remained unchanged after refactoring  
+* Amazon MostPop produced substantially lower ranking accuracy than MovieLens  
+* Amazon MostPop also showed extremely low Coverage, indicating a very strong concentration on a small number of popular items  
+
+### Interpretation
+
+The results confirm that:
+
+* popularity-based recommendations behave differently across domains  
+* Amazon exhibits a stronger popularity bias and higher sparsity  
+* simple global popularity is less effective in large-scale, sparse datasets  
+
+---
+
+### Strategic Update
+
+Following a project discussion, the overall direction of the thesis was refined:
+
+* Instead of maintaining a standalone recommendation pipeline, the project will transition to a **framework-based approach using RecBole**  
+* All models, including MostPop, RecentPop, and DecayPop, will be **re-implemented as native RecBole models**  
+* RecBole will serve as the central framework for training, evaluation, and comparison  
+
+---
+
+### Role of This Step
+
+This implementation represents the **final stage of the prototype pipeline**:
+
+* validated correctness of the MostPop implementation  
+* ensured consistency across multiple datasets  
+* confirmed reproducibility of results  
+* provided a reference baseline for later RecBole integration  
+
+---
+
+### Next Steps
+
+* start implementation of custom RecBole models  
+* implement MostPop as first RecBole-native model  
+* gradually migrate RecentPop and DecayPop into RecBole  
+* shift evaluation from custom pipeline to RecBole framework  
+
