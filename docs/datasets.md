@@ -1,6 +1,6 @@
 # Dataset Documentation
 
-This file documents all datasets used in the thesis project, including their source, local storage path, intended role in the thesis, preprocessing assumptions, and generated outputs where applicable.
+This document describes all datasets used in the thesis project, their role, preprocessing, and how they are integrated into the experimental pipeline.
 
 ---
 
@@ -10,111 +10,100 @@ This file documents all datasets used in the thesis project, including their sou
 
 ### Purpose
 
-Used as the primary Top-N dataset for reproducing the reference study and for the initial comparison of popularity-based and model-based recommender systems.
+MovieLens 20M serves as the primary dataset for the Top-N recommendation setting. It is used for:
+
+- initial prototypical experiments with popularity-based models
+- integration and evaluation of models within the RecBole framework
+- controlled comparison between time-aware popularity models and model-based approaches
+
+---
 
 ### Source
 
 GroupLens Research
 
+---
+
 ### Dataset Version / Time Reference
 
-* interaction period ends in 2015
-* dataset publication/update reference: 2016
-* this thesis uses the downloaded version available at the start of the project
+- interaction period ends in 2015  
+- dataset release: 2016  
+- the version used corresponds to the downloaded dataset at the beginning of the project  
+
+---
 
 ### Local Path
 
 `data/raw/movielens/`
 
+---
+
 ### Expected Main File
 
 `ratings.csv`
 
+---
+
 ### Relevant Fields
 
-* `userId`
-* `movieId`
-* `timestamp`
+- `userId`
+- `movieId`
+- `timestamp`
 
-### Role in Thesis
-
-* reproduction of the reference study
-* first benchmark for MostPop, RecentPop, and DecayPop
-* controlled Top-N recommendation setting for initial experiments
-* first comparison between popularity-based models and a model-based collaborative filtering baseline via RecBole
-* initial RecBole integration for reproducible comparison under the same evaluation pipeline
+---
 
 ### Preprocessing
 
-* reduced to implicit interactions (`user_id`, `item_id`, `timestamp`)
-* interactions sorted chronologically per user
-* users with fewer than 2 interactions were filtered (mainly for consistency with the general pipeline)
+The dataset is transformed into a unified implicit feedback format:
 
-### Generated Files
+- mapping to: `user_id`, `item_id`, `timestamp`
+- chronological sorting per user
+- removal of users with fewer than 2 interactions
 
-* `data/processed/movielens_interactions.csv`
-* `data/processed/movielens_train.csv`
-* `data/processed/movielens_test.csv`
-* `data/recbole/movielens_recbole/movielens_recbole.inter`
+---
 
-### Split Strategy
+### Data Splitting
 
-* chronological leave-one-out split
-* last interaction per user → test set
-* all previous interactions → training set
+A chronological leave-one-out split is applied:
 
-### Generated Recommendation Outputs
+- last interaction per user → test set  
+- all previous interactions → training set  
 
-* `results/movielens_mostpop_recommendations.csv`
-* `results/movielens_recentpop_recommendations.csv`
-* `results/movielens_decaypop_recommendations.csv`
-* `results/movielens_bpr_recommendations.csv`
+This ensures a realistic temporal evaluation scenario.
 
-### Recommendation Output Format
+---
 
-Each recommendation file contains one row per recommended item:
+### RecBole Integration
 
-* `user_id`
-* `rank`
-* `item_id`
+The dataset is converted into RecBole format:
 
-Each user receives a ranked top-k recommendation list (currently k = 10).
+- `.inter` file for RecBole input  
+- consistent field mapping for user, item, and time  
 
-### Evaluation Result Files
+Example:
 
-* `results/movielens_mostpop_metrics.csv`
-* `results/movielens_recentpop_metrics.csv`
-* `results/movielens_decaypop_metrics.csv`
-* `results/movielens_bpr_metrics.csv`
+`data/recbole/movielens_recbole/movielens_recbole.inter`
 
-### Stored Metrics
+---
 
-The following ranking metrics are currently computed and stored:
+### Role in Thesis
 
-* HR@5
-* HR@10
-* NDCG@5
-* NDCG@10
-* MRR@5
-* MRR@10
+MovieLens is used as:
 
-### Purpose of Generated Outputs
+- the primary benchmark dataset
+- the main environment for developing and validating RecBole-based model implementations
+- the reference dataset for comparing:
+  - MostPop
+  - RecentPop
+  - DecayPop
+  - model-based methods (e.g., BPR)
 
-The recommendation files and evaluation result files are used to compare the performance of popularity-based recommendation models on MovieLens.
-They serve as the basis for comparing static popularity (MostPop), time-aware popularity models (RecentPop and DecayPop), and a first model-based baseline (BPR via RecBole).
+---
 
-This setup enables a controlled and reproducible evaluation of how temporal information influences recommendation performance in a Top-N setting.
+### Notes
 
-### Analysis Outputs
-
-* `results/analysis_results/movielens_popularity_model_comparison.csv`
-* `results/analysis_results/movielens_hr10_comparison.png`
-* `results/analysis_results/movielens_ndcg10_comparison.png`
-
-### Purpose of Analysis Outputs
-
-These files summarize and visualize the comparative performance of MostPop, RecentPop, DecayPop, and BPR on MovieLens.
-They are used for result interpretation and for preparing thesis figures and tables.
+Initial experiments were conducted using a custom evaluation pipeline.  
+In the final setup, all models are integrated and evaluated within the RecBole framework to ensure consistency and reproducibility.
 
 ---
 
@@ -122,50 +111,76 @@ They are used for result interpretation and for preparing thesis figures and tab
 
 ### Purpose
 
-Used as a second Top-N recommendation domain to test whether findings generalize beyond movie recommendation.
+Amazon Reviews are used as a second domain to evaluate the generalization of findings beyond the movie recommendation setting.
+
+---
 
 ### Source
 
-Amazon Review Data / McAuley Lab
+Amazon Review Data (McAuley Lab)
+
+---
 
 ### Dataset Version / Time Reference
 
-* downloaded dataset version: 2023
-* used as the product recommendation domain in this thesis
+- downloaded dataset version: 2023  
+- used as a large-scale product recommendation dataset  
+
+---
 
 ### Local Path
 
 `data/raw/amazon/`
 
-### Downloaded Files
+---
 
-* `Electronics.json.gz`
-* `Movies_and_TV.json.gz`
+### Data Format
+
+JSONL format (e.g., `Video_Games.jsonl`)
+
+---
 
 ### Relevant Fields
 
-* `reviewerID`
-* `asin`
-* `unixReviewTime`
+- `user_id`
+- `asin` → mapped to `item_id`
+- `timestamp`
 
-### Intended Unified Fields After Preprocessing
+---
 
-* `user_id`
-* `item_id`
-* `timestamp`
+### Preprocessing
+
+- conversion to implicit interaction format  
+- mapping to `user_id`, `item_id`, `timestamp`  
+- chronological sorting  
+- filtering of users with insufficient interactions  
+
+---
+
+### Data Splitting
+
+Same as MovieLens:
+
+- chronological leave-one-out split  
+
+---
+
+### RecBole Integration
+
+- conversion into `.inter` format  
+- alignment with RecBole input requirements  
+
+---
 
 ### Role in Thesis
 
-* second Top-N recommendation domain
-* cross-domain comparison for popularity-based and model-based methods
-* validation of whether observed effects also appear outside the movie domain
+Amazon is used for:
 
-### Planned Processing
-
-* convert raw review data into implicit interaction format
-* reduce to `user_id`, `item_id`, `timestamp`
-* apply chronological preprocessing
-* generate train/test splits compatible with the Top-N evaluation pipeline
+- cross-domain validation  
+- testing robustness of models under:
+  - higher sparsity  
+  - stronger popularity bias  
+- evaluating whether time-aware popularity models generalize beyond controlled datasets  
 
 ---
 
@@ -175,45 +190,42 @@ Amazon Review Data / McAuley Lab
 
 ### Purpose
 
-Used as a session-based e-commerce dataset for evaluating recommendation methods under short-term user intent and session dynamics.
+Used for session-based recommendation in an e-commerce context.
+
+---
 
 ### Source
 
-RecSys Challenge 2015 / Yoochoose dataset
+RecSys Challenge 2015
+
+---
 
 ### Local Path
 
 `data/raw/yoochoose/`
 
-### Expected Main Files
-
-* `yoochoose-clicks.dat`
-* `yoochoose-buys.dat`
+---
 
 ### Relevant Fields
 
-From click data:
-* `session_id`
-* `timestamp`
-* `item_id`
-* `category`
+- `session_id`
+- `item_id`
+- `timestamp`
 
-From buy data:
-* `session_id`
-* `timestamp`
-* `item_id`
+---
 
 ### Role in Thesis
 
-* main session-based e-commerce dataset
-* evaluation of recommendation methods under session-based interaction patterns
-* comparison of popularity-based and sequential/model-based methods in a session setting
+- evaluation of session-based recommendation methods  
+- comparison with Top-N approaches  
+- analysis of short-term user intent  
 
-### Planned Processing
+---
 
-* construct sessions from click sequences
-* define recommendation targets at session level
-* align data format with session-based evaluation pipeline
+### Planned Integration
+
+- conversion into session-based RecBole-compatible format  
+- evaluation using session-based models (e.g., KNN-based approaches)
 
 ---
 
@@ -221,38 +233,14 @@ From buy data:
 
 ### Purpose
 
-Used as a session-based news recommendation dataset with strong temporal dynamics.
+Session-based news recommendation dataset with strong temporal dynamics.
 
-### Source
+---
 
-Globo.com news interaction dataset
+### Role
 
-### Local Path
-
-`data/raw/globo/`
-
-### Expected Main Content
-
-News portal interaction logs with session-based user behavior
-
-### Relevant Fields
-
-Expected core fields after preprocessing:
-* `session_id`
-* `item_id`
-* `timestamp`
-
-### Role in Thesis
-
-* session-based news recommendation domain
-* evaluation of methods on time-sensitive news consumption
-* comparison between e-commerce-like and news-like session behavior
-
-### Planned Processing
-
-* convert interactions into session-based format
-* preserve chronological order within sessions
-* prepare data for session-based recommendation experiments
+- evaluation of time-sensitive recommendation  
+- comparison with Yoochoose (different domain behavior)
 
 ---
 
@@ -260,66 +248,58 @@ Expected core fields after preprocessing:
 
 ### Purpose
 
-Used as an additional news recommendation dataset to study temporal dynamics and news recommendation behavior.
+Additional dataset for news recommendation.
 
-### Source
+---
 
-Adressa dataset for news recommendation
+### Role
 
-### Local Path
-
-`data/raw/adressa/`
-
-### Expected Main Files
-
-Depending on the downloaded subset/version, interaction logs and article metadata
-
-### Relevant Fields
-
-Expected core fields after preprocessing:
-* `user_id` or session-level identifier
-* `item_id`
-* `timestamp`
-
-### Role in Thesis
-
-* additional news recommendation domain
-* comparison with Globo in a temporally sensitive recommendation setting
-* optional complementary dataset for session-aware and time-aware news evaluation
-
-### Planned Processing
-
-* convert raw interaction logs into a session-oriented or temporally ordered interaction format
-* preserve strong time information for later evaluation
-* adapt the dataset to the session-based recommendation pipeline where feasible
+- complementary dataset for temporal and session-based analysis  
+- optional extension for robustness evaluation  
 
 ---
 
 # 3. General Notes
 
-### Current Experimental Focus
+## Experimental Setup
 
-The project currently has two main evaluation tracks:
+The project is structured into two main phases:
 
-* **Top-N recommendation**
-  * MovieLens 20M
-  * Amazon Reviews
+### Phase 1 – Prototypical Pipeline
 
-* **Session-based recommendation**
-  * Yoochoose
-  * Globo
-  * Adressa
+- initial implementation of:
+  - MostPop
+  - RecentPop
+  - DecayPop  
+- custom evaluation pipeline  
+- used for validation of model logic and baseline comparisons  
 
-### Common Design Principle
+---
 
-All datasets are intended to be integrated into a reproducible experimental pipeline with:
+### Phase 2 – RecBole-Based Framework
 
-* explicit preprocessing steps
-* documented train/test splitting strategy
-* consistent recommendation output format
-* shared ranking-based evaluation where applicable
+- full integration of models into RecBole  
+- implementation of custom models:
+  - MostPop
+  - RecentPop
+  - DecayPop  
+- standardized evaluation within RecBole  
+- comparison with built-in models (e.g., BPR)
 
-### Current Implementation Status
+---
 
-At the moment, the Top-N pipeline is already implemented and tested on MovieLens.
-The session-based datasets are part of the planned next stages of the thesis.
+## Design Principles
+
+- unified data representation (`user_id`, `item_id`, `timestamp`)
+- chronological evaluation
+- reproducibility
+- framework-based extensibility
+
+---
+
+## Current Status
+
+- Top-N pipeline implemented and validated  
+- Amazon dataset integrated  
+- RecBole integration started  
+- transition towards fully framework-based implementation ongoing  

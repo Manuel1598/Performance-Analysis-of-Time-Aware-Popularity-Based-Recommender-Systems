@@ -1,6 +1,6 @@
 import pandas as pd
 
-from src.models.base import BaseRecommender
+from src.prototype.models.base import BaseRecommender
 
 
 class MostPopRecommender(BaseRecommender):

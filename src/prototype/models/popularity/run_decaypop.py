@@ -1,12 +1,11 @@
 from pathlib import Path
-import pandas as pd
 
-from src.utils.io import load_data, save_recommendations, REQUIRED_INTERACTION_COLUMNS
-from src.utils.recommendation import (
+from src.prototype.utils.io import load_data, save_recommendations, REQUIRED_INTERACTION_COLUMNS
+from src.prototype.utils.recommendation import (
     build_user_seen_items,
     generate_model_recommendations_for_test_users,
 )
-from src.models.popularity.mostpop import MostPopRecommender
+from src.prototype.models.popularity.decaypop import DecayPopRecommender
 
 
 DATASET_CONFIGS = {
@@ -14,40 +13,34 @@ DATASET_CONFIGS = {
         "label": "MovieLens",
         "train_file": "data/processed/movielens_train.csv",
         "test_file": "data/processed/movielens_test.csv",
-        "output_file": "results/movielens_mostpop_recommendations.csv",
+        "output_file": "results_prototype/movielens_decaypop_recommendations.csv",
     },
     "amazon": {
         "label": "Amazon",
         "train_file": "data/processed/amazon_train.csv",
         "test_file": "data/processed/amazon_test.csv",
-        "output_file": "results/amazon_mostpop_recommendations.csv",
+        "output_file": "results_prototype/amazon_decaypop_recommendations.csv",
     },
 }
 
 
 def run_for_dataset(dataset_name: str) -> None:
     if dataset_name not in DATASET_CONFIGS:
-        raise ValueError(
-            f"Unknown dataset: {dataset_name}. "
-            f"Available datasets: {list(DATASET_CONFIGS.keys())}"
-        )
+        raise ValueError(f"Unknown dataset: {dataset_name}")
 
     project_root = Path(__file__).resolve().parents[3]
     config = DATASET_CONFIGS[dataset_name]
 
-    train_file = project_root / config["train_file"]
-    test_file = project_root / config["test_file"]
-    output_file = project_root / config["output_file"]
-
     train_df = load_data(
-        train_file,
+        project_root / config["train_file"],
         f"{config['label']} training data",
-        required_columns=REQUIRED_INTERACTION_COLUMNS
+        required_columns=REQUIRED_INTERACTION_COLUMNS,
     )
+
     test_df = load_data(
-        test_file,
+        project_root / config["test_file"],
         f"{config['label']} test data",
-        required_columns=REQUIRED_INTERACTION_COLUMNS
+        required_columns=REQUIRED_INTERACTION_COLUMNS,
     )
 
     print(f"\nDataset: {config['label']}")
@@ -60,42 +53,50 @@ def run_for_dataset(dataset_name: str) -> None:
 
     user_seen = build_user_seen_items(train_df)
 
-    model = MostPopRecommender()
+    model = DecayPopRecommender(decay_lambda=1e-7)
     model.fit(train_df)
 
-    print("\nTop 10 most popular items:")
-    print(model.popularity_df.head(10))
+    sample_row = test_df.iloc[0]
+    sample_user_id = sample_row["user_id"]
+    sample_timestamp = int(sample_row["timestamp"])
+
+    print(f"\nSample user: {sample_user_id}")
+    print(f"Reference timestamp (t0): {sample_timestamp}")
+
+    sample_recommendations = model.recommend(
+        user_id=sample_user_id,
+        user_seen=user_seen,
+        top_k=10,
+        reference_timestamp=sample_timestamp,
+    )
+
+    print(f"\nDecayPop recommendations for user {sample_user_id}:")
+    print(sample_recommendations)
 
     all_recommendations = generate_model_recommendations_for_test_users(
         model=model,
         test_df=test_df,
         user_seen=user_seen,
-        use_reference_timestamp=False,
+        use_reference_timestamp=True,
         top_k=10,
     )
 
-    sample_user_ids = list(all_recommendations.keys())[:3]
-    for user_id in sample_user_ids:
-        print(f"\nSample recommendations for user {user_id}:")
-        print(all_recommendations[user_id])
+    print(f"\nGenerated recommendations for {len(all_recommendations):,} users.")
 
     recommendations_df = save_recommendations(
         recommendations=all_recommendations,
-        output_file=output_file,
+        output_file=project_root / config["output_file"],
     )
 
     print("\nRecommendation output summary:")
-    print(f"Saved file: {output_file}")
     print(f"Rows saved: {len(recommendations_df):,}")
     print("\nPreview:")
     print(recommendations_df.head(10))
 
 
 def main() -> None:
-
     run_for_dataset("movielens")
     run_for_dataset("amazon")
-
 
 
 if __name__ == "__main__":

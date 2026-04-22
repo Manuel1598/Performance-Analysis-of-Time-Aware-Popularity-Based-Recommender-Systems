@@ -1,7 +1,7 @@
 from pathlib import Path
 import pandas as pd
 
-from src.utils.io import load_data, REQUIRED_INTERACTION_COLUMNS
+from src.prototype.utils.io import load_data, REQUIRED_INTERACTION_COLUMNS
 
 
 def split_leave_one_out(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:

@@ -1,36 +1,38 @@
-import numpy as np
 import pandas as pd
 
-from src.models.base import BaseRecommender
+from src.prototype.models.base import BaseRecommender
 
 
-class DecayPopRecommender(BaseRecommender):
-    def __init__(self, decay_lambda: float = 1e-7) -> None:
-        self.decay_lambda = decay_lambda
+class RecentPopRecommender(BaseRecommender):
+    def __init__(self, window_days: int = 30) -> None:
+        self.window_days = window_days
         self.train_df: pd.DataFrame | None = None
 
     def fit(self, train_df: pd.DataFrame) -> None:
         self.train_df = train_df
 
-    def compute_decay_popularity(
+    def compute_recent_popularity(
         self,
         reference_timestamp: int
     ) -> pd.DataFrame:
         if self.train_df is None:
             raise ValueError("Model has not been fitted yet. Call fit() first.")
 
-        print(f"Computing DecayPop popularity for reference time {reference_timestamp}...")
+        print(f"Computing RecentPop popularity for reference time {reference_timestamp}...")
 
-        df = self.train_df[self.train_df["timestamp"] <= reference_timestamp].copy()
+        window_seconds = self.window_days * 24 * 60 * 60
+        window_start = reference_timestamp - window_seconds
 
-        df["time_diff"] = reference_timestamp - df["timestamp"]
-        df["weight"] = np.exp(-self.decay_lambda * df["time_diff"])
+        recent_df = self.train_df[
+            (self.train_df["timestamp"] >= window_start) &
+            (self.train_df["timestamp"] <= reference_timestamp)
+        ].copy()
 
         popularity_df = (
-            df.groupby("item_id")["weight"]
-            .sum()
-            .reset_index()
-            .sort_values(by="weight", ascending=False)
+            recent_df.groupby("item_id")
+            .size()
+            .reset_index(name="interaction_count")
+            .sort_values(by="interaction_count", ascending=False)
             .reset_index(drop=True)
         )
 
@@ -44,9 +46,9 @@ class DecayPopRecommender(BaseRecommender):
         reference_timestamp: int | None = None,
     ) -> list[int]:
         if reference_timestamp is None:
-            raise ValueError("DecayPop requires a reference_timestamp.")
+            raise ValueError("RecentPop requires a reference_timestamp.")
 
-        popularity_df = self.compute_decay_popularity(reference_timestamp)
+        popularity_df = self.compute_recent_popularity(reference_timestamp)
 
         seen_items = user_seen.get(user_id, set())
         recommendations = []

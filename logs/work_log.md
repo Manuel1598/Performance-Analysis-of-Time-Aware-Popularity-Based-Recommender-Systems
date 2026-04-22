@@ -426,3 +426,293 @@ Using the same preprocessing and chronological split strategy ensures methodolog
 This step extends the Top-N recommendation pipeline from a single dataset to a multi-dataset setup.
 By generalizing the runner and evaluation structure, the same baseline model can now be applied consistently across domains.
 This is important for testing whether the findings from MovieLens also generalize to Amazon.
+
+
+
+
+
+## 2026-04-21 – Generalized MostPop pipeline for MovieLens and Amazon
+
+* Refactored the MostPop runner into a shared multi-dataset version  
+* Added dataset-specific configuration for MovieLens and Amazon  
+* Extended the shared recommendation pipeline to support both numeric and string-based user/item identifiers  
+* Verified that MovieLens MostPop still reproduces the same results as before  
+* Ran MostPop on the Amazon Video Games dataset using the same Top-N evaluation setup  
+* Generated recommendation outputs and evaluation results for both datasets  
+
+### Results
+
+* MovieLens MostPop results remained unchanged after refactoring  
+* Amazon MostPop produced substantially lower ranking accuracy than MovieLens  
+* Amazon MostPop also showed extremely low Coverage, indicating a very strong concentration on a small number of popular items  
+
+### Interpretation
+
+The results confirm that:
+
+* popularity-based recommendations behave differently across domains  
+* Amazon exhibits a stronger popularity bias and higher sparsity  
+* simple global popularity is less effective in large-scale, sparse datasets  
+
+---
+
+### Strategic Update
+
+Following a project discussion, the overall direction of the thesis was refined:
+
+* Instead of maintaining a standalone recommendation pipeline, the project will transition to a **framework-based approach using RecBole**  
+* All models, including MostPop, RecentPop, and DecayPop, will be **re-implemented as native RecBole models**  
+* RecBole will serve as the central framework for training, evaluation, and comparison  
+
+---
+
+### Role of This Step
+
+This implementation represents the **final stage of the prototype pipeline**:
+
+* validated correctness of the MostPop implementation  
+* ensured consistency across multiple datasets  
+* confirmed reproducibility of results  
+* provided a reference baseline for later RecBole integration  
+
+---
+
+### Next Steps
+
+* start implementation of custom RecBole models  
+* implement MostPop as first RecBole-native model  
+* gradually migrate RecentPop and DecayPop into RecBole  
+* shift evaluation from custom pipeline to RecBole framework  
+
+
+
+
+
+## 2026-04-21 – First successful RecBole integration of MostPop
+
+* Implemented MostPop as a native RecBole model (`MostPopRecBole`)
+* Followed the RecBole model interface by implementing:
+  * `__init__`
+  * `calculate_loss`
+  * `predict`
+  * `full_sort_predict`
+* Adapted the model to work without trainable parameters by introducing a minimal dummy parameter for compatibility with the RecBole optimizer
+* Built a first RecBole runner using:
+  * `Config`
+  * `create_dataset`
+  * `data_preparation`
+  * `Trainer`
+* Successfully loaded the MovieLens dataset in RecBole format (`.inter`)
+* Executed a full RecBole pipeline run including training and evaluation
+* Resolved compatibility issues related to:
+  * dataset path handling
+  * PyTorch checkpoint loading
+  * non-trainable model structure
+
+### Results
+
+* RecBole successfully executed the full pipeline with the custom MostPop model  
+* Evaluation metrics were produced using RecBole’s internal evaluation framework  
+* The model behaves as expected within the RecBole environment  
+
+---
+
+### Observations
+
+* The obtained evaluation results differ from the previous standalone implementation  
+* This is due to differences in:
+  * data splitting strategy (RecBole default vs. chronological leave-one-out)  
+  * evaluation setup  
+* The current RecBole configuration uses a random split, which is not aligned with the thesis methodology  
+
+---
+
+### Interpretation
+
+This step confirms that:
+
+* custom popularity-based models can be fully integrated into RecBole  
+* RecBole can be used as the central framework for model execution and evaluation  
+* additional work is required to align the evaluation setup with the intended experimental design  
+
+---
+
+### Role of This Step
+
+This step represents the **first successful transition from the prototype pipeline to the RecBole-based framework**:
+
+* validates the technical feasibility of custom model integration  
+* establishes the foundation for all further RecBole-based experiments  
+* enables direct comparison with built-in RecBole models  
+
+---
+
+### Methodological Note
+
+The final experimental setup does not aim to exactly replicate the earlier standalone leave-one-out pipeline.  
+Instead, the project now adopts RecBole’s standardized data preparation and evaluation workflow as the main experimental framework.  
+The earlier standalone implementation remains relevant as a prototype and validation step, while the final comparison is conducted under the unified RecBole setup.
+
+---
+
+### Next Steps
+
+* adapt RecBole evaluation to match chronological leave-one-out splitting  
+* ensure comparability with previous experimental results  
+* extend RecBole implementation to:
+  * RecentPop  
+  * DecayPop  
+* integrate additional model-based baselines (BPR, NeuMF)  
+
+
+
+
+
+
+## 2026-04-22 – Implementation of RecentPop as a RecBole-native model
+
+* Implemented RecentPop as a custom model within the RecBole framework (`RecentPopRecBole`)
+* Extended the MostPop implementation by introducing a time-based filtering mechanism
+* Added a configurable time window parameter (`window_days`) to restrict interactions to recent data
+* Used the maximum timestamp in the dataset as a global reference point for defining the recent interaction window
+* Filtered interactions to include only those within the specified time window before computing item popularity
+* Maintained compatibility with RecBole's training pipeline by including a dummy trainable parameter
+* Implemented all required RecBole model interface methods:
+  * `__init__`
+  * `calculate_loss`
+  * `predict`
+  * `full_sort_predict`
+* Created a dedicated RecBole runner (`run_recentpop_recbole.py`) following the standardized pipeline:
+  * `Config`
+  * `create_dataset`
+  * `data_preparation`
+  * `Trainer.fit`
+  * `Trainer.evaluate`
+* Successfully executed the full RecBole pipeline on the MovieLens dataset
+
+---
+
+### Results
+
+* The RecentPop model executed successfully within the RecBole framework
+* Evaluation metrics were produced using RecBole’s internal evaluation pipeline
+* Compared to MostPop, the RecentPop model achieved lower ranking performance in the current setup:
+  * lower Hit@k
+  * lower NDCG@k
+  * lower MRR@k
+
+---
+
+### Observations
+
+* The current implementation uses a **global time window**, defined relative to the maximum timestamp in the dataset
+* This approach differs from more fine-grained temporal models that adapt the time window per user or per interaction
+* Due to the global filtering, only a subset of interactions contributes to the popularity estimation
+* This may reduce robustness, especially in sparse datasets such as MovieLens
+
+---
+
+### Interpretation
+
+The results suggest that:
+
+* a simple global RecentPop formulation may not outperform static popularity (MostPop) in all settings
+* the effectiveness of time-aware popularity models strongly depends on how temporal context is defined
+* the interaction between time-awareness and the evaluation setup (e.g., random split vs. chronological behavior) plays a significant role
+
+---
+
+### Role of This Step
+
+This step represents the **first time-aware extension of popularity-based models within RecBole**:
+
+* validates that temporal extensions can be integrated into the framework
+* establishes a foundation for more advanced time-aware models
+* enables systematic comparison between:
+  * static popularity (MostPop)
+  * time-window-based popularity (RecentPop)
+
+---
+
+### Next Steps
+
+* implement DecayPop as a RecBole-native model
+* compare MostPop, RecentPop, and DecayPop under identical RecBole settings
+* refine temporal modeling strategies (e.g., dynamic windows or user-specific time references)
+* analyze the impact of time-awareness on recommendation performance and popularity bias
+
+
+
+## 2026-04-22 – Implementation of DecayPop as a RecBole-native model
+
+* Implemented DecayPop as a custom model within the RecBole framework (`DecayPopRecBole`)
+* Extended the popularity-based modeling approach by introducing a continuous time-decay function
+* Replaced the hard cutoff of RecentPop with an exponential decay weighting scheme
+* Defined the decay function as:
+
+  weight = exp(-λ * Δt)
+
+  where:
+  * Δt is the time difference between an interaction and the most recent timestamp
+  * λ is a configurable decay parameter (`decay_lambda`)
+
+* Used the maximum timestamp in the dataset as a global reference point for computing time differences
+* Weighted all interactions based on recency instead of discarding older interactions
+* Maintained compatibility with RecBole’s training pipeline by including a dummy trainable parameter
+* Implemented all required RecBole model interface methods:
+  * `__init__`
+  * `calculate_loss`
+  * `predict`
+  * `full_sort_predict`
+* Created a dedicated RecBole runner (`run_decaypop_recbole.py`)
+* Successfully executed the full RecBole pipeline on the MovieLens dataset
+
+---
+
+### Results
+
+* The DecayPop model executed successfully within the RecBole framework
+* Evaluation metrics were produced using RecBole’s internal evaluation pipeline
+* Results will be compared against:
+  * MostPop (static popularity)
+  * RecentPop (time-window-based popularity)
+
+---
+
+### Observations
+
+* Unlike RecentPop, DecayPop considers all interactions but assigns lower weights to older ones
+* This results in a smoother and more stable popularity estimation
+* The model avoids abrupt changes caused by hard time windows
+* The behavior of the model is highly sensitive to the decay parameter λ
+
+---
+
+### Interpretation
+
+The DecayPop formulation provides a more flexible representation of temporal dynamics:
+
+* it captures gradual changes in item popularity
+* it balances long-term popularity and short-term trends
+* it may perform more robustly than RecentPop in sparse or long-tailed datasets
+
+---
+
+### Role of This Step
+
+This step completes the implementation of the three core popularity-based models within RecBole:
+
+* MostPop (static)
+* RecentPop (window-based)
+* DecayPop (time-decay-based)
+
+This enables a fully consistent and framework-based comparison of different popularity formulations.
+
+---
+
+### Next Steps
+
+* compare MostPop, RecentPop, and DecayPop under identical RecBole settings
+* analyze the effect of time-awareness on recommendation performance
+* investigate the impact of decay parameter choices
+* extend experiments to additional datasets (e.g., Amazon)

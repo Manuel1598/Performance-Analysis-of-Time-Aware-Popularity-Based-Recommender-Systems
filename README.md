@@ -1,9 +1,9 @@
 # Performance Analysis of Time-Aware Popularity-Based Recommender Systems
 
-**Master Thesis Project**
-Author: Manuel Weilguni
-University: AAU
-Year: 2026
+**Master Thesis Project**  
+Author: Manuel Weilguni  
+University: AAU  
+Year: 2026  
 
 ---
 
@@ -13,23 +13,27 @@ This repository contains the implementation and experiments for the master thesi
 
 **"Performance Analysis of Time-Aware Popularity-Based Recommender Systems"**
 
-The goal of this work is to analyze the performance of popularity-based recommendation methods, with a particular focus on **temporal dynamics**, **trendiness**, and their impact on recommendation quality.
+The goal of this work is to analyze the performance of popularity-based recommendation methods, with a particular focus on:
 
-The project considers both **Top-N recommendation scenarios** and **sequential (session-based) recommendation settings**, enabling a comprehensive comparison across different recommendation tasks and domains.
+- temporal dynamics  
+- trendiness  
+- popularity bias  
+
+The project follows a **framework-based approach using RecBole**, where both existing and custom models are implemented and evaluated in a unified environment.
 
 ---
 
 # Research Motivation
 
-Popularity-based recommender systems are widely used as baseline methods in research due to their simplicity and strong performance.
+Popularity-based recommender systems are widely used as baselines due to their simplicity and strong empirical performance.
 
-The standard baseline, **MostPop**, ranks items based on their total number of interactions in the training data. However, this approach ignores that:
+The standard baseline, **MostPop**, ranks items based on global interaction frequency. However, this approach ignores that:
 
-* popularity changes over time
-* items may only be popular within specific time periods
-* evaluation without temporal awareness can be misleading
+- popularity evolves over time  
+- items may only be relevant within specific time windows  
+- evaluation without temporal awareness can lead to misleading conclusions  
 
-This thesis revisits popularity-based recommendation and investigates whether **time-aware models provide better and more realistic baselines**, especially when compared to more advanced recommender systems.
+This thesis revisits popularity-based recommendation and investigates whether **time-aware extensions provide stronger and more realistic baselines**, especially when compared to model-based methods.
 
 ---
 
@@ -37,29 +41,27 @@ This thesis revisits popularity-based recommendation and investigates whether **
 
 The main objectives of this thesis are:
 
-* Implement and analyze popularity-based recommendation models:
+- Implement popularity-based models:
+  - MostPop  
+  - RecentPop  
+  - DecayPop  
 
-  * MostPop
-  * RecentPop
-  * DecayPop
+- Integrate these models as **custom implementations within the RecBole framework**
 
-* Investigate **temporal dynamics and trendiness** in recommendation systems
+- Compare them with model-based recommender systems:
+  - BPR  
+  - NeuMF  
+  - SVD  
 
-* Compare popularity-based approaches with **model-based recommender systems**:
+- Extend the analysis to **session-based recommendation**:
+  - GRU4Rec  
 
-  * BPR
-  * NeuMF
-  * SVD
+- Analyze:
+  - temporal effects  
+  - popularity bias  
+  - fairness aspects  
 
-* Extend the analysis to **sequential recommendation models**:
-
-  * GRU4Rec
-
-* Perform **systematic performance evaluation and comparison**
-
-* Analyze the impact of **popularity bias and fairness**
-
-* Evaluate whether findings generalize across **multiple datasets and domains**
+- Evaluate generalization across multiple datasets and domains  
 
 ---
 
@@ -69,137 +71,158 @@ The main objectives of this thesis are:
 
 Sub-questions:
 
-* Do time-aware popularity models improve recommendation accuracy?
-* How do popularity-based methods compare to model-based approaches?
-* How do results differ between Top-N and sequential recommendation settings?
-* How does popularity bias influence recommendation outcomes?
-* Do results generalize across different datasets and domains?
-
----
-
-# Datasets
-
-The project uses multiple datasets to ensure cross-domain validity.
-
-## Top-N Recommendation Datasets
-
-* **MovieLens (1M / 20M)**
-* **Amazon Reviews**
-
-## Sequential / Session-Based Datasets
-
-* **Yoochoose (RecSys Challenge 2015)**
-* **Globo dataset (news recommendation)**
-* Optional: **Adressa dataset**
+- Do time-aware popularity models improve ranking performance?  
+- How do they compare to model-based approaches?  
+- How does popularity bias influence results?  
+- Do findings generalize across datasets?  
+- How do results differ between Top-N and session-based settings?  
 
 ---
 
 # Methodology
 
-The experiments follow a reproducible pipeline:
+The project follows a two-phase approach:
 
-1. Data preprocessing (user_id, item_id, timestamp)
-2. Chronological data splitting (leave-one-out for Top-N tasks)
-3. Implementation of popularity-based models
-4. Generation of recommendation outputs
-5. Evaluation using ranking metrics
-6. Comparison with advanced models using RecBole
+## Phase 1 – Prototype Pipeline
 
-The setup ensures **time-aware evaluation**, avoids **future data leakage**, and supports consistent comparison across datasets.
+- standalone implementation of popularity-based models  
+- custom evaluation pipeline  
+- validation of model logic and reproducibility  
 
-Additionally, **hyperparameter tuning** is performed for all models to ensure fair comparison.
+## Phase 2 – RecBole-Based Framework (Main System)
+
+- integration of all models into RecBole  
+- implementation of custom models:
+  - MostPop  
+  - RecentPop  
+  - DecayPop  
+
+- standardized training and evaluation  
+- direct comparison with RecBole baselines  
+
+---
+
+# Datasets
+
+## Top-N Recommendation
+
+- MovieLens (primary benchmark)  
+- Amazon Reviews (cross-domain validation)  
+
+## Session-Based Recommendation
+
+- Yoochoose (e-commerce)  
+- Globo (news recommendation)  
+- Adressa (optional news dataset)  
 
 ---
 
 # Implemented Models
 
-## Popularity-Based Models
+## Custom Models (RecBole)
 
-### MostPop
+- MostPop  
+- RecentPop  
+- DecayPop  
 
-Ranks items based on global popularity in the training data.
-
-### RecentPop
-
-Ranks items based on interactions within a recent time window.
-
-### DecayPop
-
-Uses a time-decay function to weight recent interactions more strongly.
+These models are implemented as **native RecBole models**.
 
 ---
 
-## Model-Based Baselines (via RecBole)
+## Baselines (RecBole)
 
-* BPR (Bayesian Personalized Ranking)
-* NeuMF (Neural Matrix Factorization)
-* SVD (Matrix Factorization baseline)
-* GRU4Rec (session-based recommendation)
+- BPR (Bayesian Personalized Ranking)  
+- NeuMF (Neural Matrix Factorization)  
+- SVD  
+- GRU4Rec (session-based)  
 
 ---
 
-# Evaluation Metrics
+# Evaluation
 
-The models are evaluated using standard ranking metrics:
+Evaluation is performed using RecBole’s ranking-based metrics:
 
-* NDCG@k
-* MRR@k
+- NDCG@k  
+- MRR@k  
 
-Additionally, the project analyzes:
+Additionally analyzed:
 
-* popularity distribution
-* popularity bias
-* fairness aspects
+- coverage  
+- popularity bias  
+- distribution of recommended items  
+
+---
+
+# Project Structure
+
+The project is organized into:
+
+- `src/` → source code  
+- `data/` → datasets  
+- `results/` → outputs and metrics  
+- `docs/` → documentation  
+- `logs/` → work log  
+
+The codebase separates:
+
+- prototype implementation (exploratory phase)  
+- RecBole-based implementation (final system)  
 
 ---
 
 # Reproducibility
 
-All steps of the project are documented and reproducible:
+The project is designed for full reproducibility:
 
-* preprocessing pipeline
-* dataset splits
-* model outputs
-* evaluation results
+- documented preprocessing  
+- deterministic data splits  
+- unified evaluation within RecBole  
 
 See:
 
-* `logs/` (work log)
-* `data/processed/`
-* `results/`
+- `docs/`  
+- `logs/`  
+- `data/`  
 
 ---
 
 # Current Status
 
-The following components are already implemented:
+Completed:
 
-* MovieLens preprocessing pipeline
-* Chronological leave-one-out split
-* MostPop baseline
-* Evaluation pipeline (HR, NDCG)
-* Initial results consistent with prior literature
-* Implement RecentPop and DecayPop
+- prototype pipeline for Top-N recommendation  
+- implementation of MostPop, RecentPop, DecayPop  
+- integration of MovieLens and Amazon datasets  
+
+Ongoing:
+
+- RecBole integration of custom models  
+- implementation of MostPop as first RecBole-native model  
 
 ---
 
 # Next Steps
 
-* Integrate RecBole models (BPR, NeuMF, SVD, GRU4Rec)
-* Extend experiments to additional datasets
-* Perform hyperparameter tuning
-* Compare Top-N and sequential scenarios
-* Analyze trendiness and popularity bias
+- implement MostPop in RecBole  
+- extend to RecentPop and DecayPop  
+- integrate additional RecBole baselines  
+- extend to session-based recommendation  
+- perform systematic hyperparameter tuning  
 
 ---
 
 # Summary
 
-This project bridges simple popularity-based recommendation methods and modern recommender systems by combining:
+This project transitions from a standalone experimental setup to a **framework-based evaluation using RecBole**, enabling:
 
-* reproducible experimentation
-* time-aware modeling
-* cross-domain evaluation
-* comparison across Top-N and sequential scenarios
+- standardized comparison  
+- reproducibility  
+- extensibility  
 
-The goal is to better understand the role of **popularity, time, and model complexity in recommender systems**, and to provide a more realistic and comprehensive evaluation framework.
+The goal is to better understand the role of:
+
+- popularity  
+- time  
+- model complexity  
+
+in modern recommender systems.

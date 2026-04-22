@@ -9,7 +9,7 @@ from recbole.data import create_dataset, data_preparation
 from recbole.model.general_recommender import BPR
 from recbole.trainer import Trainer
 
-from src.models.base import BaseRecommender
+from src.prototype.models.base import BaseRecommender
 
 
 class RecBoleBPRRecommender(BaseRecommender):

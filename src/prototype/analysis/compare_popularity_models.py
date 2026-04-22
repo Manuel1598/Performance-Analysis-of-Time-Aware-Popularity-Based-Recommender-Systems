@@ -15,16 +15,16 @@ def load_metrics(file_path: Path, model_name: str) -> pd.DataFrame:
 def main() -> None:
     project_root = Path(__file__).resolve().parents[2]
 
-    mostpop_file = project_root / "results" / "movielens_mostpop_metrics.csv"
-    recentpop_file = project_root / "results" / "movielens_recentpop_metrics.csv"
-    decaypop_file = project_root / "results" / "movielens_decaypop_metrics.csv"
-    bpr_file = project_root / "results" / "movielens_bpr_metrics.csv"
+    mostpop_file = project_root / "results_prototype" / "movielens_mostpop_metrics.csv"
+    recentpop_file = project_root / "results_prototype" / "movielens_recentpop_metrics.csv"
+    decaypop_file = project_root / "results_prototype" / "movielens_decaypop_metrics.csv"
+    bpr_file = project_root / "results_prototype" / "movielens_bpr_metrics.csv"
 
-    output_table = project_root / "results" / "analysis_results" / "movielens_topn_model_comparison.csv"
-    output_plot_hr10 = project_root / "results" / "analysis_results" / "movielens_hr10_comparison.png"
-    output_plot_ndcg10 = project_root / "results" / "analysis_results" / "movielens_ndcg10_comparison.png"
-    output_plot_mrr10 = project_root / "results" / "analysis_results" / "movielens_mrr10_comparison.png"
-    output_plot_coverage = project_root / "results" / "analysis_results" / "movielens_coverage_comparison.png"
+    output_table = project_root / "results_prototype" / "analysis_results" / "movielens_topn_model_comparison.csv"
+    output_plot_hr10 = project_root / "results_prototype" / "analysis_results" / "movielens_hr10_comparison.png"
+    output_plot_ndcg10 = project_root / "results_prototype" / "analysis_results" / "movielens_ndcg10_comparison.png"
+    output_plot_mrr10 = project_root / "results_prototype" / "analysis_results" / "movielens_mrr10_comparison.png"
+    output_plot_coverage = project_root / "results_prototype" / "analysis_results" / "movielens_coverage_comparison.png"
 
     mostpop_df = load_metrics(mostpop_file, "MostPop")
     recentpop_df = load_metrics(recentpop_file, "RecentPop")
