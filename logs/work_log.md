@@ -640,3 +640,79 @@ This step represents the **first time-aware extension of popularity-based models
 * compare MostPop, RecentPop, and DecayPop under identical RecBole settings
 * refine temporal modeling strategies (e.g., dynamic windows or user-specific time references)
 * analyze the impact of time-awareness on recommendation performance and popularity bias
+
+
+
+## 2026-04-22 – Implementation of DecayPop as a RecBole-native model
+
+* Implemented DecayPop as a custom model within the RecBole framework (`DecayPopRecBole`)
+* Extended the popularity-based modeling approach by introducing a continuous time-decay function
+* Replaced the hard cutoff of RecentPop with an exponential decay weighting scheme
+* Defined the decay function as:
+
+  weight = exp(-λ * Δt)
+
+  where:
+  * Δt is the time difference between an interaction and the most recent timestamp
+  * λ is a configurable decay parameter (`decay_lambda`)
+
+* Used the maximum timestamp in the dataset as a global reference point for computing time differences
+* Weighted all interactions based on recency instead of discarding older interactions
+* Maintained compatibility with RecBole’s training pipeline by including a dummy trainable parameter
+* Implemented all required RecBole model interface methods:
+  * `__init__`
+  * `calculate_loss`
+  * `predict`
+  * `full_sort_predict`
+* Created a dedicated RecBole runner (`run_decaypop_recbole.py`)
+* Successfully executed the full RecBole pipeline on the MovieLens dataset
+
+---
+
+### Results
+
+* The DecayPop model executed successfully within the RecBole framework
+* Evaluation metrics were produced using RecBole’s internal evaluation pipeline
+* Results will be compared against:
+  * MostPop (static popularity)
+  * RecentPop (time-window-based popularity)
+
+---
+
+### Observations
+
+* Unlike RecentPop, DecayPop considers all interactions but assigns lower weights to older ones
+* This results in a smoother and more stable popularity estimation
+* The model avoids abrupt changes caused by hard time windows
+* The behavior of the model is highly sensitive to the decay parameter λ
+
+---
+
+### Interpretation
+
+The DecayPop formulation provides a more flexible representation of temporal dynamics:
+
+* it captures gradual changes in item popularity
+* it balances long-term popularity and short-term trends
+* it may perform more robustly than RecentPop in sparse or long-tailed datasets
+
+---
+
+### Role of This Step
+
+This step completes the implementation of the three core popularity-based models within RecBole:
+
+* MostPop (static)
+* RecentPop (window-based)
+* DecayPop (time-decay-based)
+
+This enables a fully consistent and framework-based comparison of different popularity formulations.
+
+---
+
+### Next Steps
+
+* compare MostPop, RecentPop, and DecayPop under identical RecBole settings
+* analyze the effect of time-awareness on recommendation performance
+* investigate the impact of decay parameter choices
+* extend experiments to additional datasets (e.g., Amazon)
