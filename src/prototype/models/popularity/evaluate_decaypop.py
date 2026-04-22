@@ -10,15 +10,15 @@ DATASET_CONFIGS = {
         "label": "MovieLens",
         "train_file": "data/processed/movielens_train.csv",
         "test_file": "data/processed/movielens_test.csv",
-        "recommendations_file": "results/movielens_decaypop_recommendations.csv",
-        "output_file": "results/movielens_decaypop_metrics.csv",
+        "recommendations_file": "results_prototype/movielens_decaypop_recommendations.csv",
+        "output_file": "results_prototype/movielens_decaypop_metrics.csv",
     },
     "amazon": {
         "label": "Amazon",
         "train_file": "data/processed/amazon_train.csv",
         "test_file": "data/processed/amazon_test.csv",
-        "recommendations_file": "results/amazon_decaypop_recommendations.csv",
-        "output_file": "results/amazon_decaypop_metrics.csv",
+        "recommendations_file": "results_prototype/amazon_decaypop_recommendations.csv",
+        "output_file": "results_prototype/amazon_decaypop_metrics.csv",
     },
 }
 
@@ -54,7 +54,7 @@ def evaluate_for_dataset(dataset_name: str) -> None:
         model_name="DecayPop"
     )
 
-    print("\nEvaluation results:")
+    print("\nEvaluation results_prototype:")
     print(f"Evaluated users: {results['evaluated_users']:,}")
     print(f"HR@5: {results['HR@5']:.4f}")
     print(f"HR@10: {results['HR@10']:.4f}")

@@ -10,15 +10,15 @@ DATASET_CONFIGS = {
         "label": "MovieLens",
         "train_file": "data/processed/movielens_train.csv",
         "test_file": "data/processed/movielens_test.csv",
-        "recommendations_file": "results/movielens_recentpop_recommendations.csv",
-        "output_file": "results/movielens_recentpop_metrics.csv",
+        "recommendations_file": "results_prototype/movielens_recentpop_recommendations.csv",
+        "output_file": "results_prototype/movielens_recentpop_metrics.csv",
     },
     "amazon": {
         "label": "Amazon",
         "train_file": "data/processed/amazon_train.csv",
         "test_file": "data/processed/amazon_test.csv",
-        "recommendations_file": "results/amazon_recentpop_recommendations.csv",
-        "output_file": "results/amazon_recentpop_metrics.csv",
+        "recommendations_file": "results_prototype/amazon_recentpop_recommendations.csv",
+        "output_file": "results_prototype/amazon_recentpop_metrics.csv",
     },
 }
 
@@ -48,7 +48,7 @@ def evaluate_for_dataset(dataset_name: str) -> None:
         model_name="RecentPop",
     )
 
-    print("\nEvaluation results:")
+    print("\nEvaluation results_prototype:")
     for k, v in results.items():
         if isinstance(v, float):
             print(f"{k}: {v:.4f}")

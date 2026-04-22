@@ -14,7 +14,7 @@ def main() -> None:
     train_file = project_root / "data" / "processed" / "movielens_train.csv"
     test_file = project_root / "data" / "processed" / "movielens_test.csv"
     recbole_data_parent = project_root / "data" / "recbole"
-    output_file = project_root / "results" / "movielens_bpr_recommendations.csv"
+    output_file = project_root / "results_prototype" / "movielens_bpr_recommendations.csv"
 
     train_df = load_data(
         train_file,

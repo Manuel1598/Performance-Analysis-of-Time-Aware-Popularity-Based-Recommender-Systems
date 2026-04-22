@@ -10,8 +10,8 @@ def main() -> None:
 
     train_file = project_root / "data" / "processed" / "movielens_train.csv"
     test_file = project_root / "data" / "processed" / "movielens_test.csv"
-    recommendations_file = project_root / "results" / "movielens_bpr_recommendations.csv"
-    output_file = project_root / "results" / "movielens_bpr_metrics.csv"
+    recommendations_file = project_root / "results_prototype" / "movielens_bpr_recommendations.csv"
+    output_file = project_root / "results_prototype" / "movielens_bpr_metrics.csv"
 
     train_df = load_data(train_file, "MovieLens training data")
     test_df = load_data(test_file, "MovieLens test data")
@@ -33,7 +33,7 @@ def main() -> None:
         model_name="BPR",
     )
 
-    print("\nEvaluation results:")
+    print("\nEvaluation results_prototype:")
     print(f"Evaluated users: {results['evaluated_users']:,}")
     print(f"HR@5: {results['HR@5']:.4f}")
     print(f"HR@10: {results['HR@10']:.4f}")

@@ -13,13 +13,13 @@ DATASET_CONFIGS = {
         "label": "MovieLens",
         "train_file": "data/processed/movielens_train.csv",
         "test_file": "data/processed/movielens_test.csv",
-        "output_file": "results/movielens_mostpop_recommendations.csv",
+        "output_file": "results_prototype/movielens_mostpop_recommendations.csv",
     },
     "amazon": {
         "label": "Amazon",
         "train_file": "data/processed/amazon_train.csv",
         "test_file": "data/processed/amazon_test.csv",
-        "output_file": "results/amazon_mostpop_recommendations.csv",
+        "output_file": "results_prototype/amazon_mostpop_recommendations.csv",
     },
 }
 
