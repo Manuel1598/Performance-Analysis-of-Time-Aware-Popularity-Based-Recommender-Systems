@@ -567,3 +567,76 @@ The earlier standalone implementation remains relevant as a prototype and valida
 
 
 
+
+
+## 2026-04-22 – Implementation of RecentPop as a RecBole-native model
+
+* Implemented RecentPop as a custom model within the RecBole framework (`RecentPopRecBole`)
+* Extended the MostPop implementation by introducing a time-based filtering mechanism
+* Added a configurable time window parameter (`window_days`) to restrict interactions to recent data
+* Used the maximum timestamp in the dataset as a global reference point for defining the recent interaction window
+* Filtered interactions to include only those within the specified time window before computing item popularity
+* Maintained compatibility with RecBole's training pipeline by including a dummy trainable parameter
+* Implemented all required RecBole model interface methods:
+  * `__init__`
+  * `calculate_loss`
+  * `predict`
+  * `full_sort_predict`
+* Created a dedicated RecBole runner (`run_recentpop_recbole.py`) following the standardized pipeline:
+  * `Config`
+  * `create_dataset`
+  * `data_preparation`
+  * `Trainer.fit`
+  * `Trainer.evaluate`
+* Successfully executed the full RecBole pipeline on the MovieLens dataset
+
+---
+
+### Results
+
+* The RecentPop model executed successfully within the RecBole framework
+* Evaluation metrics were produced using RecBole’s internal evaluation pipeline
+* Compared to MostPop, the RecentPop model achieved lower ranking performance in the current setup:
+  * lower Hit@k
+  * lower NDCG@k
+  * lower MRR@k
+
+---
+
+### Observations
+
+* The current implementation uses a **global time window**, defined relative to the maximum timestamp in the dataset
+* This approach differs from more fine-grained temporal models that adapt the time window per user or per interaction
+* Due to the global filtering, only a subset of interactions contributes to the popularity estimation
+* This may reduce robustness, especially in sparse datasets such as MovieLens
+
+---
+
+### Interpretation
+
+The results suggest that:
+
+* a simple global RecentPop formulation may not outperform static popularity (MostPop) in all settings
+* the effectiveness of time-aware popularity models strongly depends on how temporal context is defined
+* the interaction between time-awareness and the evaluation setup (e.g., random split vs. chronological behavior) plays a significant role
+
+---
+
+### Role of This Step
+
+This step represents the **first time-aware extension of popularity-based models within RecBole**:
+
+* validates that temporal extensions can be integrated into the framework
+* establishes a foundation for more advanced time-aware models
+* enables systematic comparison between:
+  * static popularity (MostPop)
+  * time-window-based popularity (RecentPop)
+
+---
+
+### Next Steps
+
+* implement DecayPop as a RecBole-native model
+* compare MostPop, RecentPop, and DecayPop under identical RecBole settings
+* refine temporal modeling strategies (e.g., dynamic windows or user-specific time references)
+* analyze the impact of time-awareness on recommendation performance and popularity bias
