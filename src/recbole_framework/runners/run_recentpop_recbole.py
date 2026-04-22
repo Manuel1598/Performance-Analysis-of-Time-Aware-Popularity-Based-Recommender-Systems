@@ -1,4 +1,5 @@
 from pathlib import Path
+import pandas as pd
 
 from recbole.config import Config
 from recbole.data import create_dataset, data_preparation
@@ -66,6 +67,13 @@ def main() -> None:
 
     print("\nTest Results:")
     print(test_result)
+
+    results_df = pd.DataFrame([test_result])
+    output_file = project_root / "results" / "recbole_results" / "movielens_decaypop_recbole_metrics.csv"
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    results_df.to_csv(output_file, index=False)
+
+    print(f"Saved results to: {output_file}")
 
 
 if __name__ == "__main__":
