@@ -65,7 +65,7 @@ def main() -> None:
     print(test_result)
 
     results_df = pd.DataFrame([test_result])
-    output_file = project_root / "results" / "recbole_results" / "movielens_decaypop_recbole_metrics.csv"
+    output_file = project_root / "results" / "recbole_results" / "movielens_mostpop_recbole_metrics.csv"
     output_file.parent.mkdir(parents=True, exist_ok=True)
     results_df.to_csv(output_file, index=False)
 
