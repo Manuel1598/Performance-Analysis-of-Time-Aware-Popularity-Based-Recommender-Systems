@@ -752,3 +752,52 @@ The current results suggest that:
 
 This step establishes the first complete RecBole-based comparison between custom popularity-based models and a built-in model-based baseline on MovieLens.
 It provides the foundation for extending the same comparison setup to additional datasets such as Amazon.
+
+
+
+## 2026-04-24 – Amazon integration for RecBole MostPop experiments
+
+* Prepared the Amazon Video Games dataset for RecBole-based experiments
+* Converted the processed Amazon interaction data into RecBole `.inter` format
+* Added support for running the RecBole MostPop model on multiple datasets
+* Extended the MostPop RecBole runner from MovieLens-only execution to a multi-dataset setup
+* Successfully executed MostPop on the Amazon dataset using the RecBole pipeline
+* Stored the Amazon MostPop evaluation output in `recbole_results/amazon_mostpop_recbole_metrics.csv`
+
+---
+
+### Results
+
+Amazon MostPop results:
+
+* Hit@5: 0.0161
+* Hit@10: 0.0255
+* NDCG@5: 0.0104
+* NDCG@10: 0.0134
+* MRR@5: 0.0086
+* MRR@10: 0.0099
+
+---
+
+### Observations
+
+* The Amazon results are substantially lower than the corresponding MovieLens results
+* This is expected due to the higher sparsity and larger number of users and items in the Amazon dataset
+* The result confirms that the RecBole setup can now be applied beyond MovieLens
+
+---
+
+### Role of This Step
+
+This step extends the RecBole-based experimental setup from a single dataset to a cross-domain setting.
+
+It provides the foundation for evaluating whether findings from MovieLens generalize to Amazon.
+
+---
+
+### Next Steps
+
+* run RecentPop on Amazon
+* run DecayPop on Amazon
+* evaluate BPR on Amazon where computationally feasible
+* compare MovieLens and Amazon results under the same RecBole framework
