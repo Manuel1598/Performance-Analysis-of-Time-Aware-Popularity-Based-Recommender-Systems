@@ -716,3 +716,39 @@ This enables a fully consistent and framework-based comparison of different popu
 * analyze the effect of time-awareness on recommendation performance
 * investigate the impact of decay parameter choices
 * extend experiments to additional datasets (e.g., Amazon)
+
+
+## 2026-04-22 – Comparative evaluation of RecBole models on MovieLens
+
+* Extended the RecBole comparison pipeline to include the built-in BPR model
+* Executed all four models under the same RecBole-based experimental setup:
+  * MostPop
+  * RecentPop
+  * DecayPop
+  * BPR
+* Stored individual metric outputs and generated a consolidated comparison table
+* Created comparison plots for:
+  * Hit@10
+  * NDCG@10
+  * MRR@10
+
+### Results
+
+* BPR achieved the strongest performance across all measured ranking metrics
+* Among the popularity-based models, MostPop performed best
+* DecayPop consistently outperformed RecentPop
+* Neither RecentPop nor DecayPop surpassed MostPop in the current RecBole setup
+
+### Interpretation
+
+The current results suggest that:
+
+* the model-based BPR approach benefits from personalized latent preference learning
+* static global popularity remains a strong simple baseline
+* adding temporal popularity information in a simple global form does not automatically improve recommendation quality
+* smooth temporal weighting (DecayPop) is more effective than a strict recent-window formulation (RecentPop)
+
+### Role of This Step
+
+This step establishes the first complete RecBole-based comparison between custom popularity-based models and a built-in model-based baseline on MovieLens.
+It provides the foundation for extending the same comparison setup to additional datasets such as Amazon.
