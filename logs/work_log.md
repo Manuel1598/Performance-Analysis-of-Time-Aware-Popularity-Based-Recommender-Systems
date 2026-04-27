@@ -801,3 +801,130 @@ It provides the foundation for evaluating whether findings from MovieLens genera
 * run DecayPop on Amazon
 * evaluate BPR on Amazon where computationally feasible
 * compare MovieLens and Amazon results under the same RecBole framework
+
+
+
+
+
+## 2026-04-27 – Amazon integration for RecentPop and DecayPop (RecBole)
+
+* Extended the RecBole-based experimental setup to include time-aware popularity models on the Amazon dataset
+* Adapted the RecentPop and DecayPop runners to support multiple datasets (MovieLens and Amazon)
+* Successfully executed RecentPop on the Amazon Video Games dataset
+* Successfully executed DecayPop on the Amazon Video Games dataset
+* Stored evaluation outputs in:
+  * `recbole_results/amazon_recentpop_recbole_metrics.csv`
+  * `recbole_results/amazon_decaypop_recbole_metrics.csv`
+
+---
+
+### Results
+
+Amazon RecentPop results:
+
+* Hit@5: 0.0034
+* Hit@10: 0.0075
+* NDCG@5: 0.0023
+* NDCG@10: 0.0036
+* MRR@5: 0.0019
+* MRR@10: 0.0025
+
+Amazon DecayPop results:
+
+* Hit@5: 0.0065
+* Hit@10: 0.0112
+* NDCG@5: 0.0035
+* NDCG@10: 0.0050
+* MRR@5: 0.0026
+* MRR@10: 0.0032
+
+---
+
+### Observations
+
+* Both time-aware models perform significantly worse than MostPop on the Amazon dataset
+* RecentPop shows the lowest performance across all evaluated models
+* DecayPop performs better than RecentPop, but still remains below MostPop
+* The fixed time window in RecentPop leads to a strong loss of interaction data in sparse datasets
+* Decay-based weighting mitigates this issue but does not fully recover performance
+
+---
+
+### Interpretation
+
+The results highlight that:
+
+* aggressive time filtering (RecentPop) is not suitable for highly sparse datasets like Amazon
+* gradual time decay (DecayPop) is more robust but still sensitive to sparsity
+* global popularity remains a strong baseline in large-scale, sparse recommendation scenarios
+
+---
+
+### Role of This Step
+
+This step completes the evaluation of all popularity-based models on the Amazon dataset within the RecBole framework.
+
+It enables a direct comparison between static and time-aware popularity approaches across domains.
+
+---
+
+### Next Steps
+
+* integrate and evaluate BPR on the Amazon dataset
+* extend comparison analysis to include all models across both datasets
+* analyze cross-domain differences between MovieLens and Amazon
+
+
+
+## 2026-04-25 – Integration and evaluation of BPR across datasets (RecBole)
+
+* Implemented a unified RecBole runner for the BPR model supporting multiple datasets
+* Integrated BPR into the same experimental pipeline as the popularity-based models
+* Executed BPR on MovieLens and Amazon datasets using consistent evaluation settings
+* Stored evaluation outputs in:
+  * `recbole_results/movielens_bpr_recbole_metrics.csv`
+  * `recbole_results/amazon_bpr_recbole_metrics.csv`
+* Extended the analysis scripts to include BPR in model comparisons
+
+---
+
+### Results (MovieLens reference)
+
+BPR results outperform all popularity-based models on MovieLens:
+
+* highest Hit@k, NDCG@k, and MRR@k across all evaluated models
+* confirms the advantage of personalized, model-based approaches in dense datasets
+
+---
+
+### Observations
+
+* BPR benefits from learning user-specific preferences, unlike popularity-based models
+* Performance gains are particularly visible in ranking-based metrics (NDCG, MRR)
+* The RecBole integration allows direct and fair comparison under identical evaluation conditions
+
+---
+
+### Interpretation
+
+The results confirm that:
+
+* model-based approaches can outperform popularity-based baselines in structured datasets
+* however, the gap depends strongly on dataset characteristics such as sparsity and interaction density
+* popularity-based models remain competitive baselines, especially in large-scale scenarios
+
+---
+
+### Role of This Step
+
+This step completes the integration of both popularity-based and model-based approaches within a unified RecBole framework.
+
+It establishes the foundation for systematic model comparison across datasets.
+
+---
+
+### Next Steps
+
+* analyze performance differences between popularity-based and model-based methods
+* investigate the impact of sparsity and temporal dynamics on model performance
+* prepare result tables and figures for the thesis
