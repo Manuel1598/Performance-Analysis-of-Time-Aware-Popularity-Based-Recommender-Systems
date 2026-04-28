@@ -928,3 +928,118 @@ It establishes the foundation for systematic model comparison across datasets.
 * analyze performance differences between popularity-based and model-based methods
 * investigate the impact of sparsity and temporal dynamics on model performance
 * prepare result tables and figures for the thesis
+
+
+
+
+## 2026-04-26 – Cross-domain comparison of popularity-based and model-based methods
+
+* Completed the full evaluation of all models across both MovieLens and Amazon datasets
+* Integrated and executed BPR alongside MostPop, RecentPop, and DecayPop on Amazon
+* Consolidated all evaluation results into a unified comparison table
+* Extended analysis scripts to support cross-dataset (cross-domain) comparison
+* Generated comparative metrics across models and datasets under identical evaluation settings
+
+---
+
+### Results
+
+#### Amazon
+
+* BPR:
+  * Hit@10: 0.0323
+  * NDCG@10: 0.0188
+  * MRR@10: 0.0148
+
+* MostPop:
+  * Hit@10: 0.0255
+  * NDCG@10: 0.0134
+  * MRR@10: 0.0099
+
+* DecayPop:
+  * Hit@10: 0.0112
+  * NDCG@10: 0.0050
+  * MRR@10: 0.0032
+
+* RecentPop:
+  * Hit@10: 0.0075
+  * NDCG@10: 0.0036
+  * MRR@10: 0.0025
+
+---
+
+#### MovieLens
+
+* BPR:
+  * Hit@10: 0.3332
+  * NDCG@10: 0.0758
+  * MRR@10: 0.1391
+
+* MostPop:
+  * Hit@10: 0.2480
+  * NDCG@10: 0.0562
+  * MRR@10: 0.1053
+
+* DecayPop:
+  * Hit@10: 0.1561
+  * NDCG@10: 0.0325
+  * MRR@10: 0.0653
+
+* RecentPop:
+  * Hit@10: 0.1315
+  * NDCG@10: 0.0252
+  * MRR@10: 0.0492
+
+---
+
+### Observations
+
+* All models perform significantly worse on Amazon compared to MovieLens
+* BPR consistently outperforms all popularity-based models on both datasets
+* The performance gap between BPR and popularity-based models is larger on MovieLens than on Amazon
+* MostPop remains a strong baseline, especially on the sparse Amazon dataset
+* RecentPop shows the weakest performance across both datasets, with a particularly strong degradation on Amazon
+* DecayPop improves over RecentPop but does not outperform MostPop on either dataset
+
+---
+
+### Interpretation
+
+The results highlight several important effects:
+
+* **Dataset characteristics strongly influence model performance**
+  * MovieLens (denser) allows models to learn stronger patterns
+  * Amazon (sparser) leads to overall lower accuracy
+
+* **Time-aware popularity models are not universally beneficial**
+  * RecentPop suffers from aggressive data filtering in sparse environments
+  * DecayPop mitigates this but still cannot match static popularity
+
+* **Model-based approaches (BPR) generalize better across domains**
+  * personalization provides consistent improvements
+  * however, gains are reduced in highly sparse datasets
+
+---
+
+### Role of This Step
+
+This step represents the **first complete cross-domain evaluation** of all implemented models.
+
+It establishes a direct comparison between:
+
+* popularity-based vs model-based methods
+* static vs time-aware approaches
+* dense vs sparse datasets
+
+---
+
+### Next Steps
+
+* extend experiments to session-based recommendation models (e.g., SessionKNN, GRU4Rec)
+* perform systematic hyperparameter tuning for all models
+* analyze the impact of temporal parameters (window size, decay rate)
+* investigate popularity bias and coverage across datasets
+* prepare final evaluation tables and figures for the thesis
+
+
+
