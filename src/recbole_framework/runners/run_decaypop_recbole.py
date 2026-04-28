@@ -8,12 +8,30 @@ from recbole.trainer import Trainer
 from src.recbole_framework.custom_models.decaypop_recbole import DecayPopRecBole
 
 
-def main() -> None:
+# =========================
+# Dataset Configuration
+# =========================
+DATASETS = {
+    "movielens": {
+        "recbole_name": "movielens_recbole",
+        "output_prefix": "movielens",
+    },
+    "amazon": {
+        "recbole_name": "amazon_recbole",
+        "output_prefix": "amazon",
+    },
+}
+
+
+def run_for_dataset(dataset_key: str, dataset_config: dict) -> None:
     project_root = Path(__file__).resolve().parents[3]
+
+    recbole_dataset_name = dataset_config["recbole_name"]
+    output_prefix = dataset_config["output_prefix"]
 
     config_dict = {
         "model": DecayPopRecBole,
-        "dataset": "movielens_recbole",
+        "dataset": recbole_dataset_name,
         "data_path": str(project_root / "data" / "recbole"),
         "USER_ID_FIELD": "user_id",
         "ITEM_ID_FIELD": "item_id",
@@ -30,7 +48,7 @@ def main() -> None:
         "eval_args": {
             "split": {"RS": [0.8, 0.1, 0.1]},
             "order": "TO",
-            "mode": "full"
+            "mode": "full",
         },
         "decay_lambda": 1e-7,
         "seed": 42,
@@ -39,9 +57,16 @@ def main() -> None:
         "show_progress": True,
     }
 
+    print("\n" + "=" * 80)
+    print(f"Running DecayPopRecBole on dataset: {dataset_key}")
+    print("=" * 80)
+
     print("Project root:", project_root)
     print("RecBole data path:", project_root / "data" / "recbole")
 
+    # =========================
+    # RecBole Pipeline
+    # =========================
     print("Creating RecBole config...")
     config = Config(model=DecayPopRecBole, config_dict=config_dict)
 
@@ -68,12 +93,26 @@ def main() -> None:
     print("\nTest Results:")
     print(test_result)
 
+    # =========================
+    # Save Results
+    # =========================
     results_df = pd.DataFrame([test_result])
-    output_file = project_root / "recbole_results"  / "movielens_decaypop_recbole_metrics.csv"
+
+    output_file = (
+        project_root
+        / "recbole_results"
+        / f"{output_prefix}_decaypop_recbole_metrics.csv"
+    )
+
     output_file.parent.mkdir(parents=True, exist_ok=True)
     results_df.to_csv(output_file, index=False)
 
-    print(f"Saved recbole_results to: {output_file}")
+    print(f"Saved RecBole results to: {output_file}")
+
+
+def main() -> None:
+    for dataset_key, dataset_config in DATASETS.items():
+        run_for_dataset(dataset_key, dataset_config)
 
 
 if __name__ == "__main__":

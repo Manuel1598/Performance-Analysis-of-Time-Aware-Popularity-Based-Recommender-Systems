@@ -8,12 +8,27 @@ from recbole.trainer import Trainer
 from src.recbole_framework.custom_models.recentpop_recbole import RecentPopRecBole
 
 
-def main() -> None:
+DATASETS = {
+    "movielens": {
+        "recbole_name": "movielens_recbole",
+        "output_prefix": "movielens",
+    },
+    "amazon": {
+        "recbole_name": "amazon_recbole",
+        "output_prefix": "amazon",
+    },
+}
+
+
+def run_for_dataset(dataset_key: str, dataset_config: dict) -> None:
     project_root = Path(__file__).resolve().parents[3]
+
+    recbole_dataset_name = dataset_config["recbole_name"]
+    output_prefix = dataset_config["output_prefix"]
 
     config_dict = {
         "model": RecentPopRecBole,
-        "dataset": "movielens_recbole",
+        "dataset": recbole_dataset_name,
         "data_path": str(project_root / "data" / "recbole"),
         "USER_ID_FIELD": "user_id",
         "ITEM_ID_FIELD": "item_id",
@@ -30,7 +45,7 @@ def main() -> None:
         "eval_args": {
             "split": {"RS": [0.8, 0.1, 0.1]},
             "order": "TO",
-            "mode": "full"
+            "mode": "full",
         },
         "window_days": 30,
         "seed": 42,
@@ -39,6 +54,9 @@ def main() -> None:
         "show_progress": True,
     }
 
+    print("\n" + "=" * 80)
+    print(f"Running RecentPopRecBole on dataset: {dataset_key}")
+    print("=" * 80)
     print("Project root:", project_root)
     print("RecBole data path:", project_root / "data" / "recbole")
 
@@ -69,11 +87,21 @@ def main() -> None:
     print(test_result)
 
     results_df = pd.DataFrame([test_result])
-    output_file = project_root / "recbole_results" / "movielens_recentpop_recbole_metrics.csv"
+    output_file = (
+        project_root
+        / "recbole_results"
+        / f"{output_prefix}_recentpop_recbole_metrics.csv"
+    )
+
     output_file.parent.mkdir(parents=True, exist_ok=True)
     results_df.to_csv(output_file, index=False)
 
-    print(f"Saved recbole_results to: {output_file}")
+    print(f"Saved RecBole results to: {output_file}")
+
+
+def main() -> None:
+    for dataset_key, dataset_config in DATASETS.items():
+        run_for_dataset(dataset_key, dataset_config)
 
 
 if __name__ == "__main__":

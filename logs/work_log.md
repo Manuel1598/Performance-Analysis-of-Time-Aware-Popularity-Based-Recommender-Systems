@@ -752,3 +752,294 @@ The current results suggest that:
 
 This step establishes the first complete RecBole-based comparison between custom popularity-based models and a built-in model-based baseline on MovieLens.
 It provides the foundation for extending the same comparison setup to additional datasets such as Amazon.
+
+
+
+## 2026-04-24 – Amazon integration for RecBole MostPop experiments
+
+* Prepared the Amazon Video Games dataset for RecBole-based experiments
+* Converted the processed Amazon interaction data into RecBole `.inter` format
+* Added support for running the RecBole MostPop model on multiple datasets
+* Extended the MostPop RecBole runner from MovieLens-only execution to a multi-dataset setup
+* Successfully executed MostPop on the Amazon dataset using the RecBole pipeline
+* Stored the Amazon MostPop evaluation output in `recbole_results/amazon_mostpop_recbole_metrics.csv`
+
+---
+
+### Results
+
+Amazon MostPop results:
+
+* Hit@5: 0.0161
+* Hit@10: 0.0255
+* NDCG@5: 0.0104
+* NDCG@10: 0.0134
+* MRR@5: 0.0086
+* MRR@10: 0.0099
+
+---
+
+### Observations
+
+* The Amazon results are substantially lower than the corresponding MovieLens results
+* This is expected due to the higher sparsity and larger number of users and items in the Amazon dataset
+* The result confirms that the RecBole setup can now be applied beyond MovieLens
+
+---
+
+### Role of This Step
+
+This step extends the RecBole-based experimental setup from a single dataset to a cross-domain setting.
+
+It provides the foundation for evaluating whether findings from MovieLens generalize to Amazon.
+
+---
+
+### Next Steps
+
+* run RecentPop on Amazon
+* run DecayPop on Amazon
+* evaluate BPR on Amazon where computationally feasible
+* compare MovieLens and Amazon results under the same RecBole framework
+
+
+
+
+
+## 2026-04-27 – Amazon integration for RecentPop and DecayPop (RecBole)
+
+* Extended the RecBole-based experimental setup to include time-aware popularity models on the Amazon dataset
+* Adapted the RecentPop and DecayPop runners to support multiple datasets (MovieLens and Amazon)
+* Successfully executed RecentPop on the Amazon Video Games dataset
+* Successfully executed DecayPop on the Amazon Video Games dataset
+* Stored evaluation outputs in:
+  * `recbole_results/amazon_recentpop_recbole_metrics.csv`
+  * `recbole_results/amazon_decaypop_recbole_metrics.csv`
+
+---
+
+### Results
+
+Amazon RecentPop results:
+
+* Hit@5: 0.0034
+* Hit@10: 0.0075
+* NDCG@5: 0.0023
+* NDCG@10: 0.0036
+* MRR@5: 0.0019
+* MRR@10: 0.0025
+
+Amazon DecayPop results:
+
+* Hit@5: 0.0065
+* Hit@10: 0.0112
+* NDCG@5: 0.0035
+* NDCG@10: 0.0050
+* MRR@5: 0.0026
+* MRR@10: 0.0032
+
+---
+
+### Observations
+
+* Both time-aware models perform significantly worse than MostPop on the Amazon dataset
+* RecentPop shows the lowest performance across all evaluated models
+* DecayPop performs better than RecentPop, but still remains below MostPop
+* The fixed time window in RecentPop leads to a strong loss of interaction data in sparse datasets
+* Decay-based weighting mitigates this issue but does not fully recover performance
+
+---
+
+### Interpretation
+
+The results highlight that:
+
+* aggressive time filtering (RecentPop) is not suitable for highly sparse datasets like Amazon
+* gradual time decay (DecayPop) is more robust but still sensitive to sparsity
+* global popularity remains a strong baseline in large-scale, sparse recommendation scenarios
+
+---
+
+### Role of This Step
+
+This step completes the evaluation of all popularity-based models on the Amazon dataset within the RecBole framework.
+
+It enables a direct comparison between static and time-aware popularity approaches across domains.
+
+---
+
+### Next Steps
+
+* integrate and evaluate BPR on the Amazon dataset
+* extend comparison analysis to include all models across both datasets
+* analyze cross-domain differences between MovieLens and Amazon
+
+
+
+## 2026-04-25 – Integration and evaluation of BPR across datasets (RecBole)
+
+* Implemented a unified RecBole runner for the BPR model supporting multiple datasets
+* Integrated BPR into the same experimental pipeline as the popularity-based models
+* Executed BPR on MovieLens and Amazon datasets using consistent evaluation settings
+* Stored evaluation outputs in:
+  * `recbole_results/movielens_bpr_recbole_metrics.csv`
+  * `recbole_results/amazon_bpr_recbole_metrics.csv`
+* Extended the analysis scripts to include BPR in model comparisons
+
+---
+
+### Results (MovieLens reference)
+
+BPR results outperform all popularity-based models on MovieLens:
+
+* highest Hit@k, NDCG@k, and MRR@k across all evaluated models
+* confirms the advantage of personalized, model-based approaches in dense datasets
+
+---
+
+### Observations
+
+* BPR benefits from learning user-specific preferences, unlike popularity-based models
+* Performance gains are particularly visible in ranking-based metrics (NDCG, MRR)
+* The RecBole integration allows direct and fair comparison under identical evaluation conditions
+
+---
+
+### Interpretation
+
+The results confirm that:
+
+* model-based approaches can outperform popularity-based baselines in structured datasets
+* however, the gap depends strongly on dataset characteristics such as sparsity and interaction density
+* popularity-based models remain competitive baselines, especially in large-scale scenarios
+
+---
+
+### Role of This Step
+
+This step completes the integration of both popularity-based and model-based approaches within a unified RecBole framework.
+
+It establishes the foundation for systematic model comparison across datasets.
+
+---
+
+### Next Steps
+
+* analyze performance differences between popularity-based and model-based methods
+* investigate the impact of sparsity and temporal dynamics on model performance
+* prepare result tables and figures for the thesis
+
+
+
+
+## 2026-04-26 – Cross-domain comparison of popularity-based and model-based methods
+
+* Completed the full evaluation of all models across both MovieLens and Amazon datasets
+* Integrated and executed BPR alongside MostPop, RecentPop, and DecayPop on Amazon
+* Consolidated all evaluation results into a unified comparison table
+* Extended analysis scripts to support cross-dataset (cross-domain) comparison
+* Generated comparative metrics across models and datasets under identical evaluation settings
+
+---
+
+### Results
+
+#### Amazon
+
+* BPR:
+  * Hit@10: 0.0323
+  * NDCG@10: 0.0188
+  * MRR@10: 0.0148
+
+* MostPop:
+  * Hit@10: 0.0255
+  * NDCG@10: 0.0134
+  * MRR@10: 0.0099
+
+* DecayPop:
+  * Hit@10: 0.0112
+  * NDCG@10: 0.0050
+  * MRR@10: 0.0032
+
+* RecentPop:
+  * Hit@10: 0.0075
+  * NDCG@10: 0.0036
+  * MRR@10: 0.0025
+
+---
+
+#### MovieLens
+
+* BPR:
+  * Hit@10: 0.3332
+  * NDCG@10: 0.0758
+  * MRR@10: 0.1391
+
+* MostPop:
+  * Hit@10: 0.2480
+  * NDCG@10: 0.0562
+  * MRR@10: 0.1053
+
+* DecayPop:
+  * Hit@10: 0.1561
+  * NDCG@10: 0.0325
+  * MRR@10: 0.0653
+
+* RecentPop:
+  * Hit@10: 0.1315
+  * NDCG@10: 0.0252
+  * MRR@10: 0.0492
+
+---
+
+### Observations
+
+* All models perform significantly worse on Amazon compared to MovieLens
+* BPR consistently outperforms all popularity-based models on both datasets
+* The performance gap between BPR and popularity-based models is larger on MovieLens than on Amazon
+* MostPop remains a strong baseline, especially on the sparse Amazon dataset
+* RecentPop shows the weakest performance across both datasets, with a particularly strong degradation on Amazon
+* DecayPop improves over RecentPop but does not outperform MostPop on either dataset
+
+---
+
+### Interpretation
+
+The results highlight several important effects:
+
+* **Dataset characteristics strongly influence model performance**
+  * MovieLens (denser) allows models to learn stronger patterns
+  * Amazon (sparser) leads to overall lower accuracy
+
+* **Time-aware popularity models are not universally beneficial**
+  * RecentPop suffers from aggressive data filtering in sparse environments
+  * DecayPop mitigates this but still cannot match static popularity
+
+* **Model-based approaches (BPR) generalize better across domains**
+  * personalization provides consistent improvements
+  * however, gains are reduced in highly sparse datasets
+
+---
+
+### Role of This Step
+
+This step represents the **first complete cross-domain evaluation** of all implemented models.
+
+It establishes a direct comparison between:
+
+* popularity-based vs model-based methods
+* static vs time-aware approaches
+* dense vs sparse datasets
+
+---
+
+### Next Steps
+
+* extend experiments to session-based recommendation models (e.g., SessionKNN, GRU4Rec)
+* perform systematic hyperparameter tuning for all models
+* analyze the impact of temporal parameters (window size, decay rate)
+* investigate popularity bias and coverage across datasets
+* prepare final evaluation tables and figures for the thesis
+
+
+
