@@ -1042,4 +1042,29 @@ It establishes a direct comparison between:
 * prepare final evaluation tables and figures for the thesis
 
 
+## 2026-04-28 – Planning session-based RecBole integration
+
+* Completed the first cross-domain Top-N RecBole evaluation
+* Decided to extend the framework to session-based recommendation
+* Identified VS-KNN and VSTAN as relevant session-based nearest-neighbor baselines
+* Selected the `session-rec` repository as reference implementation
+* Planned integration of selected session-based algorithms into the RecBole framework
+
+### Motivation
+
+Session-based nearest-neighbor algorithms are strong and interpretable baselines for session-based recommendation.
+Prior work has shown that such methods can outperform more complex neural approaches in several settings.
+
+### Planned Models
+
+* VS-KNN
+* VSTAN
+
+### Next Steps
+
+* inspect the reference implementations in `session-rec`
+* define how session data must be represented in RecBole
+* prepare a session-based dataset such as Yoochoose
+* implement VS-KNN as the first RecBole-compatible session-based baseline
+
 
