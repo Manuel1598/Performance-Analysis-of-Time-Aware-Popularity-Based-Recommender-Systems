@@ -9,7 +9,7 @@ from src.recbole_framework.custom_models.session.vsknn_recbole import VSKNNRecBo
 
 
 def main() -> None:
-    project_root = Path(__file__).resolve().parents[4]
+    project_root = Path(__file__).resolve().parents[3]
 
     config_dict = {
         "model": VSKNNRecBole,
