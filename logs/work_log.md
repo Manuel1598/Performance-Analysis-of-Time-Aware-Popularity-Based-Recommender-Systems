@@ -1068,3 +1068,99 @@ Prior work has shown that such methods can outperform more complex neural approa
 * implement VS-KNN as the first RecBole-compatible session-based baseline
 
 
+
+## 2026-04-29 – Yoochoose Dataset Preparation and RecBole Integration
+
+### Overview
+- Integrated the Yoochoose dataset as the first session-based dataset in the RecBole framework  
+- Converted raw clickstream data into RecBole `.inter` format with session-based structure  
+- Implemented correct timestamp conversion to Unix time for temporal ordering  
+- Filtered sessions with fewer than two interactions to enable next-item prediction  
+- Created a session-based sampling pipeline to generate manageable subsets of the dataset  
+- Generated a ~500k interaction sample for efficient experimentation  
+- Validated the RecBole pipeline by running the MostPop baseline on the Yoochoose sample  
+
+### Results
+
+#### MostPop on Yoochoose (sample)
+- Hit@5: 0.0002  
+- Hit@10: 0.0003  
+- NDCG@5: 0.0001  
+- NDCG@10: 0.0001  
+- MRR@5: 0.0001  
+- MRR@10: 0.0001  
+
+### Observations
+- Performance is significantly lower than on MovieLens and Amazon  
+- This is expected due to:
+  - extreme sparsity  
+  - short session lengths  
+  - absence of long-term user preferences  
+- Global popularity is not suitable for session-based recommendation tasks  
+
+### Interpretation
+The results confirm that:
+- session-based recommendation requires context-aware models  
+- global popularity fails in short-session environments  
+- Yoochoose represents a fundamentally different recommendation setting  
+
+### Role of This Step
+This step establishes the data foundation for session-based recommendation experiments.
+
+It ensures that:
+- session data is correctly represented in RecBole  
+- temporal ordering is preserved  
+- scalable experimentation is possible via sampling  
+
+### Next Steps
+- implement session-based nearest-neighbor models  
+- start with VS-KNN as first baseline  
+- compare against popularity-based methods on Yoochoose  
+
+
+---
+
+## 2026-04-29 – Initial Implementation of VS-KNN in RecBole
+
+### Overview
+- Implemented the VS-KNN session-based nearest-neighbor algorithm as a custom RecBole model  
+- Adapted session-based recommendation logic to the RecBole GeneralRecommender interface  
+- Represented sessions as pseudo-users to reuse RecBole’s interaction format  
+- Built session-item and item-session mappings from the dataset  
+- Implemented cosine similarity between sessions based on item overlap  
+- Integrated candidate session sampling to control computational complexity  
+- Implemented full-sort prediction for compatibility with RecBole evaluation  
+
+### Model Characteristics
+
+#### VS-KNN
+- uses session similarity instead of global popularity  
+- recommends items from similar sessions  
+- operates without training or learnable parameters  
+- captures short-term user intent  
+
+### Observations
+- significantly more complex than popularity-based models  
+- requires careful handling of:
+  - session structure  
+  - candidate selection  
+  - computational efficiency  
+- integration into RecBole requires adapting non-parametric models to a training-based framework  
+
+### Role of This Step
+This step introduces the first session-based recommendation model into the RecBole framework.
+
+It marks the transition from:
+- user-based recommendation → session-based recommendation  
+
+### Next Steps
+- run VS-KNN on Yoochoose sample  
+- analyze performance vs MostPop baseline  
+- optimize runtime and candidate sampling  
+- extend implementation toward VSTAN  
+- integrate session-based models into comparison pipeline  
+
+
+
+
+
