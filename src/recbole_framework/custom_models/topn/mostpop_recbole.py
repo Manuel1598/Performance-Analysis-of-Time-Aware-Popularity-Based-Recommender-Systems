@@ -10,26 +10,41 @@ class MostPopRecBole(GeneralRecommender):
     def __init__(self, config, dataset):
         super(MostPopRecBole, self).__init__(config, dataset)
 
+
         self.device = config["device"]
+
+        # RecBole field names
         self.USER_ID = config["USER_ID_FIELD"]
         self.ITEM_ID = config["ITEM_ID_FIELD"]
 
+        # Number of items in the RecBole dataset
         self.n_items = dataset.num(self.ITEM_ID)
 
+        # Dummy parameter so RecBole can build an optimizer
         self.dummy_param = torch.nn.Parameter(torch.zeros(1))
 
-        item_ids = dataset.inter_feat[self.ITEM_ID].long()
+        # Popularity scores for all item ids in RecBole's internal index space
+        self.item_popularity = torch.zeros(self.n_items, dtype=torch.float32)
 
+        # InterFeat contains the observed interactions
+        item_ids = dataset.inter_feat[self.ITEM_ID]
+
+        # Count item occurrences
+        item_ids = dataset.inter_feat[self.ITEM_ID].long()
         self.item_popularity = torch.bincount(
             item_ids,
-            minlength=self.n_items,
-        ).float().to(self.device)
+            minlength=self.n_items
+        ).float()
+        self.item_popularity = self.item_popularity.to(self.device)
+
+        self.item_popularity = self.item_popularity.to(self.device)
 
     def forward(self, interaction):
         item = interaction[self.ITEM_ID]
         return self.item_popularity[item]
 
     def calculate_loss(self, interaction):
+        # MostPop is non-trainable, but RecBole expects a loss tensor
         return self.dummy_param.sum() * 0.0
 
     def predict(self, interaction):
@@ -40,5 +55,7 @@ class MostPopRecBole(GeneralRecommender):
         user = interaction[self.USER_ID]
         batch_size = user.shape[0]
 
+        # Return one popularity score vector per user in the batch
         scores = self.item_popularity.unsqueeze(0).expand(batch_size, -1)
         return scores.reshape(-1)
+
