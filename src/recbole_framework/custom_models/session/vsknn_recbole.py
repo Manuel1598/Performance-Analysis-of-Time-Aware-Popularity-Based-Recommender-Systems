@@ -4,11 +4,11 @@ import random
 
 import torch
 
-from recbole.model.abstract_recommender import GeneralRecommender
+from recbole.model.abstract_recommender import SequentialRecommender
 from recbole.utils import InputType
 
 
-class VSKNNRecBole(GeneralRecommender):
+class VSKNNRecBole(SequentialRecommender):
     input_type = InputType.POINTWISE
 
     def __init__(self, config, dataset):
@@ -16,36 +16,45 @@ class VSKNNRecBole(GeneralRecommender):
 
         self.device = config["device"]
 
-        self.USER_ID = config["USER_ID_FIELD"]
-        self.ITEM_ID = config["ITEM_ID_FIELD"]
-        self.TIME_FIELD = config["TIME_FIELD"]
-
-        self.n_items = dataset.num(self.ITEM_ID)
-
         self.k = config["vsknn_k"]
         self.sample_size = config["vsknn_sample_size"]
 
-        # Dummy parameter so RecBole Trainer can build an optimizer
         self.dummy_param = torch.nn.Parameter(torch.zeros(1))
 
-        self.session_items: dict[int, list[int]] = defaultdict(list)
+        self.reference_sessions: list[list[int]] = []
+        self.reference_session_sets: list[set[int]] = []
         self.item_sessions: dict[int, set[int]] = defaultdict(set)
 
-        user_ids = dataset.inter_feat[self.USER_ID].cpu().tolist()
-        item_ids = dataset.inter_feat[self.ITEM_ID].cpu().tolist()
-        timestamps = dataset.inter_feat[self.TIME_FIELD].cpu().tolist()
+        self._build_reference_sessions(dataset)
 
-        interactions = list(zip(user_ids, item_ids, timestamps))
-        interactions.sort(key=lambda x: (x[0], x[2]))
+    def _build_reference_sessions(self, dataset) -> None:
+        item_seq_data = dataset.inter_feat[self.ITEM_SEQ]
+        item_seq_len_data = dataset.inter_feat[self.ITEM_SEQ_LEN]
+        target_items = dataset.inter_feat[self.ITEM_ID]
 
-        for session_id, item_id, _ in interactions:
-            self.session_items[int(session_id)].append(int(item_id))
-            self.item_sessions[int(item_id)].add(int(session_id))
+        for row_idx in range(len(item_seq_data)):
+            seq_len = int(item_seq_len_data[row_idx])
+            item_seq = item_seq_data[row_idx][:seq_len].cpu().tolist()
 
-        self.session_lengths = {
-            session_id: len(items)
-            for session_id, items in self.session_items.items()
-        }
+            target_item = int(target_items[row_idx])
+
+            # Historical sequence + target item as reference session
+            session_items = [int(item_id) for item_id in item_seq if int(item_id) > 0]
+
+            if target_item > 0:
+                session_items.append(target_item)
+
+            if not session_items:
+                continue
+
+            session_index = len(self.reference_sessions)
+
+            self.reference_sessions.append(session_items)
+            session_item_set = set(session_items)
+            self.reference_session_sets.append(session_item_set)
+
+            for item_id in session_item_set:
+                self.item_sessions[item_id].add(session_index)
 
     def forward(self, interaction):
         return self.predict(interaction)
@@ -54,33 +63,42 @@ class VSKNNRecBole(GeneralRecommender):
         return self.dummy_param.sum() * 0.0
 
     def predict(self, interaction):
-        user = interaction[self.USER_ID]
-        item = interaction[self.ITEM_ID]
+        item_seq = interaction[self.ITEM_SEQ]
+        item_seq_len = interaction[self.ITEM_SEQ_LEN]
+        target_item = interaction[self.ITEM_ID]
 
         scores = []
 
-        for session_id, target_item in zip(user.cpu().tolist(), item.cpu().tolist()):
-            session_scores = self._score_session(int(session_id))
-            scores.append(session_scores[int(target_item)])
+        for seq, seq_len, item_id in zip(item_seq, item_seq_len, target_item):
+            current_items = self._extract_sequence_items(seq, int(seq_len))
+            session_scores = self._score_sequence(current_items)
+            scores.append(session_scores[int(item_id)])
 
         return torch.tensor(scores, dtype=torch.float32, device=self.device)
 
     def full_sort_predict(self, interaction):
-        users = interaction[self.USER_ID].cpu().tolist()
+        item_seq = interaction[self.ITEM_SEQ]
+        item_seq_len = interaction[self.ITEM_SEQ_LEN]
 
         batch_scores = []
 
-        for session_id in users:
-            scores = self._score_session(int(session_id))
+        for seq, seq_len in zip(item_seq, item_seq_len):
+            current_items = self._extract_sequence_items(seq, int(seq_len))
+            scores = self._score_sequence(current_items)
             batch_scores.append(scores)
 
         scores_tensor = torch.stack(batch_scores, dim=0).to(self.device)
 
         return scores_tensor.reshape(-1)
 
-    def _score_session(self, session_id: int) -> torch.Tensor:
-        current_items = self.session_items.get(session_id, [])
+    def _extract_sequence_items(self, item_seq: torch.Tensor, seq_len: int) -> list[int]:
+        if seq_len <= 0:
+            return []
 
+        items = item_seq[:seq_len].cpu().tolist()
+        return [int(item_id) for item_id in items if int(item_id) > 0]
+
+    def _score_sequence(self, current_items: list[int]) -> torch.Tensor:
         scores = torch.zeros(self.n_items, dtype=torch.float32)
 
         if not current_items:
@@ -88,46 +106,38 @@ class VSKNNRecBole(GeneralRecommender):
 
         current_item_set = set(current_items)
 
-        candidate_sessions = self._find_candidate_sessions(
-            current_item_set, session_id
-        )
+        candidate_sessions = self._find_candidate_sessions(current_item_set)
 
         if not candidate_sessions:
             return scores
 
         similarities = []
 
-        for neighbor_session_id in candidate_sessions:
+        for session_index in candidate_sessions:
             similarity = self._cosine_similarity(
                 current_item_set=current_item_set,
-                neighbor_session_id=neighbor_session_id,
+                session_index=session_index,
             )
 
             if similarity > 0:
-                similarities.append((neighbor_session_id, similarity))
+                similarities.append((session_index, similarity))
 
         similarities.sort(key=lambda x: x[1], reverse=True)
         nearest_neighbors = similarities[: self.k]
 
-        for neighbor_session_id, similarity in nearest_neighbors:
-            neighbor_items = self.session_items[neighbor_session_id]
+        for session_index, similarity in nearest_neighbors:
+            neighbor_items = self.reference_sessions[session_index]
 
             for item_id in neighbor_items:
                 scores[item_id] += similarity
 
         return scores
 
-    def _find_candidate_sessions(
-        self,
-        current_item_set: set[int],
-        current_session_id: int,
-    ) -> set[int]:
+    def _find_candidate_sessions(self, current_item_set: set[int]) -> set[int]:
         candidate_sessions = set()
 
         for item_id in current_item_set:
             candidate_sessions.update(self.item_sessions.get(item_id, set()))
-
-        candidate_sessions.discard(current_session_id)
 
         if self.sample_size > 0 and len(candidate_sessions) > self.sample_size:
             candidate_sessions = set(
@@ -139,10 +149,9 @@ class VSKNNRecBole(GeneralRecommender):
     def _cosine_similarity(
         self,
         current_item_set: set[int],
-        neighbor_session_id: int,
+        session_index: int,
     ) -> float:
-        neighbor_items = self.session_items.get(neighbor_session_id, [])
-        neighbor_item_set = set(neighbor_items)
+        neighbor_item_set = self.reference_session_sets[session_index]
 
         if not neighbor_item_set:
             return 0.0

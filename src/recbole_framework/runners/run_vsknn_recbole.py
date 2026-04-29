@@ -5,7 +5,9 @@ from recbole.config import Config
 from recbole.data import create_dataset, data_preparation
 from recbole.trainer import Trainer
 
-from src.recbole_framework.custom_models.session.vsknn_recbole import VSKNNRecBole
+from src.recbole_framework.custom_models.session.vsknn_recbole import (
+    VSKNNRecBole,
+)
 
 
 def main() -> None:
@@ -21,6 +23,7 @@ def main() -> None:
         "load_col": {
             "inter": ["user_id", "item_id", "timestamp"]
         },
+        "MAX_ITEM_LIST_LENGTH": 20,
         "epochs": 1,
         "train_batch_size": 2048,
         "eval_batch_size": 1024,
@@ -53,7 +56,7 @@ def main() -> None:
     print("Preparing train/valid/test data...")
     train_data, valid_data, test_data = data_preparation(config, dataset)
 
-    print("Initializing VSKNNRecBole model...")
+    print("Initializing VSKNNSequentialRecBole model...")
     model = VSKNNRecBole(config, train_data.dataset).to(config["device"])
     print(model)
 
@@ -72,7 +75,7 @@ def main() -> None:
     output_file = (
         project_root
         / "recbole_results"
-        / "yoochoose_sample_vsknn_recbole_metrics.csv"
+        / "yoochoose_sample_vsknn_sequential_recbole_metrics.csv"
     )
 
     output_file.parent.mkdir(parents=True, exist_ok=True)
