@@ -1162,5 +1162,57 @@ It marks the transition from:
 
 
 
+# 2026-04-29 – Evaluation and Refinement of VS-KNN Implementation
+
+## Overview
+- Successfully executed the VS-KNN model on the Yoochoose sample dataset within the RecBole framework  
+- Verified correct functionality of session similarity computation and scoring mechanism  
+- Achieved strong Top-N performance compared to popularity-based baselines  
+- Identified limitations of the current implementation due to the use of the GeneralRecommender interface  
+- Analyzed the mismatch between RecBole’s default evaluation pipeline and session-based next-item prediction  
+
+## Results
+
+### VS-KNN on Yoochoose (sample)
+- Hit@5: 0.4101  
+- Hit@10: 0.4560  
+- NDCG@5: 0.3609  
+- NDCG@10: 0.3758  
+- MRR@5: 0.3457  
+- MRR@10: 0.3519  
+
+## Observations
+- VS-KNN significantly outperforms MostPop on session-based data  
+- The model effectively captures short-term user intent through session similarity  
+- High performance indicates that neighborhood-based methods are well-suited for session-based recommendation  
+- However, the current implementation operates on full session information rather than true session prefixes  
+
+## Methodological Limitation
+
+The current VS-KNN implementation:
+- uses complete sessions as input instead of session prefixes  
+- relies on the GeneralRecommender interface, which is designed for user-based recommendation  
+- does not fully align with the standard formulation of next-item prediction  
+
+As a result, the evaluation represents an approximation of session-based recommendation rather than a fully correct sequential setup.  
+
+## Interpretation
+
+The results confirm that:
+- session-based nearest-neighbor models are highly effective on clickstream data  
+- RecBole can be extended to support non-parametric session-based methods  
+- careful alignment between model design and evaluation protocol is critical  
+
+## Role of This Step
+This step validates the feasibility of integrating session-based nearest-neighbor models into RecBole.
+
+It also highlights the need for a more principled integration aligned with sequential recommendation.  
+
+## Next Steps
+- refactor VS-KNN to use RecBole’s SequentialRecommender interface  
+- adapt the model to operate on session prefixes (`item_seq`)  
+- ensure proper next-item prediction setup  
+- implement VSTAN on top of the improved sequential formulation  
+- compare session-based models against popularity-based and BPR baselines  
 
 
