@@ -1173,7 +1173,7 @@ It marks the transition from:
 
 ## Results
 
-### VS-KNN on Yoochoose (sample)
+### VS-KNN on Yoochoose (sample) (Generalrecommender (false recommender))
 - Hit@5: 0.4101  
 - Hit@10: 0.4560  
 - NDCG@5: 0.3609  
@@ -1214,5 +1214,66 @@ It also highlights the need for a more principled integration aligned with seque
 - ensure proper next-item prediction setup  
 - implement VSTAN on top of the improved sequential formulation  
 - compare session-based models against popularity-based and BPR baselines  
+
+
+
+## 2026-04-29 – Refactoring VS-KNN to RecBole SequentialRecommender
+
+### Overview
+
+* Refactored the initial VS-KNN implementation from `GeneralRecommender` to RecBole’s `SequentialRecommender` interface
+* Replaced the pseudo-user/session approximation with a sequence-based formulation
+* Adapted VS-KNN to operate on item sequences (`item_seq`) and predict the next item
+* Built reference sessions from RecBole’s sequential interaction representation
+* Preserved the non-parametric nearest-neighbor logic while aligning the model more closely with session-based recommendation
+* Evaluated the sequential VS-KNN implementation on the Yoochoose sample dataset
+
+---
+
+### Results
+
+VS-KNN Sequential on Yoochoose sample: (Correct Recommender)
+
+* Hit@5: 0.3986
+* Hit@10: 0.4947
+* NDCG@5: 0.2870
+* NDCG@10: 0.3182
+* MRR@5: 0.2500
+* MRR@10: 0.2629
+
+---
+
+### Observations
+
+* The sequential implementation produces strong results on the Yoochoose sample
+* Hit@10 improves compared to the first GeneralRecommender-based approximation
+* NDCG and MRR are lower than in the earlier approximation, indicating that relevant items are often found in the top-10 but not always ranked at the very top
+* The new implementation is methodologically better aligned with next-item prediction
+
+---
+
+### Interpretation
+
+The results indicate that VS-KNN is a strong session-based baseline for clickstream data.
+
+The migration to `SequentialRecommender` improves the conceptual fit with RecBole’s session/sequential recommendation setup and reduces the methodological limitations of the previous approximation.
+
+---
+
+### Role of This Step
+
+This step improves the scientific validity of the VS-KNN integration by aligning it with RecBole’s sequential recommendation interface.
+
+It establishes a stronger foundation for implementing VSTAN and other session-based baselines.
+
+---
+
+### Next Steps
+
+* implement VSTAN using the sequential VS-KNN structure as a base
+* compare MostPop and VS-KNN on Yoochoose
+* extend the session-based comparison pipeline
+* later perform hyperparameter tuning for `k`, sample size, and sequence length
+
 
 
