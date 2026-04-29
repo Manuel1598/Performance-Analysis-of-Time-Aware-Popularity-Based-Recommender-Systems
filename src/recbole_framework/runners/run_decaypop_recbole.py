@@ -5,7 +5,7 @@ from recbole.config import Config
 from recbole.data import create_dataset, data_preparation
 from recbole.trainer import Trainer
 
-from src.recbole_framework.custom_models.decaypop_recbole import DecayPopRecBole
+from src.recbole_framework.custom_models.topn.decaypop_recbole import DecayPopRecBole
 
 
 # =========================

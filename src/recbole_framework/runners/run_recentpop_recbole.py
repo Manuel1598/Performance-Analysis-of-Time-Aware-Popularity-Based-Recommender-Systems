@@ -5,7 +5,7 @@ from recbole.config import Config
 from recbole.data import create_dataset, data_preparation
 from recbole.trainer import Trainer
 
-from src.recbole_framework.custom_models.recentpop_recbole import RecentPopRecBole
+from src.recbole_framework.custom_models.topn.recentpop_recbole import RecentPopRecBole
 
 
 DATASETS = {

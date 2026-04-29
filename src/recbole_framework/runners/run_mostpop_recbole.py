@@ -5,7 +5,7 @@ from recbole.config import Config
 from recbole.data import create_dataset, data_preparation
 from recbole.trainer import Trainer
 
-from src.recbole_framework.custom_models.mostpop_recbole import MostPopRecBole
+from src.recbole_framework.custom_models.topn.mostpop_recbole import MostPopRecBole
 
 
 DATASETS = {
@@ -16,6 +16,10 @@ DATASETS = {
     "amazon": {
         "recbole_name": "amazon_recbole",
         "output_prefix": "amazon",
+    },
+    "yoochoose": {
+        "recbole_name": "yoochoose_recbole",
+        "output_prefix": "yoochoose",
     },
 }
 
