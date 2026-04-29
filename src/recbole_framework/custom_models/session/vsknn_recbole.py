@@ -115,17 +115,6 @@ class VSKNNRecBole(GeneralRecommender):
             for item_id in neighbor_items:
                 scores[item_id] += similarity
 
-
-        if random.random() < 0.0001:
-            print("\nDEBUG SESSION:", session_id)
-            print("DEBUG current_items:", current_items[:10])
-            print("DEBUG candidate_sessions:", len(candidate_sessions))
-            print("DEBUG nonzero scores:", torch.count_nonzero(scores).item())
-
-            if torch.count_nonzero(scores) > 0:
-                print("DEBUG top scores:",
-                      torch.topk(scores, k=10).values.tolist())
-
         return scores
 
     def _find_candidate_sessions(
