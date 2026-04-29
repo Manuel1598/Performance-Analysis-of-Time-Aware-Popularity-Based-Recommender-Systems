@@ -17,9 +17,9 @@ DATASETS = {
         "recbole_name": "amazon_recbole",
         "output_prefix": "amazon",
     },
-    "yoochoose": {
-        "recbole_name": "yoochoose_recbole",
-        "output_prefix": "yoochoose",
+    "yoochoose_sample": {
+        "recbole_name": "yoochoose_recbole_sample",
+        "output_prefix": "yoochoose_sample",
     },
 }
 
