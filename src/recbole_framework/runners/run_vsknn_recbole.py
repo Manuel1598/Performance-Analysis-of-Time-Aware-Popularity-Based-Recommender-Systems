@@ -54,7 +54,7 @@ def main() -> None:
     train_data, valid_data, test_data = data_preparation(config, dataset)
 
     print("Initializing VSKNNRecBole model...")
-    model = VSKNNRecBole(config, dataset).to(config["device"])
+    model = VSKNNRecBole(config, train_data.dataset).to(config["device"])
     print(model)
 
     print("Creating trainer...")

@@ -88,7 +88,9 @@ class VSKNNRecBole(GeneralRecommender):
 
         current_item_set = set(current_items)
 
-        candidate_sessions = self._find_candidate_sessions(current_item_set, session_id)
+        candidate_sessions = self._find_candidate_sessions(
+            current_item_set, session_id
+        )
 
         if not candidate_sessions:
             return scores
@@ -111,10 +113,18 @@ class VSKNNRecBole(GeneralRecommender):
             neighbor_items = self.session_items[neighbor_session_id]
 
             for item_id in neighbor_items:
-                if item_id in current_item_set:
-                    continue
-
                 scores[item_id] += similarity
+
+
+        if random.random() < 0.0001:
+            print("\nDEBUG SESSION:", session_id)
+            print("DEBUG current_items:", current_items[:10])
+            print("DEBUG candidate_sessions:", len(candidate_sessions))
+            print("DEBUG nonzero scores:", torch.count_nonzero(scores).item())
+
+            if torch.count_nonzero(scores) > 0:
+                print("DEBUG top scores:",
+                      torch.topk(scores, k=10).values.tolist())
 
         return scores
 
