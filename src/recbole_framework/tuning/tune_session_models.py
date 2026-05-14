@@ -65,6 +65,10 @@ def run_experiment(
     return {
         "model": model_name,
         "dataset": dataset_name,
+        "device": device,
+        "epochs": config["epochs"],
+        "train_batch_size": config["train_batch_size"],
+        "eval_batch_size": config["eval_batch_size"],
         **config_updates,
         **dict(test_result),
     }
@@ -115,7 +119,7 @@ def main() -> None:
     dataset_name = "yoochoose_recbole_sample"
 
     # VS-KNN tuning
-    for k, sample_size in product([50, 100, 200], [250, 500, 1000]):
+    for k, sample_size in product([50, 100], [250]):
         config_updates = {
             "vsknn_k": k,
             "vsknn_sample_size": sample_size,
@@ -135,9 +139,9 @@ def main() -> None:
 
     # VSTAN tuning
     for k, sample_size, position_decay, idf_weighting in product(
-        [50, 100, 200],
-        [250, 500],
-        [0.05, 0.1, 0.2],
+        [50, 100],
+        [250],
+        [0.1],
         [True, False],
     ):
         config_updates = {
@@ -161,10 +165,10 @@ def main() -> None:
 
     # GRU4Rec tuning
     for hidden_size, learning_rate, dropout_prob, epochs in product(
-        [64, 128],
-        [0.001, 0.0005],
-        [0.1, 0.2],
-        [10, 20],
+        [64],
+        [0.001],
+        [0.2],
+        [5],
     ):
         config_updates = {
             "model": "GRU4Rec",
@@ -193,8 +197,34 @@ def main() -> None:
 
     results_df = pd.DataFrame(all_results)
 
+    summary_columns = [
+        "model",
+        "hit@10",
+        "ndcg@10",
+        "mrr@10",
+        "vsknn_k",
+        "vsknn_sample_size",
+        "vstan_k",
+        "vstan_sample_size",
+        "vstan_position_decay",
+        "vstan_idf_weighting",
+        "hidden_size",
+        "learning_rate",
+        "dropout_prob",
+        "epochs",
+        "train_batch_size",
+        "eval_batch_size",
+        "device",
+    ]
+
+    available_columns = [col for col in summary_columns if col in results_df.columns]
+
     print("\nBest configurations by MRR@10:")
-    print(results_df.sort_values("mrr@10", ascending=False).head(10))
+    print(
+        results_df
+        .sort_values("mrr@10", ascending=False)
+        .head(10)[available_columns]
+    )
 
     print(f"\nSaved tuning results to: {output_file}")
 
