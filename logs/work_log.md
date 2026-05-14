@@ -1277,3 +1277,62 @@ It establishes a stronger foundation for implementing VSTAN and other session-ba
 
 
 
+## 2026-05-14 – Implementation of VSTAN within the RecBole framework
+
+### Overview
+
+* Implemented the VSTAN session-based nearest-neighbor model as a custom RecBole sequential recommender
+* Extended the previously implemented VS-KNN model with additional temporal and weighting mechanisms
+* Adapted the implementation to RecBole’s `SequentialRecommender` interface
+* Built sequence-based recommendation using `item_seq` representations
+* Added position-based weighting to emphasize more recent interactions within a session
+* Added optional IDF weighting to reduce the influence of highly popular items
+* Preserved compatibility with RecBole’s full-sort Top-N evaluation pipeline
+
+---
+
+### Model Characteristics
+
+#### VSTAN
+
+* extends VS-KNN with temporal and positional weighting
+* emphasizes recent items within a session
+* reduces dominance of globally popular items through IDF weighting
+* operates as a non-parametric session-based nearest-neighbor recommender
+
+---
+
+### Observations
+
+* VSTAN is structurally more complex than VS-KNN
+* the model combines:
+  * session similarity
+  * sequence recency
+  * item weighting
+* integrating VSTAN into RecBole required adapting a non-neural nearest-neighbor method to a sequential recommendation framework
+
+---
+
+### Interpretation
+
+The implementation demonstrates that RecBole can be extended beyond its standard neural recommendation models to support advanced session-based nearest-neighbor approaches.
+
+The migration toward `SequentialRecommender` improves the methodological correctness of session-based next-item prediction.
+
+---
+
+### Role of This Step
+
+This step completes the first integration of advanced session-based nearest-neighbor methods into the RecBole framework.
+
+Together with VS-KNN, it establishes a session-based recommendation benchmark suite for Yoochoose experiments.
+
+---
+
+### Next Steps
+
+* run VSTAN on Yoochoose sample
+* compare MostPop, VS-KNN, and VSTAN
+* analyze the effect of temporal weighting
+* start systematic hyperparameter tuning
+* investigate runtime-performance tradeoffs
