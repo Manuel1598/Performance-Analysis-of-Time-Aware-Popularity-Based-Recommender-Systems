@@ -1570,3 +1570,84 @@ It supports the overall goal of:
 - support interruption-safe experiment continuation
 - integrate tuning results into the evaluation workflow
 - perform the first systematic tuning runs on Yoochoose sample datasets
+
+
+# 2026-04-29 – Integration of GRU4Rec and Initial Hyperparameter Tuning Pipeline
+
+## Overview
+
+- Integrated the GRU4Rec neural sequential recommendation model from RecBole
+- Added GPU acceleration support via CUDA for neural model training
+- Evaluated GRU4Rec on the Yoochoose sample dataset
+- Extended the session-based comparison pipeline with a neural baseline
+- Started development of an automated hyperparameter tuning framework for session-based recommendation models
+
+---
+
+## GRU4Rec Results
+
+### GRU4Rec on Yoochoose Sample
+
+| Metric   | Value  |
+|----------|--------:|
+| Hit@5    | 0.3548  |
+| Hit@10   | 0.4566  |
+| NDCG@5   | 0.2486  |
+| NDCG@10  | 0.2816  |
+| MRR@5    | 0.2135  |
+| MRR@10   | 0.2272  |
+
+---
+
+## Observations
+
+- GRU4Rec substantially outperforms the MostPop baseline
+- VS-KNN and VSTAN still achieve stronger ranking performance on the current Yoochoose sample setup
+- GPU acceleration significantly reduced training time for neural recommendation experiments
+- The results confirm that strong nearest-neighbor baselines remain highly competitive against neural approaches
+
+---
+
+## Hyperparameter Tuning Pipeline
+
+Implemented an initial automated tuning framework supporting:
+
+- repeated experiment execution
+- configurable parameter grids
+- automatic result aggregation
+- CSV-based result storage
+
+### Current Tuning Support
+
+- VS-KNN
+- VSTAN
+
+### Currently Explored Parameters
+
+- neighborhood size (`k`)
+- candidate session sample size
+- position decay
+- IDF weighting
+
+---
+
+## Role of This Step
+
+This step extends the project from:
+
+- static model evaluation
+
+toward:
+
+- systematic model optimization
+- reproducible hyperparameter exploration
+- scalable GPU-accelerated experimentation
+
+---
+
+## Next Steps
+
+- extend tuning support to GRU4Rec
+- analyze best-performing parameter combinations
+- scale experiments beyond the Yoochoose sample dataset
+- compare runtime and recommendation quality across models
