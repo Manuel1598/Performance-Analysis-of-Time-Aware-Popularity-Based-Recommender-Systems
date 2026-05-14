@@ -165,10 +165,10 @@ def main() -> None:
 
     # GRU4Rec tuning
     for hidden_size, learning_rate, dropout_prob, epochs in product(
-        [64],
+        [128,256],
+        [10,20],
         [0.001],
         [0.2],
-        [5],
     ):
         config_updates = {
             "model": "GRU4Rec",
