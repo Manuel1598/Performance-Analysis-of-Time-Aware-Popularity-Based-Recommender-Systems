@@ -1336,3 +1336,81 @@ Together with VS-KNN, it establishes a session-based recommendation benchmark su
 * analyze the effect of temporal weighting
 * start systematic hyperparameter tuning
 * investigate runtime-performance tradeoffs
+
+
+# 2026-05-14 – Comparative Evaluation of Session-Based RecBole Models
+
+## Overview
+
+Conducted the first comparative evaluation of session-based recommendation models within the RecBole framework.
+
+### Compared Models
+- MostPop
+- VS-KNN
+- VSTAN
+
+All models were executed on the Yoochoose sample dataset using identical RecBole evaluation settings.
+
+Generated unified comparison tables and visualizations for:
+- Hit@10
+- NDCG@10
+- MRR@10
+
+Additionally, a dedicated session-model comparison analysis pipeline was added.
+
+---
+
+## Results
+
+| Model   | Hit@10 | NDCG@10 | MRR@10 |
+|---------|--------:|---------:|--------:|
+| MostPop | 0.0003  | 0.0001   | 0.0001  |
+| VS-KNN  | 0.4947  | 0.3182   | 0.2629  |
+| VSTAN   | 0.5140  | 0.3280   | 0.2698  |
+
+---
+
+## Observations
+
+- Session-based nearest-neighbor models dramatically outperform the global MostPop baseline.
+- MostPop performs poorly because it ignores the current session context.
+- VS-KNN effectively captures short-term user intent through session similarity.
+- VSTAN further improves VS-KNN by incorporating:
+  - positional weighting
+  - temporal emphasis
+  - IDF-based item weighting
+- The improvements of VSTAN over VS-KNN are consistent across all ranking metrics.
+
+---
+
+## Interpretation
+
+The results demonstrate that:
+
+- session context is essential for next-item prediction in clickstream datasets
+- simple popularity-based recommendation is insufficient for session-based recommendation tasks
+- nearest-neighbor session models remain highly competitive baselines
+- RecBole can successfully support both:
+  - traditional recommendation models
+  - session-based recommendation approaches
+
+---
+
+## Role of This Step
+
+This step establishes the first complete session-based evaluation pipeline within the project.
+
+It provides:
+- a reproducible benchmarking setup
+- direct comparability between session-based algorithms
+- the foundation for future hyperparameter tuning and larger-scale experiments
+
+---
+
+## Next Steps
+
+- perform hyperparameter tuning for VS-KNN and VSTAN
+- evaluate runtime-performance tradeoffs
+- scale experiments from Yoochoose sample to larger subsets
+- optionally integrate neural sequential models such as GRU4Rec
+- analyze popularity bias and coverage in session-based recommendation
