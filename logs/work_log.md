@@ -1414,3 +1414,159 @@ It provides:
 - scale experiments from Yoochoose sample to larger subsets
 - optionally integrate neural sequential models such as GRU4Rec
 - analyze popularity bias and coverage in session-based recommendation
+
+
+# 2026-05-14 – GPU-Enabled Python Environment and CUDA Setup for RecBole Experiments
+
+## Overview
+
+- Installed Python 3.12 to improve compatibility with machine learning libraries
+- Replaced the previous Python 3.14 environment due to incompatibilities with RecBole and CUDA-enabled PyTorch
+- Created a new isolated virtual environment (`.venv`) for the project
+- Installed CUDA-enabled PyTorch within the virtual environment
+- Successfully enabled GPU acceleration for RecBole-based neural recommendation experiments
+- Configured the development environment to use the new Python interpreter inside PyCharm
+
+---
+
+## Technical Setup
+
+### Environment
+
+- Python 3.12
+- Virtual environment via `venv`
+- CUDA-enabled PyTorch
+- NVIDIA RTX 2070 SUPER GPU
+
+### Installed Core Libraries
+
+- PyTorch
+- RecBole
+- pandas
+- numpy
+- matplotlib
+
+---
+
+## Observations
+
+- Python 3.14 caused compatibility issues with:
+  - CUDA-enabled PyTorch wheels
+  - RecBole dependencies
+- Downgrading to Python 3.12 resolved the installation and compatibility problems
+- GPU acceleration significantly improves runtime for neural recommendation models such as GRU4Rec
+
+---
+
+## Role of This Step
+
+This step establishes a reproducible and scalable experimental environment for future recommendation experiments.
+
+It provides the technical foundation for:
+
+- GPU-based neural recommendation training
+- large-scale session-based experiments
+- automated hyperparameter tuning
+
+---
+
+## Next Steps
+
+- migrate future experiments fully to the new virtual environment
+- create a reproducible `requirements.txt`
+- benchmark runtime differences between CPU and GPU execution
+- use GPU acceleration for larger-scale tuning experiments
+
+---
+
+# 2026-05-14 – Initial Implementation of Automated Hyperparameter Tuning Pipeline
+
+## Overview
+
+- Started development of an automated hyperparameter tuning pipeline for RecBole experiments
+- Designed a framework for systematic parameter exploration across multiple recommendation models
+- Added support for configurable parameter grids
+- Planned automatic result collection and comparison across tuning runs
+- Prepared the tuning pipeline for future GPU-accelerated large-scale experiments
+
+---
+
+## Planned Functionality
+
+The tuning pipeline is intended to:
+
+- automatically execute multiple experiment configurations
+- vary model-specific hyperparameters
+- store evaluation results after each run
+- identify best-performing parameter combinations
+- support reproducible benchmarking across datasets and models
+
+---
+
+## Target Models
+
+### Initial Focus
+
+- VS-KNN
+- VSTAN
+- GRU4Rec
+
+### Planned Future Extensions
+
+- BPR
+- NeuMF
+- additional sequential recommendation models
+
+---
+
+## Planned Hyperparameters
+
+### VS-KNN
+
+- number of neighbors (`k`)
+- candidate session sample size
+
+### VSTAN
+
+- number of neighbors (`k`)
+- position decay
+- IDF weighting
+- candidate session sampling
+
+### GRU4Rec
+
+- hidden size
+- learning rate
+- batch size
+- number of epochs
+- dropout probability
+
+---
+
+## Observations
+
+- Hyperparameter tuning becomes computationally feasible after enabling GPU acceleration
+- Session-based models are highly sensitive to parameter selection
+- Automated tuning is necessary for fair and reproducible comparison between neural and non-neural models
+
+---
+
+## Role of This Step
+
+This step introduces the foundation for systematic model optimization and fair experimental evaluation.
+
+It supports the overall goal of:
+
+- reproducibility
+- transparent evaluation
+- scientifically rigorous comparison between recommendation approaches
+
+---
+
+## Next Steps
+
+- finalize the tuning pipeline implementation
+- add automatic CSV result aggregation
+- support interruption-safe experiment continuation
+- integrate tuning results into the evaluation workflow
+- perform the first systematic tuning runs on Yoochoose sample datasets
