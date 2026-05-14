@@ -17,6 +17,10 @@ MODELS = {
         "display_name": "VSTAN",
         "file_name": "yoochoose_sample_vstan_recbole_metrics.csv",
     },
+    "gru4rec": {
+        "display_name": "GRU4Rec",
+        "file_name": "yoochoose_sample_gru4rec_recbole_metrics.csv",
+    },
 }
 
 
