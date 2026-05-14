@@ -115,7 +115,6 @@ def main() -> None:
     print(f"Using device: {device}")
 
     all_results = []
-
     dataset_name = "yoochoose_recbole_sample"
 
     # VS-KNN tuning
@@ -165,10 +164,10 @@ def main() -> None:
 
     # GRU4Rec tuning
     for hidden_size, learning_rate, dropout_prob, epochs in product(
-        [128,256],
-        [10,20],
+        [128, 256],
         [0.001],
         [0.2],
+        [10, 20],
     ):
         config_updates = {
             "model": "GRU4Rec",
