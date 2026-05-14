@@ -1689,3 +1689,84 @@ The reduced grid helps test:
 * identify best-performing configurations by MRR@10
 * expand the parameter grid for longer server or overnight runs
 * use tuning results to improve final model comparisons
+
+
+
+# 2026-05-14 – Analysis and Evaluation of Session-Based Hyperparameter Tuning Results
+
+## Overview
+
+- Completed the first successful hyperparameter tuning runs for:
+  - VS-KNN
+  - VSTAN
+  - GRU4Rec
+- Added automated analysis and reporting for tuning results
+- Implemented result ranking based on `MRR@10`
+- Added extraction of:
+  - best overall configurations
+  - best configuration per model
+- Exported summarized tuning results into structured CSV files for later thesis evaluation
+
+---
+
+## Main Findings
+
+### Session-Based Nearest-Neighbor Models
+
+- VSTAN achieved the strongest ranking performance on the Yoochoose sample dataset
+- VS-KNN remained highly competitive and consistently outperformed the popularity baseline
+
+### GRU4Rec
+
+- Initial GRU4Rec configurations produced weak results due to incorrect hyperparameter settings
+- After correcting the tuning grid, GRU4Rec performance improved substantially
+- Tuned GRU4Rec remained below the best VSTAN configuration on the current Yoochoose sample setup
+
+---
+
+## Best Observed Performance
+
+Current observations indicate:
+
+- VSTAN currently achieves the best overall `MRR@10`
+- Session-based nearest-neighbor methods remain highly competitive against neural approaches
+- Hyperparameter tuning has a significant impact on GRU4Rec performance
+
+---
+
+## Technical Improvements
+
+- Improved result reporting and CSV export structure
+- Reduced unnecessary NaN-heavy output in analysis tables
+- Added reusable tuning analysis workflow for future experiments
+- Added automatic extraction of best-performing configurations
+
+### Generated Outputs Include
+
+- overall best tuning configurations
+- best configuration per model
+- summarized CSV reports for later visualization and thesis integration
+
+---
+
+## Role of This Step
+
+This step marks the transition from:
+
+- initial model implementation
+
+toward:
+
+- systematic experimental evaluation
+- comparative model optimization
+- reproducible session-based benchmarking
+
+---
+
+## Next Steps
+
+- integrate tuned configurations into the final comparison pipeline
+- scale experiments to larger Yoochoose subsets
+- perform longer and larger tuning runs
+- compare runtime and recommendation quality across models
+- prepare visualizations and evaluation tables for the thesis
