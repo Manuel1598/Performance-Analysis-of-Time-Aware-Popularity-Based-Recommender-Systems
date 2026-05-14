@@ -1651,3 +1651,41 @@ toward:
 - analyze best-performing parameter combinations
 - scale experiments beyond the Yoochoose sample dataset
 - compare runtime and recommendation quality across models
+
+
+
+## 2026-05-14 – Initial execution of session-based hyperparameter tuning
+
+### Overview
+
+* Started the first automated hyperparameter tuning run for session-based RecBole models
+* Extended the tuning setup to include:
+  * VS-KNN
+  * VSTAN
+  * GRU4Rec
+* Added GPU support for neural model tuning where available
+* Configured the tuning script to store results incrementally after each completed run
+* Started with a reduced parameter grid to validate stability before larger-scale tuning
+
+---
+
+### Purpose
+
+The goal of this step is to verify that the tuning pipeline works reliably before running larger experiments.
+
+The reduced grid helps test:
+
+* automated experiment execution
+* result collection
+* CSV output generation
+* model-specific parameter handling
+* GPU support for GRU4Rec
+
+---
+
+### Planned Next Steps
+
+* inspect the first tuning results
+* identify best-performing configurations by MRR@10
+* expand the parameter grid for longer server or overnight runs
+* use tuning results to improve final model comparisons
