@@ -1,5 +1,6 @@
 from itertools import product
 from pathlib import Path
+import time
 
 import pandas as pd
 import torch
@@ -9,6 +10,7 @@ from recbole.data import create_dataset, data_preparation
 from recbole.model.sequential_recommender import GRU4Rec
 from recbole.trainer import Trainer
 
+from src.recbole_framework.measurement.experiment_logger import ExperimentLogger
 from src.recbole_framework.custom_models.session.vsknn_recbole import VSKNNRecBole
 from src.recbole_framework.custom_models.session.vstan_recbole import VSTANRecBole
 
@@ -77,12 +79,15 @@ def run_experiment(
 def run_and_store(
     all_results: list[dict],
     output_file: Path,
+    logger: ExperimentLogger,
     model_class,
     model_name: str,
     dataset_name: str,
     config_updates: dict,
     device: str,
 ) -> None:
+    start_time = time.time()
+
     try:
         result = run_experiment(
             model_class=model_class,
@@ -92,10 +97,34 @@ def run_and_store(
             device=device,
         )
 
+        runtime_seconds = round(time.time() - start_time, 2)
+
+        result["status"] = "success"
+        result["error_message"] = ""
+        result["runtime_seconds"] = runtime_seconds
+        result["config_json"] = ExperimentLogger.serialize_config(config_updates)
+
         all_results.append(result)
         pd.DataFrame(all_results).to_csv(output_file, index=False)
 
+        logger.log_result(result)
+
     except Exception as error:
+        runtime_seconds = round(time.time() - start_time, 2)
+
+        failed_result = {
+            "model": model_name,
+            "dataset": dataset_name,
+            "device": device,
+            "status": "failed",
+            "error_message": str(error),
+            "runtime_seconds": runtime_seconds,
+            "config_json": ExperimentLogger.serialize_config(config_updates),
+            **config_updates,
+        }
+
+        logger.log_result(failed_result)
+
         print(f"Run failed for {model_name} with config {config_updates}")
         print(f"Error: {error}")
 
@@ -110,6 +139,15 @@ def main() -> None:
         / "yoochoose_session_tuning_results.csv"
     )
     output_file.parent.mkdir(parents=True, exist_ok=True)
+
+    log_file = (
+        project_root
+        / "recbole_results"
+        / "experiment_logs"
+        / "session_tuning_experiment_log.csv"
+    )
+
+    logger = ExperimentLogger(log_file)
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using device: {device}")
@@ -129,6 +167,7 @@ def main() -> None:
         run_and_store(
             all_results=all_results,
             output_file=output_file,
+            logger=logger,
             model_class=VSKNNRecBole,
             model_name="VS-KNN",
             dataset_name=dataset_name,
@@ -155,6 +194,7 @@ def main() -> None:
         run_and_store(
             all_results=all_results,
             output_file=output_file,
+            logger=logger,
             model_class=VSTANRecBole,
             model_name="VSTAN",
             dataset_name=dataset_name,
@@ -187,6 +227,7 @@ def main() -> None:
         run_and_store(
             all_results=all_results,
             output_file=output_file,
+            logger=logger,
             model_class=GRU4Rec,
             model_name="GRU4Rec",
             dataset_name=dataset_name,
@@ -195,6 +236,10 @@ def main() -> None:
         )
 
     results_df = pd.DataFrame(all_results)
+
+    if results_df.empty:
+        print("\nNo successful runs completed.")
+        return
 
     summary_columns = [
         "model",
@@ -214,6 +259,8 @@ def main() -> None:
         "train_batch_size",
         "eval_batch_size",
         "device",
+        "runtime_seconds",
+        "status",
     ]
 
     available_columns = [col for col in summary_columns if col in results_df.columns]
@@ -226,6 +273,7 @@ def main() -> None:
     )
 
     print(f"\nSaved tuning results to: {output_file}")
+    print(f"Saved experiment log to: {log_file}")
 
 
 if __name__ == "__main__":
