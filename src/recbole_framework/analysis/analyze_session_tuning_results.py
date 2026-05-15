@@ -23,11 +23,19 @@ def main() -> None:
 
     results_df = pd.read_csv(input_file)
 
+    successful_results = results_df[results_df["status"] == "success"].copy()
+
     summary_columns = [
         "model",
         "hit@10",
         "ndcg@10",
         "mrr@10",
+        "coverage@10",
+        "avg_recommendation_popularity@10",
+        "runtime_seconds",
+        "train_runtime_seconds",
+        "eval_runtime_seconds",
+        "extra_metrics_runtime_seconds",
         "vsknn_k",
         "vsknn_sample_size",
         "vstan_k",
@@ -41,60 +49,55 @@ def main() -> None:
         "train_batch_size",
         "eval_batch_size",
         "device",
+        "status",
     ]
 
     available_columns = [
-        col for col in summary_columns if col in results_df.columns
+        col for col in summary_columns
+        if col in successful_results.columns
     ]
 
     best_overall = (
-        results_df
+        successful_results
         .sort_values("mrr@10", ascending=False)
-        .head(10)
+        .head(20)
     )
 
-    print("\nBest configurations overall by MRR@10:")
-    print(best_overall[available_columns])
-
     best_per_model = (
-        results_df
+        successful_results
         .sort_values("mrr@10", ascending=False)
         .groupby("model", as_index=False)
         .first()
     )
 
+    print("\nBest configurations overall by MRR@10:")
+    print(best_overall[available_columns].head(10))
+
     print("\nBest configuration per model:")
     print(best_per_model[available_columns])
 
-    best_per_model_file = (
-        output_dir
-        / "best_session_tuning_configurations_per_model.csv"
-    )
-
-    best_overall_file = (
+    output_best_overall = (
         output_dir
         / "best_session_tuning_configurations_overall.csv"
     )
 
-    best_per_model[available_columns].to_csv(
-        best_per_model_file,
-        index=False,
+    output_best_per_model = (
+        output_dir
+        / "best_session_tuning_configurations_per_model.csv"
     )
 
     best_overall[available_columns].to_csv(
-        best_overall_file,
+        output_best_overall,
         index=False,
     )
 
-    print(
-        f"\nSaved best per-model configurations to: "
-        f"{best_per_model_file}"
+    best_per_model[available_columns].to_csv(
+        output_best_per_model,
+        index=False,
     )
 
-    print(
-        f"Saved best overall configurations to: "
-        f"{best_overall_file}"
-    )
+    print(f"\nSaved best overall configurations to: {output_best_overall}")
+    print(f"Saved best per-model configurations to: {output_best_per_model}")
 
 
 if __name__ == "__main__":
