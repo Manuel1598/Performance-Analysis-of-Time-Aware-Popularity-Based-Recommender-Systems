@@ -1,0 +1,4 @@
+model,hit@10,ndcg@10,mrr@10,vsknn_k,vsknn_sample_size,vstan_k,vstan_sample_size,vstan_position_decay,vstan_idf_weighting,hidden_size,learning_rate,dropout_prob,epochs,train_batch_size,eval_batch_size,device
+GRU4Rec,0.479,0.2992,0.2433,,,,,,,256.0,0.001,0.2,20,2048,2048,cuda
+VS-KNN,0.496,0.3178,0.2621,100.0,250.0,,,,,,,,1,2048,1024,cuda
+VSTAN,0.5147,0.3282,0.2699,,,100.0,250.0,0.1,True,,,,1,2048,1024,cuda

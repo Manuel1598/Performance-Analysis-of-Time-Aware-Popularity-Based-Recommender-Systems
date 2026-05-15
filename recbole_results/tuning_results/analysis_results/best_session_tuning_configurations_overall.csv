@@ -1,0 +1,11 @@
+model,hit@10,ndcg@10,mrr@10,vsknn_k,vsknn_sample_size,vstan_k,vstan_sample_size,vstan_position_decay,vstan_idf_weighting,hidden_size,learning_rate,dropout_prob,epochs,train_batch_size,eval_batch_size,device
+VSTAN,0.5147,0.3282,0.2699,,,100.0,250.0,0.1,True,,,,1,2048,1024,cuda
+VSTAN,0.5071,0.3246,0.2676,,,100.0,250.0,0.1,False,,,,1,2048,1024,cuda
+VSTAN,0.4986,0.3219,0.2665,,,50.0,250.0,0.1,True,,,,1,2048,1024,cuda
+VSTAN,0.497,0.3213,0.2662,,,50.0,250.0,0.1,False,,,,1,2048,1024,cuda
+VS-KNN,0.496,0.3178,0.2621,100.0,250.0,,,,,,,,1,2048,1024,cuda
+VS-KNN,0.4836,0.3141,0.2608,50.0,250.0,,,,,,,,1,2048,1024,cuda
+GRU4Rec,0.479,0.2992,0.2433,,,,,,,256.0,0.001,0.2,20,2048,2048,cuda
+GRU4Rec,0.4689,0.2914,0.2361,,,,,,,128.0,0.001,0.2,20,2048,2048,cuda
+GRU4Rec,0.3226,0.1851,0.1428,,,,,,,256.0,0.001,0.2,10,2048,2048,cuda
+GRU4Rec,0.2907,0.1653,0.1269,,,,,,,128.0,0.001,0.2,10,2048,2048,cuda
