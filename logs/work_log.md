@@ -1770,3 +1770,96 @@ toward:
 - perform longer and larger tuning runs
 - compare runtime and recommendation quality across models
 - prepare visualizations and evaluation tables for the thesis
+
+
+## 2026-05-15 – Persistent experiment logging and measurement infrastructure
+
+### Overview
+
+* Extended the session-based tuning pipeline with persistent experiment logging
+* Added automatic runtime measurement for all experiment executions
+* Added structured experiment tracking for:
+  * successful runs
+  * failed runs
+  * runtime information
+  * serialized configuration storage
+* Implemented reusable experiment logging utilities for long-running experiments and server execution
+* Added preparation utilities for additional evaluation metrics beyond ranking accuracy
+
+---
+
+### Experiment Logging
+
+A new experiment logging system was introduced to support:
+
+* incremental CSV-based result persistence
+* automatic saving after each completed run
+* fault tolerance for long-running tuning jobs
+* reproducible experiment tracking
+
+Stored information now includes:
+
+* model name
+* dataset
+* hyperparameter configuration
+* runtime
+* device (CPU/GPU)
+* evaluation metrics
+* execution status
+* error messages for failed runs
+
+This enables unattended large-scale experimentation on external servers.
+
+---
+
+### Measurement Infrastructure
+
+Additional evaluation utilities were prepared for future integration, including:
+
+* recommendation coverage
+* average recommendation popularity
+* popularity bias analysis
+
+These metrics will complement ranking-based evaluation metrics such as:
+
+* Hit@K
+* NDCG@K
+* MRR@K
+
+---
+
+### Motivation
+
+The initial evaluation pipeline focused mainly on ranking accuracy.
+
+The new infrastructure prepares the framework for:
+
+* larger-scale experiments
+* automated multi-dataset benchmarking
+* long-running hyperparameter tuning
+* reproducible evaluation workflows
+* additional beyond-accuracy measurements
+
+---
+
+### Role of This Step
+
+This step marks the transition from:
+
+* manual experimental execution
+
+toward:
+
+* scalable automated experimentation
+* server-based evaluation workflows
+* reproducible experiment management
+
+---
+
+### Next Steps
+
+* integrate coverage and popularity-based metrics into evaluation runs
+* extend tuning to larger parameter grids
+* execute longer GPU-based tuning runs
+* scale experiments to larger Yoochoose subsets
+* prepare multi-dataset evaluation pipelines for Adressa and Globo
