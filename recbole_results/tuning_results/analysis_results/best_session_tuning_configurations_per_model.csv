@@ -1,4 +1,4 @@
-model,hit@10,ndcg@10,mrr@10,vsknn_k,vsknn_sample_size,vstan_k,vstan_sample_size,vstan_position_decay,vstan_idf_weighting,hidden_size,learning_rate,dropout_prob,epochs,train_batch_size,eval_batch_size,device
-GRU4Rec,0.479,0.2992,0.2433,,,,,,,256.0,0.001,0.2,20,2048,2048,cuda
-VS-KNN,0.496,0.3178,0.2621,100.0,250.0,,,,,,,,1,2048,1024,cuda
-VSTAN,0.5147,0.3282,0.2699,,,100.0,250.0,0.1,True,,,,1,2048,1024,cuda
+model,hit@10,ndcg@10,mrr@10,coverage@10,avg_recommendation_popularity@10,runtime_seconds,train_runtime_seconds,eval_runtime_seconds,extra_metrics_runtime_seconds,vsknn_k,vsknn_sample_size,vstan_k,vstan_sample_size,vstan_position_decay,vstan_idf_weighting,hidden_size,learning_rate,dropout_prob,epochs,train_batch_size,eval_batch_size,device,status
+GRU4Rec,0.4825,0.3019,0.2456,0.6833033303330333,101.12228611402588,90.0,80.81,0.7,2.17,,,,,,,256.0,0.001,0.2,20,2048,2048,cuda,success
+VS-KNN,0.4962,0.3181,0.2625,0.7048604860486049,111.2254172787688,418.94,103.53,153.06,154.52,100.0,250.0,,,,,,,,1,2048,1024,cuda,success
+VSTAN,0.5145,0.3284,0.2702,0.7860936093609361,99.96378733823016,512.14,127.92,187.09,187.0,,,100.0,250.0,0.1,True,,,,1,2048,1024,cuda,success
