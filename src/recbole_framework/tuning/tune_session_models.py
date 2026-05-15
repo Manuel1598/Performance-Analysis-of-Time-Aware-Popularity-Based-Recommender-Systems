@@ -15,6 +15,75 @@ from src.recbole_framework.custom_models.session.vsknn_recbole import VSKNNRecBo
 from src.recbole_framework.custom_models.session.vstan_recbole import VSTANRecBole
 
 
+def extract_interaction(batch_data):
+    if isinstance(batch_data, tuple):
+        return batch_data[0]
+    return batch_data
+
+
+def extract_history_index(batch_data):
+    if isinstance(batch_data, tuple) and len(batch_data) > 1:
+        return batch_data[1]
+    return None
+
+
+def calculate_extra_metrics(
+    model,
+    test_data,
+    train_data,
+    config,
+    top_k: int = 10,
+) -> dict:
+    model.eval()
+
+    item_field = config["ITEM_ID_FIELD"]
+    n_items = train_data.dataset.num(item_field)
+
+    train_item_ids = train_data.dataset.inter_feat[item_field].long().cpu()
+    item_popularity = torch.bincount(train_item_ids, minlength=n_items).float()
+
+    recommended_items = set()
+    recommendation_popularities = []
+
+    with torch.no_grad():
+        for batch_data in test_data:
+            interaction = extract_interaction(batch_data)
+            history_index = extract_history_index(batch_data)
+
+            interaction = interaction.to(config["device"])
+
+            scores = model.full_sort_predict(interaction)
+            scores = scores.view(-1, n_items)
+
+            if history_index is not None:
+                scores[history_index] = -float("inf")
+
+            _, top_items = torch.topk(scores, k=top_k, dim=1)
+
+            top_items_cpu = top_items.cpu()
+
+            for rec_list in top_items_cpu.tolist():
+                recommended_items.update(rec_list)
+
+                for item_id in rec_list:
+                    recommendation_popularities.append(
+                        float(item_popularity[item_id].item())
+                    )
+
+    coverage = len(recommended_items) / n_items if n_items > 0 else 0.0
+
+    avg_popularity = (
+        sum(recommendation_popularities) / len(recommendation_popularities)
+        if recommendation_popularities
+        else 0.0
+    )
+
+    return {
+        f"coverage@{top_k}": coverage,
+        f"avg_recommendation_popularity@{top_k}": avg_popularity,
+    }
+
+
 def run_experiment(
     model_class,
     model_name: str,
@@ -55,14 +124,30 @@ def run_experiment(
     config_dict.update(config_updates)
 
     config = Config(model=model_class, config_dict=config_dict)
+
     dataset = create_dataset(config)
     train_data, valid_data, test_data = data_preparation(config, dataset)
 
     model = model_class(config, train_data.dataset).to(config["device"])
     trainer = Trainer(config, model)
 
+    train_start = time.time()
     trainer.fit(train_data, valid_data, saved=False, verbose=False)
+    train_runtime_seconds = round(time.time() - train_start, 2)
+
+    eval_start = time.time()
     test_result = trainer.evaluate(test_data, load_best_model=False)
+    eval_runtime_seconds = round(time.time() - eval_start, 2)
+
+    extra_metrics_start = time.time()
+    extra_metrics = calculate_extra_metrics(
+        model=model,
+        test_data=test_data,
+        train_data=train_data,
+        config=config,
+        top_k=10,
+    )
+    extra_metrics_runtime_seconds = round(time.time() - extra_metrics_start, 2)
 
     return {
         "model": model_name,
@@ -71,8 +156,12 @@ def run_experiment(
         "epochs": config["epochs"],
         "train_batch_size": config["train_batch_size"],
         "eval_batch_size": config["eval_batch_size"],
+        "train_runtime_seconds": train_runtime_seconds,
+        "eval_runtime_seconds": eval_runtime_seconds,
+        "extra_metrics_runtime_seconds": extra_metrics_runtime_seconds,
         **config_updates,
         **dict(test_result),
+        **extra_metrics,
     }
 
 
@@ -155,7 +244,6 @@ def main() -> None:
     all_results = []
     dataset_name = "yoochoose_recbole_sample"
 
-    # VS-KNN tuning
     for k, sample_size in product([50, 100], [250]):
         config_updates = {
             "vsknn_k": k,
@@ -175,7 +263,6 @@ def main() -> None:
             device=device,
         )
 
-    # VSTAN tuning
     for k, sample_size, position_decay, idf_weighting in product(
         [50, 100],
         [250],
@@ -202,7 +289,6 @@ def main() -> None:
             device=device,
         )
 
-    # GRU4Rec tuning
     for hidden_size, learning_rate, dropout_prob, epochs in product(
         [128, 256],
         [0.001],
@@ -246,6 +332,8 @@ def main() -> None:
         "hit@10",
         "ndcg@10",
         "mrr@10",
+        "coverage@10",
+        "avg_recommendation_popularity@10",
         "vsknn_k",
         "vsknn_sample_size",
         "vstan_k",
@@ -258,12 +346,18 @@ def main() -> None:
         "epochs",
         "train_batch_size",
         "eval_batch_size",
-        "device",
+        "train_runtime_seconds",
+        "eval_runtime_seconds",
+        "extra_metrics_runtime_seconds",
         "runtime_seconds",
+        "device",
         "status",
     ]
 
-    available_columns = [col for col in summary_columns if col in results_df.columns]
+    available_columns = [
+        col for col in summary_columns
+        if col in results_df.columns
+    ]
 
     print("\nBest configurations by MRR@10:")
     print(
