@@ -1863,3 +1863,97 @@ toward:
 * execute longer GPU-based tuning runs
 * scale experiments to larger Yoochoose subsets
 * prepare multi-dataset evaluation pipelines for Adressa and Globo
+
+
+## 2026-05-15 – Extended session tuning measurements with runtime and beyond-accuracy metrics
+
+### Overview
+
+* Extended the session-based tuning pipeline with additional evaluation measurements
+* Added runtime tracking for:
+  * total runtime
+  * training runtime
+  * evaluation runtime
+  * additional metric computation runtime
+* Added beyond-accuracy measurements:
+  * Coverage@10
+  * Average Recommendation Popularity@10
+* Stored all additional measurements in both tuning result files and persistent experiment logs
+* Verified that all tuning runs completed successfully using CUDA acceleration
+
+---
+
+### Purpose
+
+The goal of this step was to move beyond pure ranking accuracy and prepare the evaluation pipeline for larger-scale and long-running experiments.
+
+The new measurements allow future analysis of:
+
+* recommendation quality
+* runtime-performance tradeoffs
+* catalog coverage
+* popularity bias
+* model scalability
+
+---
+
+### Observations
+
+* VS-KNN and VSTAN achieve strong ranking performance but require more runtime due to nearest-neighbor search
+* GRU4Rec runs substantially faster on GPU, but still remains below VSTAN in the current tuning setup
+* Runtime tracking is essential for comparing neural and non-parametric session-based models fairly
+
+---
+
+### Role of This Step
+
+This step expands the experimental infrastructure from simple metric reporting to a more complete evaluation setup.
+
+It prepares the project for unattended server-based experiments across larger datasets and wider hyperparameter grids.
+
+
+
+## 2026-05-15 – Improved analysis workflow for session tuning results
+
+### Overview
+
+* Updated the session tuning analysis script to include new measurement dimensions
+* Extended best-configuration reports with:
+  * Coverage@10
+  * Average Recommendation Popularity@10
+  * runtime measurements
+  * device information
+  * execution status
+* Generated updated best-overall and best-per-model result tables
+* Prepared analysis outputs for later use in thesis tables and visualizations
+
+---
+
+### Analysis Outputs
+
+Generated outputs include:
+
+* `best_session_tuning_configurations_overall.csv`
+* `best_session_tuning_configurations_per_model.csv`
+
+These files summarize the strongest configurations according to MRR@10 while preserving additional evaluation dimensions.
+
+---
+
+### Interpretation
+
+The analysis workflow now supports both:
+
+* accuracy-focused model selection
+* broader evaluation of efficiency and recommendation behavior
+
+This is important because the best model by ranking accuracy may not always be the best model in terms of runtime, coverage, or popularity bias.
+
+---
+
+### Next Steps
+
+* run larger tuning grids using the extended logging pipeline
+* prepare larger Yoochoose subsets
+* compare tuned models across sample sizes
+* integrate the same measurement structure into future datasets such as Globo and Adressa
