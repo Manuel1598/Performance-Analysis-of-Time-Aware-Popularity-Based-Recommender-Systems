@@ -1957,3 +1957,74 @@ This is important because the best model by ranking accuracy may not always be t
 * prepare larger Yoochoose subsets
 * compare tuned models across sample sizes
 * integrate the same measurement structure into future datasets such as Globo and Adressa
+
+
+## 2026-05-16 – Multi-dataset session-based evaluation on Yoochoose and Globo
+
+### Overview
+
+* Successfully executed the unified session-based tuning pipeline on multiple datasets
+* Evaluated:
+  * VS-KNN
+  * VSTAN
+  * GRU4Rec
+* across:
+  * Yoochoose sample
+  * Globo sample
+
+The experiments were executed using the shared RecBole-based tuning framework with automated logging and extended evaluation metrics.
+
+---
+
+### Evaluation Dimensions
+
+The pipeline now supports automated evaluation of:
+
+#### Ranking Metrics
+* Hit@10
+* NDCG@10
+* MRR@10
+
+#### Beyond-Accuracy Metrics
+* Coverage@10
+* Average Recommendation Popularity@10
+
+#### Efficiency Metrics
+* total runtime
+* training runtime
+* evaluation runtime
+* additional metric runtime
+
+---
+
+### Observations
+
+* VSTAN currently achieves the strongest ranking performance on Yoochoose
+* VS-KNN remains highly competitive despite its simpler neighborhood-based structure
+* GRU4Rec benefits strongly from GPU acceleration and significantly lower runtime
+* Globo produces lower recommendation accuracy overall, indicating a more challenging and dynamic recommendation setting
+
+---
+
+### Importance for the Thesis
+
+This step establishes a reproducible multi-dataset benchmarking environment for session-based recommendation experiments.
+
+The infrastructure now supports:
+
+* automated experimentation
+* large-scale hyperparameter tuning
+* cross-dataset comparison
+* runtime and popularity-bias analysis
+
+This forms the technical foundation for the later large-scale evaluation phase of the thesis.
+
+---
+
+### Next Steps
+
+* integrate Adressa dataset
+* create larger Yoochoose and Globo subsets
+* expand hyperparameter grids
+* prepare long-running server-side experiments
+* generate comparative plots and analysis tables
