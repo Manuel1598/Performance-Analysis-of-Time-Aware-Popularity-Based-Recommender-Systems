@@ -225,7 +225,7 @@ def main() -> None:
         project_root
         / "recbole_results"
         / "tuning_results"
-        / "yoochoose_session_tuning_results.csv"
+        / "session_tuning_results.csv"
     )
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
@@ -242,84 +242,94 @@ def main() -> None:
     print(f"Using device: {device}")
 
     all_results = []
-    dataset_name = "yoochoose_recbole_sample"
 
-    for k, sample_size in product([50, 100], [250]):
-        config_updates = {
-            "vsknn_k": k,
-            "vsknn_sample_size": sample_size,
-        }
+    datasets = [
+        "yoochoose_recbole_sample",
+        "globo_recbole_sample",
+    ]
 
-        print(f"Running VS-KNN: {config_updates}")
+    for dataset_name in datasets:
+        print(f"\n===== DATASET: {dataset_name} =====")
 
-        run_and_store(
-            all_results=all_results,
-            output_file=output_file,
-            logger=logger,
-            model_class=VSKNNRecBole,
-            model_name="VS-KNN",
-            dataset_name=dataset_name,
-            config_updates=config_updates,
-            device=device,
-        )
+        # VS-KNN tuning
+        for k, sample_size in product([50, 100], [250]):
+            config_updates = {
+                "vsknn_k": k,
+                "vsknn_sample_size": sample_size,
+            }
 
-    for k, sample_size, position_decay, idf_weighting in product(
-        [50, 100],
-        [250],
-        [0.1],
-        [True, False],
-    ):
-        config_updates = {
-            "vstan_k": k,
-            "vstan_sample_size": sample_size,
-            "vstan_position_decay": position_decay,
-            "vstan_idf_weighting": idf_weighting,
-        }
+            print(f"Running VS-KNN on {dataset_name}: {config_updates}")
 
-        print(f"Running VSTAN: {config_updates}")
+            run_and_store(
+                all_results=all_results,
+                output_file=output_file,
+                logger=logger,
+                model_class=VSKNNRecBole,
+                model_name="VS-KNN",
+                dataset_name=dataset_name,
+                config_updates=config_updates,
+                device=device,
+            )
 
-        run_and_store(
-            all_results=all_results,
-            output_file=output_file,
-            logger=logger,
-            model_class=VSTANRecBole,
-            model_name="VSTAN",
-            dataset_name=dataset_name,
-            config_updates=config_updates,
-            device=device,
-        )
+        # VSTAN tuning
+        for k, sample_size, position_decay, idf_weighting in product(
+            [50, 100],
+            [250],
+            [0.1],
+            [True, False],
+        ):
+            config_updates = {
+                "vstan_k": k,
+                "vstan_sample_size": sample_size,
+                "vstan_position_decay": position_decay,
+                "vstan_idf_weighting": idf_weighting,
+            }
 
-    for hidden_size, learning_rate, dropout_prob, epochs in product(
-        [128, 256],
-        [0.001],
-        [0.2],
-        [10, 20],
-    ):
-        config_updates = {
-            "model": "GRU4Rec",
-            "hidden_size": hidden_size,
-            "learning_rate": learning_rate,
-            "dropout_prob": dropout_prob,
-            "epochs": epochs,
-            "num_layers": 1,
-            "loss_type": "CE",
-            "train_neg_sample_args": None,
-            "train_batch_size": 2048,
-            "eval_batch_size": 2048,
-        }
+            print(f"Running VSTAN on {dataset_name}: {config_updates}")
 
-        print(f"Running GRU4Rec: {config_updates}")
+            run_and_store(
+                all_results=all_results,
+                output_file=output_file,
+                logger=logger,
+                model_class=VSTANRecBole,
+                model_name="VSTAN",
+                dataset_name=dataset_name,
+                config_updates=config_updates,
+                device=device,
+            )
 
-        run_and_store(
-            all_results=all_results,
-            output_file=output_file,
-            logger=logger,
-            model_class=GRU4Rec,
-            model_name="GRU4Rec",
-            dataset_name=dataset_name,
-            config_updates=config_updates,
-            device=device,
-        )
+        # GRU4Rec tuning
+        for hidden_size, learning_rate, dropout_prob, epochs in product(
+            [128, 256],
+            [0.001],
+            [0.2],
+            [10, 20],
+        ):
+            config_updates = {
+                "model": "GRU4Rec",
+                "hidden_size": hidden_size,
+                "learning_rate": learning_rate,
+                "dropout_prob": dropout_prob,
+                "epochs": epochs,
+                "num_layers": 1,
+                "loss_type": "CE",
+                "train_neg_sample_args": None,
+                "train_batch_size": 2048,
+                "eval_batch_size": 2048,
+            }
+
+            print(f"Running GRU4Rec on {dataset_name}: {config_updates}")
+
+            run_and_store(
+                all_results=all_results,
+                output_file=output_file,
+                logger=logger,
+                model_class=GRU4Rec,
+                model_name="GRU4Rec",
+                dataset_name=dataset_name,
+                config_updates=config_updates,
+                device=device,
+            )
 
     results_df = pd.DataFrame(all_results)
 
@@ -328,6 +338,7 @@ def main() -> None:
         return
 
     summary_columns = [
+        "dataset",
         "model",
         "hit@10",
         "ndcg@10",
