@@ -246,13 +246,17 @@ def main() -> None:
     datasets = [
         "yoochoose_recbole_sample",
         "globo_recbole_sample",
+        "adressa_recbole_sample",
     ]
 
     for dataset_name in datasets:
         print(f"\n===== DATASET: {dataset_name} =====")
 
         # VS-KNN tuning
-        for k, sample_size in product([50, 100], [250]):
+        for k, sample_size in product(
+                [50, 100],
+                [250],
+        ):
             config_updates = {
                 "vsknn_k": k,
                 "vsknn_sample_size": sample_size,
@@ -273,10 +277,10 @@ def main() -> None:
 
         # VSTAN tuning
         for k, sample_size, position_decay, idf_weighting in product(
-            [50, 100],
-            [250],
-            [0.1],
-            [True, False],
+                [50, 100],
+                [250],
+                [0.1],
+                [True, False],
         ):
             config_updates = {
                 "vstan_k": k,
@@ -300,10 +304,10 @@ def main() -> None:
 
         # GRU4Rec tuning
         for hidden_size, learning_rate, dropout_prob, epochs in product(
-            [128, 256],
-            [0.001],
-            [0.2],
-            [10, 20],
+                [128, 256],
+                [0.001],
+                [0.2],
+                [10, 20],
         ):
             config_updates = {
                 "model": "GRU4Rec",
