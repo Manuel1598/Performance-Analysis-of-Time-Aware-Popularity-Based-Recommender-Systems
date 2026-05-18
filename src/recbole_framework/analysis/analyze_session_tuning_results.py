@@ -7,10 +7,10 @@ def main() -> None:
     project_root = Path(__file__).resolve().parents[3]
 
     input_file = (
-        project_root
-        / "recbole_results"
-        / "tuning_results"
-        / "yoochoose_session_tuning_results.csv"
+            project_root
+            / "recbole_results"
+            / "tuning_results"
+            / "session_tuning_results.csv"
     )
 
     output_dir = (
@@ -26,6 +26,7 @@ def main() -> None:
     successful_results = results_df[results_df["status"] == "success"].copy()
 
     summary_columns = [
+        "dataset",
         "model",
         "hit@10",
         "ndcg@10",
@@ -66,7 +67,7 @@ def main() -> None:
     best_per_model = (
         successful_results
         .sort_values("mrr@10", ascending=False)
-        .groupby("model", as_index=False)
+        .groupby(["dataset", "model"], as_index=False)
         .first()
     )
 
