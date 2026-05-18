@@ -2028,3 +2028,107 @@ This forms the technical foundation for the later large-scale evaluation phase o
 * expand hyperparameter grids
 * prepare long-running server-side experiments
 * generate comparative plots and analysis tables
+
+
+
+# 2026-05-18 – Initial integration of the Adressa news dataset
+
+## Overview
+
+- Started the integration of the Adressa dataset into the session-based RecBole evaluation pipeline
+- Downloaded and prepared the larger multi-week Adressa dataset for future large-scale experiments
+- Analyzed the raw dataset structure and verified compatibility with the existing preprocessing infrastructure
+- Implemented the first version of the Adressa preprocessing pipeline for RecBole
+
+---
+
+## Dataset Characteristics
+
+Adressa represents a large-scale news recommendation dataset with highly dynamic user behavior and rapidly changing item popularity.
+
+The raw dataset consists of multiple daily interaction files:
+
+```text
+20170101
+20170102
+20170103
+...
+```
+
+Each file contains JSON-based interaction events stored line-by-line.
+
+The dataset includes information such as:
+
+- user identifiers
+- article identifiers
+- timestamps
+- URLs
+- article metadata
+- keyword profiles
+- publishing information
+
+---
+
+## Initial Preprocessing Strategy
+
+For the first session-based experiments, the preprocessing pipeline focuses only on the interaction information required for recommendation experiments.
+
+### Current Mapping
+
+| Original Field | Mapped Field |
+|---|---|
+| userId | user_id |
+| id | item_id |
+| time | timestamp |
+
+Additional metadata fields are currently ignored and may later be used for extended experiments.
+
+---
+
+## Technical Improvements
+
+The preprocessing pipeline was designed to support large-scale datasets by:
+
+- reading files line-by-line
+- avoiding full-memory JSON loading
+- filtering invalid events during parsing
+- generating RecBole-compatible `.inter` files
+- automatically creating smaller sample datasets for faster experimentation
+
+### Generated Outputs
+
+- `adressa_recbole.inter`
+- `adressa_recbole_sample.inter`
+
+---
+
+## Importance for the Thesis
+
+Adressa introduces a highly dynamic news recommendation scenario into the evaluation framework.
+
+This is especially relevant for:
+
+- time-aware recommendation analysis
+- popularity drift evaluation
+- session-based recommendation
+- cross-domain comparison
+
+The dataset complements the existing evaluation setup:
+
+| Dataset | Domain |
+|---|---|
+| MovieLens | long-term movie preferences |
+| Amazon | product recommendation |
+| Yoochoose | e-commerce sessions |
+| Globo | news recommendation |
+| Adressa | highly dynamic news recommendation |
+
+---
+
+## Planned Next Steps
+
+- finalize the Adressa preprocessing pipeline
+- generate the first Adressa sample dataset
+- execute initial RecBole experiments on Adressa
+- integrate Adressa into the automated tuning framework
+- compare session-based model behavior across multiple news datasets
