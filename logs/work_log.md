@@ -2132,3 +2132,194 @@ The dataset complements the existing evaluation setup:
 - execute initial RecBole experiments on Adressa
 - integrate Adressa into the automated tuning framework
 - compare session-based model behavior across multiple news datasets
+
+
+
+# 2026-05-18 – Preparation of the full-scale session-based tuning pipeline
+
+## Overview
+
+Designed and implemented a dedicated full-scale tuning pipeline for long-running recommendation experiments.
+
+Separated the lightweight sample-based tuning workflow from the large-scale evaluation workflow.
+
+Added support for:
+
+- full dataset evaluation
+- large hyperparameter grids
+- automatic resume functionality
+- completed-run skipping
+- persistent result storage
+- long-running experiment execution
+
+The new infrastructure is intended for multi-day or week-long experimental runs on high-performance hardware.
+
+---
+
+## Motivation for a Separate Full Tuning Pipeline
+
+The existing tuning pipeline was primarily designed for:
+
+- debugging
+- rapid iteration
+- preprocessing validation
+- quick metric verification
+
+using smaller dataset samples.
+
+As the project evolved toward large-scale experimentation, a separate full tuning workflow became necessary in order to:
+
+- avoid accidental modification of the lightweight test pipeline
+- support stable long-running execution
+- simplify server-side experiment management
+- allow interruption and continuation of experiments
+- improve reproducibility of large-scale evaluations
+
+The project now distinguishes between:
+
+### `tune_session_models.py`
+
+Sample-based testing and debugging.
+
+and
+
+### `tune_session_models_full.py`
+
+Large-scale experimental evaluation.
+
+---
+
+## Full Dataset Configuration
+
+The full tuning pipeline currently targets:
+
+- `yoochoose_recbole`
+- `globo_recbole`
+- `adressa_recbole`
+
+These datasets represent different recommendation domains:
+
+- e-commerce recommendation
+- news recommendation
+- highly dynamic temporal recommendation settings
+
+---
+
+## Hyperparameter Grid Design
+
+The selected hyperparameter grids were intentionally designed as a balanced compromise between:
+
+- experimental diversity
+- computational feasibility
+- runtime limitations
+- recommendation quality exploration
+
+The goal is to generate sufficiently diverse configurations while still remaining executable within approximately one week on modern high-performance hardware.
+
+---
+
+## Selected Hyperparameter Grids
+
+### VS-KNN
+
+```python
+k = [100, 200, 500]
+sample_size = [500, 1000]
+```
+
+#### Rationale
+
+- explores different neighborhood sizes
+- evaluates local vs. broader session similarity
+- balances recommendation quality and runtime complexity
+
+---
+
+### VSTAN
+
+```python
+k = [100, 200, 500]
+sample_size = [500, 1000]
+position_decay = [0.05, 0.1, 0.2]
+idf_weighting = [True, False]
+```
+
+#### Rationale
+
+- evaluates different temporal weighting strengths
+- compares popularity-aware vs. IDF-based weighting
+- explores trade-offs between short-term and broader session influence
+
+---
+
+### GRU4Rec
+
+```python
+hidden_size = [128, 256]
+learning_rate = [0.001, 0.0005, 0.0001]
+dropout_prob = [0.1, 0.2]
+epochs = [10, 20]
+```
+
+#### Rationale
+
+- explores different neural model capacities
+- evaluates training stability under different learning rates
+- analyzes regularization effects through dropout
+- compares shorter vs. longer training durations
+
+---
+
+## Infrastructure Improvements
+
+The full tuning pipeline additionally supports:
+
+- automatic experiment resumption
+- completed-run detection
+- fault-tolerant execution
+- runtime tracking
+- experiment logging
+- configuration serialization
+- beyond-accuracy metrics
+
+All experiment results are stored incrementally after each completed run to reduce the risk of data loss during long-running experiments.
+
+---
+
+## Expected Runtime Characteristics
+
+The current tuning configuration is expected to generate:
+
+- several hundred experiment runs
+- multi-day runtime behavior
+- large-scale result logs
+- extensive cross-dataset evaluation data
+
+The tuning setup is specifically intended for execution on GPU-enabled high-performance systems.
+
+---
+
+## Importance for the Thesis
+
+This marks the transition from:
+
+### implementation-focused development
+
+toward:
+
+### large-scale experimental evaluation
+### cross-dataset benchmarking
+### reproducible recommendation system analysis
+
+The resulting infrastructure forms the foundation for the empirical evaluation phase of the thesis.
+
+---
+
+## Planned Next Steps
+
+- validate the full tuning pipeline on small smoke-test runs
+- execute large-scale multi-day experiments
+- analyze runtime scalability across datasets
+- generate comparative plots and result tables
+- investigate popularity bias and coverage behavior across models
+- compare simple neighborhood-based models against neural recommenders on large-scale datasets
