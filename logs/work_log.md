@@ -2323,3 +2323,65 @@ The resulting infrastructure forms the foundation for the empirical evaluation p
 - generate comparative plots and result tables
 - investigate popularity bias and coverage behavior across models
 - compare simple neighborhood-based models against neural recommenders on large-scale datasets
+
+
+
+
+## 2026-05-18 – Initial session-based experiments on Adressa
+
+### Overview
+
+* Successfully executed the first session-based recommendation experiments on the Adressa dataset
+* Evaluated:
+  * VS-KNN
+  * VSTAN
+  * GRU4Rec
+* using the RecBole-based session tuning infrastructure
+
+---
+
+### Initial Observations
+
+The first Adressa experiments produced noticeably different model behavior compared to Yoochoose.
+
+Current ranking performance:
+
+* GRU4Rec achieved the strongest recommendation accuracy
+* VSTAN remained competitive
+* VS-KNN showed lower performance on the highly dynamic news recommendation setting
+
+---
+
+### Runtime Observations
+
+A major runtime difference between neural and neighborhood-based approaches was observed.
+
+* GRU4Rec executed significantly faster due to GPU acceleration
+* VS-KNN and VSTAN required substantially longer runtime because of large-scale session similarity computations
+
+---
+
+### Scientific Relevance
+
+The first Adressa results indicate that:
+
+* dataset characteristics strongly influence recommender performance
+* neural sequential models may benefit from highly dynamic news environments
+* recommendation quality and runtime scalability differ significantly across domains
+
+These observations directly support the thesis focus on:
+
+* fair recommender evaluation
+* cross-domain comparison
+* temporal recommendation analysis
+* neural vs. non-neural recommendation behavior
+
+---
+
+### Next Steps
+
+* integrate Adressa into the full-scale tuning pipeline
+* execute larger multi-dataset experiments
+* analyze runtime scalability across datasets
+* compare popularity bias and coverage behavior
+* generate comparative plots and evaluation tables
