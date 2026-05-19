@@ -2385,3 +2385,127 @@ These observations directly support the thesis focus on:
 * analyze runtime scalability across datasets
 * compare popularity bias and coverage behavior
 * generate comparative plots and evaluation tables
+
+
+## 2026-05-19 – Multi-dataset session tuning results on Yoochoose, Globo, and Adressa
+
+### Overview
+
+* Executed the session-based tuning pipeline on three sample datasets:
+  * Yoochoose sample
+  * Globo sample
+  * Adressa sample
+* Evaluated the implemented session-based recommenders:
+  * VS-KNN
+  * VSTAN
+  * GRU4Rec
+* Used the unified RecBole-based tuning infrastructure with:
+  * ranking metrics
+  * beyond-accuracy metrics
+  * runtime measurements
+  * persistent experiment logging
+  * CUDA acceleration
+
+---
+
+### Evaluation Setup
+
+The experiments used the sample-based tuning pipeline with the following datasets:
+
+* `yoochoose_recbole_sample`
+* `globo_recbole_sample`
+* `adressa_recbole_sample`
+
+The evaluation included:
+
+* Hit@10
+* NDCG@10
+* MRR@10
+* Coverage@10
+* Average Recommendation Popularity@10
+* training runtime
+* evaluation runtime
+* total runtime
+
+---
+
+### Main Results
+
+#### Yoochoose
+
+The best observed Yoochoose results were achieved by VSTAN:
+
+* Hit@10: approximately 0.514
+* NDCG@10: approximately 0.328
+* MRR@10: approximately 0.270
+
+VS-KNN remained highly competitive, while GRU4Rec achieved competitive results with substantially lower runtime.
+
+---
+
+#### Adressa
+
+The best observed Adressa results were achieved by GRU4Rec:
+
+* Hit@10: approximately 0.518
+* Runtime: around one minute for the tested configuration
+
+This differs from Yoochoose, where the nearest-neighbor models achieved the strongest ranking results.
+
+---
+
+#### Globo
+
+Globo was successfully included in the multi-dataset tuning pipeline.
+
+Although Globo did not appear among the global Top-10 configurations by MRR@10 in the current run, it is now fully supported by the same automated evaluation infrastructure.
+
+---
+
+### Observations
+
+* The strongest model differs by dataset:
+  * VSTAN performs best on Yoochoose
+  * GRU4Rec performs best on Adressa
+* This confirms that recommendation performance is highly dataset-dependent.
+* Neighborhood-based session models remain strong and competitive.
+* Neural sequential models can be especially effective on dynamic news recommendation data.
+* GRU4Rec benefits strongly from GPU acceleration and shows substantially lower runtime.
+* VS-KNN and VSTAN require more runtime due to session-neighborhood computations.
+
+---
+
+### Interpretation
+
+The results support an important thesis argument:
+
+There is no universally best recommender model. Instead, model performance depends strongly on:
+
+* dataset characteristics
+* temporal dynamics
+* session structure
+* item popularity distribution
+* scalability constraints
+
+The results also highlight the importance of evaluating both:
+
+* recommendation accuracy
+* computational efficiency
+
+---
+
+### Role of This Step
+
+This step establishes the first complete multi-dataset session-based evaluation setup.
+
+It shows that the implemented framework can now compare different model families across different domains using the same evaluation and logging infrastructure.
+
+---
+
+### Next Steps
+
+* use the analysis outputs to compare best configurations per dataset and model
+* prepare full-scale tuning runs using `tune_session_models_full.py`
+* execute longer server-based experiments on full datasets
+* further analyze coverage and popularity-bias behavior
+* generate thesis-ready result tables and plots
