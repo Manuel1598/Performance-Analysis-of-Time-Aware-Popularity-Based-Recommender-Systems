@@ -24,7 +24,7 @@ DATASETS = {
 
 
 def run_for_dataset(dataset_key: str, dataset_config: dict) -> None:
-    project_root = Path(__file__).resolve().parents[3]
+    project_root = Path(__file__).resolve().parents[4]
 
     recbole_dataset_name = dataset_config["recbole_name"]
     output_prefix = dataset_config["output_prefix"]
