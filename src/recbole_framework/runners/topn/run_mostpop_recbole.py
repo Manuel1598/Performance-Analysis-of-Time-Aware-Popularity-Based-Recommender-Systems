@@ -5,7 +5,7 @@ from recbole.config import Config
 from recbole.data import create_dataset, data_preparation
 from recbole.trainer import Trainer
 
-from src.recbole_framework.custom_models.mostpop_recbole import MostPopRecBole
+from src.recbole_framework.custom_models.topn.mostpop_recbole import MostPopRecBole
 
 
 DATASETS = {
@@ -17,11 +17,15 @@ DATASETS = {
         "recbole_name": "amazon_recbole",
         "output_prefix": "amazon",
     },
+    "yoochoose_sample": {
+        "recbole_name": "yoochoose_recbole_sample",
+        "output_prefix": "yoochoose_sample",
+    },
 }
 
 
 def run_for_dataset(dataset_key: str, dataset_config: dict) -> None:
-    project_root = Path(__file__).resolve().parents[3]
+    project_root = Path(__file__).resolve().parents[4]
 
     recbole_dataset_name = dataset_config["recbole_name"]
     output_prefix = dataset_config["output_prefix"]

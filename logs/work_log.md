@@ -1042,4 +1042,1470 @@ It establishes a direct comparison between:
 * prepare final evaluation tables and figures for the thesis
 
 
+## 2026-04-28 – Planning session-based RecBole integration
 
+* Completed the first cross-domain Top-N RecBole evaluation
+* Decided to extend the framework to session-based recommendation
+* Identified VS-KNN and VSTAN as relevant session-based nearest-neighbor baselines
+* Selected the `session-rec` repository as reference implementation
+* Planned integration of selected session-based algorithms into the RecBole framework
+
+### Motivation
+
+Session-based nearest-neighbor algorithms are strong and interpretable baselines for session-based recommendation.
+Prior work has shown that such methods can outperform more complex neural approaches in several settings.
+
+### Planned Models
+
+* VS-KNN
+* VSTAN
+
+### Next Steps
+
+* inspect the reference implementations in `session-rec`
+* define how session data must be represented in RecBole
+* prepare a session-based dataset such as Yoochoose
+* implement VS-KNN as the first RecBole-compatible session-based baseline
+
+
+
+## 2026-04-29 – Yoochoose Dataset Preparation and RecBole Integration
+
+### Overview
+- Integrated the Yoochoose dataset as the first session-based dataset in the RecBole framework  
+- Converted raw clickstream data into RecBole `.inter` format with session-based structure  
+- Implemented correct timestamp conversion to Unix time for temporal ordering  
+- Filtered sessions with fewer than two interactions to enable next-item prediction  
+- Created a session-based sampling pipeline to generate manageable subsets of the dataset  
+- Generated a ~500k interaction sample for efficient experimentation  
+- Validated the RecBole pipeline by running the MostPop baseline on the Yoochoose sample  
+
+### Results
+
+#### MostPop on Yoochoose (sample)
+- Hit@5: 0.0002  
+- Hit@10: 0.0003  
+- NDCG@5: 0.0001  
+- NDCG@10: 0.0001  
+- MRR@5: 0.0001  
+- MRR@10: 0.0001  
+
+### Observations
+- Performance is significantly lower than on MovieLens and Amazon  
+- This is expected due to:
+  - extreme sparsity  
+  - short session lengths  
+  - absence of long-term user preferences  
+- Global popularity is not suitable for session-based recommendation tasks  
+
+### Interpretation
+The results confirm that:
+- session-based recommendation requires context-aware models  
+- global popularity fails in short-session environments  
+- Yoochoose represents a fundamentally different recommendation setting  
+
+### Role of This Step
+This step establishes the data foundation for session-based recommendation experiments.
+
+It ensures that:
+- session data is correctly represented in RecBole  
+- temporal ordering is preserved  
+- scalable experimentation is possible via sampling  
+
+### Next Steps
+- implement session-based nearest-neighbor models  
+- start with VS-KNN as first baseline  
+- compare against popularity-based methods on Yoochoose  
+
+
+---
+
+## 2026-04-29 – Initial Implementation of VS-KNN in RecBole
+
+### Overview
+- Implemented the VS-KNN session-based nearest-neighbor algorithm as a custom RecBole model  
+- Adapted session-based recommendation logic to the RecBole GeneralRecommender interface  
+- Represented sessions as pseudo-users to reuse RecBole’s interaction format  
+- Built session-item and item-session mappings from the dataset  
+- Implemented cosine similarity between sessions based on item overlap  
+- Integrated candidate session sampling to control computational complexity  
+- Implemented full-sort prediction for compatibility with RecBole evaluation  
+
+### Model Characteristics
+
+#### VS-KNN
+- uses session similarity instead of global popularity  
+- recommends items from similar sessions  
+- operates without training or learnable parameters  
+- captures short-term user intent  
+
+### Observations
+- significantly more complex than popularity-based models  
+- requires careful handling of:
+  - session structure  
+  - candidate selection  
+  - computational efficiency  
+- integration into RecBole requires adapting non-parametric models to a training-based framework  
+
+### Role of This Step
+This step introduces the first session-based recommendation model into the RecBole framework.
+
+It marks the transition from:
+- user-based recommendation → session-based recommendation  
+
+### Next Steps
+- run VS-KNN on Yoochoose sample  
+- analyze performance vs MostPop baseline  
+- optimize runtime and candidate sampling  
+- extend implementation toward VSTAN  
+- integrate session-based models into comparison pipeline  
+
+
+
+# 2026-04-29 – Evaluation and Refinement of VS-KNN Implementation
+
+## Overview
+- Successfully executed the VS-KNN model on the Yoochoose sample dataset within the RecBole framework  
+- Verified correct functionality of session similarity computation and scoring mechanism  
+- Achieved strong Top-N performance compared to popularity-based baselines  
+- Identified limitations of the current implementation due to the use of the GeneralRecommender interface  
+- Analyzed the mismatch between RecBole’s default evaluation pipeline and session-based next-item prediction  
+
+## Results
+
+### VS-KNN on Yoochoose (sample) (Generalrecommender (false recommender))
+- Hit@5: 0.4101  
+- Hit@10: 0.4560  
+- NDCG@5: 0.3609  
+- NDCG@10: 0.3758  
+- MRR@5: 0.3457  
+- MRR@10: 0.3519  
+
+## Observations
+- VS-KNN significantly outperforms MostPop on session-based data  
+- The model effectively captures short-term user intent through session similarity  
+- High performance indicates that neighborhood-based methods are well-suited for session-based recommendation  
+- However, the current implementation operates on full session information rather than true session prefixes  
+
+## Methodological Limitation
+
+The current VS-KNN implementation:
+- uses complete sessions as input instead of session prefixes  
+- relies on the GeneralRecommender interface, which is designed for user-based recommendation  
+- does not fully align with the standard formulation of next-item prediction  
+
+As a result, the evaluation represents an approximation of session-based recommendation rather than a fully correct sequential setup.  
+
+## Interpretation
+
+The results confirm that:
+- session-based nearest-neighbor models are highly effective on clickstream data  
+- RecBole can be extended to support non-parametric session-based methods  
+- careful alignment between model design and evaluation protocol is critical  
+
+## Role of This Step
+This step validates the feasibility of integrating session-based nearest-neighbor models into RecBole.
+
+It also highlights the need for a more principled integration aligned with sequential recommendation.  
+
+## Next Steps
+- refactor VS-KNN to use RecBole’s SequentialRecommender interface  
+- adapt the model to operate on session prefixes (`item_seq`)  
+- ensure proper next-item prediction setup  
+- implement VSTAN on top of the improved sequential formulation  
+- compare session-based models against popularity-based and BPR baselines  
+
+
+
+## 2026-04-29 – Refactoring VS-KNN to RecBole SequentialRecommender
+
+### Overview
+
+* Refactored the initial VS-KNN implementation from `GeneralRecommender` to RecBole’s `SequentialRecommender` interface
+* Replaced the pseudo-user/session approximation with a sequence-based formulation
+* Adapted VS-KNN to operate on item sequences (`item_seq`) and predict the next item
+* Built reference sessions from RecBole’s sequential interaction representation
+* Preserved the non-parametric nearest-neighbor logic while aligning the model more closely with session-based recommendation
+* Evaluated the sequential VS-KNN implementation on the Yoochoose sample dataset
+
+---
+
+### Results
+
+VS-KNN Sequential on Yoochoose sample: (Correct Recommender)
+
+* Hit@5: 0.3986
+* Hit@10: 0.4947
+* NDCG@5: 0.2870
+* NDCG@10: 0.3182
+* MRR@5: 0.2500
+* MRR@10: 0.2629
+
+---
+
+### Observations
+
+* The sequential implementation produces strong results on the Yoochoose sample
+* Hit@10 improves compared to the first GeneralRecommender-based approximation
+* NDCG and MRR are lower than in the earlier approximation, indicating that relevant items are often found in the top-10 but not always ranked at the very top
+* The new implementation is methodologically better aligned with next-item prediction
+
+---
+
+### Interpretation
+
+The results indicate that VS-KNN is a strong session-based baseline for clickstream data.
+
+The migration to `SequentialRecommender` improves the conceptual fit with RecBole’s session/sequential recommendation setup and reduces the methodological limitations of the previous approximation.
+
+---
+
+### Role of This Step
+
+This step improves the scientific validity of the VS-KNN integration by aligning it with RecBole’s sequential recommendation interface.
+
+It establishes a stronger foundation for implementing VSTAN and other session-based baselines.
+
+---
+
+### Next Steps
+
+* implement VSTAN using the sequential VS-KNN structure as a base
+* compare MostPop and VS-KNN on Yoochoose
+* extend the session-based comparison pipeline
+* later perform hyperparameter tuning for `k`, sample size, and sequence length
+
+
+
+## 2026-05-14 – Implementation of VSTAN within the RecBole framework
+
+### Overview
+
+* Implemented the VSTAN session-based nearest-neighbor model as a custom RecBole sequential recommender
+* Extended the previously implemented VS-KNN model with additional temporal and weighting mechanisms
+* Adapted the implementation to RecBole’s `SequentialRecommender` interface
+* Built sequence-based recommendation using `item_seq` representations
+* Added position-based weighting to emphasize more recent interactions within a session
+* Added optional IDF weighting to reduce the influence of highly popular items
+* Preserved compatibility with RecBole’s full-sort Top-N evaluation pipeline
+
+---
+
+### Model Characteristics
+
+#### VSTAN
+
+* extends VS-KNN with temporal and positional weighting
+* emphasizes recent items within a session
+* reduces dominance of globally popular items through IDF weighting
+* operates as a non-parametric session-based nearest-neighbor recommender
+
+---
+
+### Observations
+
+* VSTAN is structurally more complex than VS-KNN
+* the model combines:
+  * session similarity
+  * sequence recency
+  * item weighting
+* integrating VSTAN into RecBole required adapting a non-neural nearest-neighbor method to a sequential recommendation framework
+
+---
+
+### Interpretation
+
+The implementation demonstrates that RecBole can be extended beyond its standard neural recommendation models to support advanced session-based nearest-neighbor approaches.
+
+The migration toward `SequentialRecommender` improves the methodological correctness of session-based next-item prediction.
+
+---
+
+### Role of This Step
+
+This step completes the first integration of advanced session-based nearest-neighbor methods into the RecBole framework.
+
+Together with VS-KNN, it establishes a session-based recommendation benchmark suite for Yoochoose experiments.
+
+---
+
+### Next Steps
+
+* run VSTAN on Yoochoose sample
+* compare MostPop, VS-KNN, and VSTAN
+* analyze the effect of temporal weighting
+* start systematic hyperparameter tuning
+* investigate runtime-performance tradeoffs
+
+
+# 2026-05-14 – Comparative Evaluation of Session-Based RecBole Models
+
+## Overview
+
+Conducted the first comparative evaluation of session-based recommendation models within the RecBole framework.
+
+### Compared Models
+- MostPop
+- VS-KNN
+- VSTAN
+
+All models were executed on the Yoochoose sample dataset using identical RecBole evaluation settings.
+
+Generated unified comparison tables and visualizations for:
+- Hit@10
+- NDCG@10
+- MRR@10
+
+Additionally, a dedicated session-model comparison analysis pipeline was added.
+
+---
+
+## Results
+
+| Model   | Hit@10 | NDCG@10 | MRR@10 |
+|---------|--------:|---------:|--------:|
+| MostPop | 0.0003  | 0.0001   | 0.0001  |
+| VS-KNN  | 0.4947  | 0.3182   | 0.2629  |
+| VSTAN   | 0.5140  | 0.3280   | 0.2698  |
+
+---
+
+## Observations
+
+- Session-based nearest-neighbor models dramatically outperform the global MostPop baseline.
+- MostPop performs poorly because it ignores the current session context.
+- VS-KNN effectively captures short-term user intent through session similarity.
+- VSTAN further improves VS-KNN by incorporating:
+  - positional weighting
+  - temporal emphasis
+  - IDF-based item weighting
+- The improvements of VSTAN over VS-KNN are consistent across all ranking metrics.
+
+---
+
+## Interpretation
+
+The results demonstrate that:
+
+- session context is essential for next-item prediction in clickstream datasets
+- simple popularity-based recommendation is insufficient for session-based recommendation tasks
+- nearest-neighbor session models remain highly competitive baselines
+- RecBole can successfully support both:
+  - traditional recommendation models
+  - session-based recommendation approaches
+
+---
+
+## Role of This Step
+
+This step establishes the first complete session-based evaluation pipeline within the project.
+
+It provides:
+- a reproducible benchmarking setup
+- direct comparability between session-based algorithms
+- the foundation for future hyperparameter tuning and larger-scale experiments
+
+---
+
+## Next Steps
+
+- perform hyperparameter tuning for VS-KNN and VSTAN
+- evaluate runtime-performance tradeoffs
+- scale experiments from Yoochoose sample to larger subsets
+- optionally integrate neural sequential models such as GRU4Rec
+- analyze popularity bias and coverage in session-based recommendation
+
+
+# 2026-05-14 – GPU-Enabled Python Environment and CUDA Setup for RecBole Experiments
+
+## Overview
+
+- Installed Python 3.12 to improve compatibility with machine learning libraries
+- Replaced the previous Python 3.14 environment due to incompatibilities with RecBole and CUDA-enabled PyTorch
+- Created a new isolated virtual environment (`.venv`) for the project
+- Installed CUDA-enabled PyTorch within the virtual environment
+- Successfully enabled GPU acceleration for RecBole-based neural recommendation experiments
+- Configured the development environment to use the new Python interpreter inside PyCharm
+
+---
+
+## Technical Setup
+
+### Environment
+
+- Python 3.12
+- Virtual environment via `venv`
+- CUDA-enabled PyTorch
+- NVIDIA RTX 2070 SUPER GPU
+
+### Installed Core Libraries
+
+- PyTorch
+- RecBole
+- pandas
+- numpy
+- matplotlib
+
+---
+
+## Observations
+
+- Python 3.14 caused compatibility issues with:
+  - CUDA-enabled PyTorch wheels
+  - RecBole dependencies
+- Downgrading to Python 3.12 resolved the installation and compatibility problems
+- GPU acceleration significantly improves runtime for neural recommendation models such as GRU4Rec
+
+---
+
+## Role of This Step
+
+This step establishes a reproducible and scalable experimental environment for future recommendation experiments.
+
+It provides the technical foundation for:
+
+- GPU-based neural recommendation training
+- large-scale session-based experiments
+- automated hyperparameter tuning
+
+---
+
+## Next Steps
+
+- migrate future experiments fully to the new virtual environment
+- create a reproducible `requirements.txt`
+- benchmark runtime differences between CPU and GPU execution
+- use GPU acceleration for larger-scale tuning experiments
+
+---
+
+# 2026-05-14 – Initial Implementation of Automated Hyperparameter Tuning Pipeline
+
+## Overview
+
+- Started development of an automated hyperparameter tuning pipeline for RecBole experiments
+- Designed a framework for systematic parameter exploration across multiple recommendation models
+- Added support for configurable parameter grids
+- Planned automatic result collection and comparison across tuning runs
+- Prepared the tuning pipeline for future GPU-accelerated large-scale experiments
+
+---
+
+## Planned Functionality
+
+The tuning pipeline is intended to:
+
+- automatically execute multiple experiment configurations
+- vary model-specific hyperparameters
+- store evaluation results after each run
+- identify best-performing parameter combinations
+- support reproducible benchmarking across datasets and models
+
+---
+
+## Target Models
+
+### Initial Focus
+
+- VS-KNN
+- VSTAN
+- GRU4Rec
+
+### Planned Future Extensions
+
+- BPR
+- NeuMF
+- additional sequential recommendation models
+
+---
+
+## Planned Hyperparameters
+
+### VS-KNN
+
+- number of neighbors (`k`)
+- candidate session sample size
+
+### VSTAN
+
+- number of neighbors (`k`)
+- position decay
+- IDF weighting
+- candidate session sampling
+
+### GRU4Rec
+
+- hidden size
+- learning rate
+- batch size
+- number of epochs
+- dropout probability
+
+---
+
+## Observations
+
+- Hyperparameter tuning becomes computationally feasible after enabling GPU acceleration
+- Session-based models are highly sensitive to parameter selection
+- Automated tuning is necessary for fair and reproducible comparison between neural and non-neural models
+
+---
+
+## Role of This Step
+
+This step introduces the foundation for systematic model optimization and fair experimental evaluation.
+
+It supports the overall goal of:
+
+- reproducibility
+- transparent evaluation
+- scientifically rigorous comparison between recommendation approaches
+
+---
+
+## Next Steps
+
+- finalize the tuning pipeline implementation
+- add automatic CSV result aggregation
+- support interruption-safe experiment continuation
+- integrate tuning results into the evaluation workflow
+- perform the first systematic tuning runs on Yoochoose sample datasets
+
+
+# 2026-04-29 – Integration of GRU4Rec and Initial Hyperparameter Tuning Pipeline
+
+## Overview
+
+- Integrated the GRU4Rec neural sequential recommendation model from RecBole
+- Added GPU acceleration support via CUDA for neural model training
+- Evaluated GRU4Rec on the Yoochoose sample dataset
+- Extended the session-based comparison pipeline with a neural baseline
+- Started development of an automated hyperparameter tuning framework for session-based recommendation models
+
+---
+
+## GRU4Rec Results
+
+### GRU4Rec on Yoochoose Sample
+
+| Metric   | Value  |
+|----------|--------:|
+| Hit@5    | 0.3548  |
+| Hit@10   | 0.4566  |
+| NDCG@5   | 0.2486  |
+| NDCG@10  | 0.2816  |
+| MRR@5    | 0.2135  |
+| MRR@10   | 0.2272  |
+
+---
+
+## Observations
+
+- GRU4Rec substantially outperforms the MostPop baseline
+- VS-KNN and VSTAN still achieve stronger ranking performance on the current Yoochoose sample setup
+- GPU acceleration significantly reduced training time for neural recommendation experiments
+- The results confirm that strong nearest-neighbor baselines remain highly competitive against neural approaches
+
+---
+
+## Hyperparameter Tuning Pipeline
+
+Implemented an initial automated tuning framework supporting:
+
+- repeated experiment execution
+- configurable parameter grids
+- automatic result aggregation
+- CSV-based result storage
+
+### Current Tuning Support
+
+- VS-KNN
+- VSTAN
+
+### Currently Explored Parameters
+
+- neighborhood size (`k`)
+- candidate session sample size
+- position decay
+- IDF weighting
+
+---
+
+## Role of This Step
+
+This step extends the project from:
+
+- static model evaluation
+
+toward:
+
+- systematic model optimization
+- reproducible hyperparameter exploration
+- scalable GPU-accelerated experimentation
+
+---
+
+## Next Steps
+
+- extend tuning support to GRU4Rec
+- analyze best-performing parameter combinations
+- scale experiments beyond the Yoochoose sample dataset
+- compare runtime and recommendation quality across models
+
+
+
+## 2026-05-14 – Initial execution of session-based hyperparameter tuning
+
+### Overview
+
+* Started the first automated hyperparameter tuning run for session-based RecBole models
+* Extended the tuning setup to include:
+  * VS-KNN
+  * VSTAN
+  * GRU4Rec
+* Added GPU support for neural model tuning where available
+* Configured the tuning script to store results incrementally after each completed run
+* Started with a reduced parameter grid to validate stability before larger-scale tuning
+
+---
+
+### Purpose
+
+The goal of this step is to verify that the tuning pipeline works reliably before running larger experiments.
+
+The reduced grid helps test:
+
+* automated experiment execution
+* result collection
+* CSV output generation
+* model-specific parameter handling
+* GPU support for GRU4Rec
+
+---
+
+### Planned Next Steps
+
+* inspect the first tuning results
+* identify best-performing configurations by MRR@10
+* expand the parameter grid for longer server or overnight runs
+* use tuning results to improve final model comparisons
+
+
+
+# 2026-05-14 – Analysis and Evaluation of Session-Based Hyperparameter Tuning Results
+
+## Overview
+
+- Completed the first successful hyperparameter tuning runs for:
+  - VS-KNN
+  - VSTAN
+  - GRU4Rec
+- Added automated analysis and reporting for tuning results
+- Implemented result ranking based on `MRR@10`
+- Added extraction of:
+  - best overall configurations
+  - best configuration per model
+- Exported summarized tuning results into structured CSV files for later thesis evaluation
+
+---
+
+## Main Findings
+
+### Session-Based Nearest-Neighbor Models
+
+- VSTAN achieved the strongest ranking performance on the Yoochoose sample dataset
+- VS-KNN remained highly competitive and consistently outperformed the popularity baseline
+
+### GRU4Rec
+
+- Initial GRU4Rec configurations produced weak results due to incorrect hyperparameter settings
+- After correcting the tuning grid, GRU4Rec performance improved substantially
+- Tuned GRU4Rec remained below the best VSTAN configuration on the current Yoochoose sample setup
+
+---
+
+## Best Observed Performance
+
+Current observations indicate:
+
+- VSTAN currently achieves the best overall `MRR@10`
+- Session-based nearest-neighbor methods remain highly competitive against neural approaches
+- Hyperparameter tuning has a significant impact on GRU4Rec performance
+
+---
+
+## Technical Improvements
+
+- Improved result reporting and CSV export structure
+- Reduced unnecessary NaN-heavy output in analysis tables
+- Added reusable tuning analysis workflow for future experiments
+- Added automatic extraction of best-performing configurations
+
+### Generated Outputs Include
+
+- overall best tuning configurations
+- best configuration per model
+- summarized CSV reports for later visualization and thesis integration
+
+---
+
+## Role of This Step
+
+This step marks the transition from:
+
+- initial model implementation
+
+toward:
+
+- systematic experimental evaluation
+- comparative model optimization
+- reproducible session-based benchmarking
+
+---
+
+## Next Steps
+
+- integrate tuned configurations into the final comparison pipeline
+- scale experiments to larger Yoochoose subsets
+- perform longer and larger tuning runs
+- compare runtime and recommendation quality across models
+- prepare visualizations and evaluation tables for the thesis
+
+
+## 2026-05-15 – Persistent experiment logging and measurement infrastructure
+
+### Overview
+
+* Extended the session-based tuning pipeline with persistent experiment logging
+* Added automatic runtime measurement for all experiment executions
+* Added structured experiment tracking for:
+  * successful runs
+  * failed runs
+  * runtime information
+  * serialized configuration storage
+* Implemented reusable experiment logging utilities for long-running experiments and server execution
+* Added preparation utilities for additional evaluation metrics beyond ranking accuracy
+
+---
+
+### Experiment Logging
+
+A new experiment logging system was introduced to support:
+
+* incremental CSV-based result persistence
+* automatic saving after each completed run
+* fault tolerance for long-running tuning jobs
+* reproducible experiment tracking
+
+Stored information now includes:
+
+* model name
+* dataset
+* hyperparameter configuration
+* runtime
+* device (CPU/GPU)
+* evaluation metrics
+* execution status
+* error messages for failed runs
+
+This enables unattended large-scale experimentation on external servers.
+
+---
+
+### Measurement Infrastructure
+
+Additional evaluation utilities were prepared for future integration, including:
+
+* recommendation coverage
+* average recommendation popularity
+* popularity bias analysis
+
+These metrics will complement ranking-based evaluation metrics such as:
+
+* Hit@K
+* NDCG@K
+* MRR@K
+
+---
+
+### Motivation
+
+The initial evaluation pipeline focused mainly on ranking accuracy.
+
+The new infrastructure prepares the framework for:
+
+* larger-scale experiments
+* automated multi-dataset benchmarking
+* long-running hyperparameter tuning
+* reproducible evaluation workflows
+* additional beyond-accuracy measurements
+
+---
+
+### Role of This Step
+
+This step marks the transition from:
+
+* manual experimental execution
+
+toward:
+
+* scalable automated experimentation
+* server-based evaluation workflows
+* reproducible experiment management
+
+---
+
+### Next Steps
+
+* integrate coverage and popularity-based metrics into evaluation runs
+* extend tuning to larger parameter grids
+* execute longer GPU-based tuning runs
+* scale experiments to larger Yoochoose subsets
+* prepare multi-dataset evaluation pipelines for Adressa and Globo
+
+
+## 2026-05-15 – Extended session tuning measurements with runtime and beyond-accuracy metrics
+
+### Overview
+
+* Extended the session-based tuning pipeline with additional evaluation measurements
+* Added runtime tracking for:
+  * total runtime
+  * training runtime
+  * evaluation runtime
+  * additional metric computation runtime
+* Added beyond-accuracy measurements:
+  * Coverage@10
+  * Average Recommendation Popularity@10
+* Stored all additional measurements in both tuning result files and persistent experiment logs
+* Verified that all tuning runs completed successfully using CUDA acceleration
+
+---
+
+### Purpose
+
+The goal of this step was to move beyond pure ranking accuracy and prepare the evaluation pipeline for larger-scale and long-running experiments.
+
+The new measurements allow future analysis of:
+
+* recommendation quality
+* runtime-performance tradeoffs
+* catalog coverage
+* popularity bias
+* model scalability
+
+---
+
+### Observations
+
+* VS-KNN and VSTAN achieve strong ranking performance but require more runtime due to nearest-neighbor search
+* GRU4Rec runs substantially faster on GPU, but still remains below VSTAN in the current tuning setup
+* Runtime tracking is essential for comparing neural and non-parametric session-based models fairly
+
+---
+
+### Role of This Step
+
+This step expands the experimental infrastructure from simple metric reporting to a more complete evaluation setup.
+
+It prepares the project for unattended server-based experiments across larger datasets and wider hyperparameter grids.
+
+
+
+## 2026-05-15 – Improved analysis workflow for session tuning results
+
+### Overview
+
+* Updated the session tuning analysis script to include new measurement dimensions
+* Extended best-configuration reports with:
+  * Coverage@10
+  * Average Recommendation Popularity@10
+  * runtime measurements
+  * device information
+  * execution status
+* Generated updated best-overall and best-per-model result tables
+* Prepared analysis outputs for later use in thesis tables and visualizations
+
+---
+
+### Analysis Outputs
+
+Generated outputs include:
+
+* `best_session_tuning_configurations_overall.csv`
+* `best_session_tuning_configurations_per_model.csv`
+
+These files summarize the strongest configurations according to MRR@10 while preserving additional evaluation dimensions.
+
+---
+
+### Interpretation
+
+The analysis workflow now supports both:
+
+* accuracy-focused model selection
+* broader evaluation of efficiency and recommendation behavior
+
+This is important because the best model by ranking accuracy may not always be the best model in terms of runtime, coverage, or popularity bias.
+
+---
+
+### Next Steps
+
+* run larger tuning grids using the extended logging pipeline
+* prepare larger Yoochoose subsets
+* compare tuned models across sample sizes
+* integrate the same measurement structure into future datasets such as Globo and Adressa
+
+
+## 2026-05-16 – Multi-dataset session-based evaluation on Yoochoose and Globo
+
+### Overview
+
+* Successfully executed the unified session-based tuning pipeline on multiple datasets
+* Evaluated:
+  * VS-KNN
+  * VSTAN
+  * GRU4Rec
+* across:
+  * Yoochoose sample
+  * Globo sample
+
+The experiments were executed using the shared RecBole-based tuning framework with automated logging and extended evaluation metrics.
+
+---
+
+### Evaluation Dimensions
+
+The pipeline now supports automated evaluation of:
+
+#### Ranking Metrics
+* Hit@10
+* NDCG@10
+* MRR@10
+
+#### Beyond-Accuracy Metrics
+* Coverage@10
+* Average Recommendation Popularity@10
+
+#### Efficiency Metrics
+* total runtime
+* training runtime
+* evaluation runtime
+* additional metric runtime
+
+---
+
+### Observations
+
+* VSTAN currently achieves the strongest ranking performance on Yoochoose
+* VS-KNN remains highly competitive despite its simpler neighborhood-based structure
+* GRU4Rec benefits strongly from GPU acceleration and significantly lower runtime
+* Globo produces lower recommendation accuracy overall, indicating a more challenging and dynamic recommendation setting
+
+---
+
+### Importance for the Thesis
+
+This step establishes a reproducible multi-dataset benchmarking environment for session-based recommendation experiments.
+
+The infrastructure now supports:
+
+* automated experimentation
+* large-scale hyperparameter tuning
+* cross-dataset comparison
+* runtime and popularity-bias analysis
+
+This forms the technical foundation for the later large-scale evaluation phase of the thesis.
+
+---
+
+### Next Steps
+
+* integrate Adressa dataset
+* create larger Yoochoose and Globo subsets
+* expand hyperparameter grids
+* prepare long-running server-side experiments
+* generate comparative plots and analysis tables
+
+
+
+# 2026-05-18 – Initial integration of the Adressa news dataset
+
+## Overview
+
+- Started the integration of the Adressa dataset into the session-based RecBole evaluation pipeline
+- Downloaded and prepared the larger multi-week Adressa dataset for future large-scale experiments
+- Analyzed the raw dataset structure and verified compatibility with the existing preprocessing infrastructure
+- Implemented the first version of the Adressa preprocessing pipeline for RecBole
+
+---
+
+## Dataset Characteristics
+
+Adressa represents a large-scale news recommendation dataset with highly dynamic user behavior and rapidly changing item popularity.
+
+The raw dataset consists of multiple daily interaction files:
+
+```text
+20170101
+20170102
+20170103
+...
+```
+
+Each file contains JSON-based interaction events stored line-by-line.
+
+The dataset includes information such as:
+
+- user identifiers
+- article identifiers
+- timestamps
+- URLs
+- article metadata
+- keyword profiles
+- publishing information
+
+---
+
+## Initial Preprocessing Strategy
+
+For the first session-based experiments, the preprocessing pipeline focuses only on the interaction information required for recommendation experiments.
+
+### Current Mapping
+
+| Original Field | Mapped Field |
+|---|---|
+| userId | user_id |
+| id | item_id |
+| time | timestamp |
+
+Additional metadata fields are currently ignored and may later be used for extended experiments.
+
+---
+
+## Technical Improvements
+
+The preprocessing pipeline was designed to support large-scale datasets by:
+
+- reading files line-by-line
+- avoiding full-memory JSON loading
+- filtering invalid events during parsing
+- generating RecBole-compatible `.inter` files
+- automatically creating smaller sample datasets for faster experimentation
+
+### Generated Outputs
+
+- `adressa_recbole.inter`
+- `adressa_recbole_sample.inter`
+
+---
+
+## Importance for the Thesis
+
+Adressa introduces a highly dynamic news recommendation scenario into the evaluation framework.
+
+This is especially relevant for:
+
+- time-aware recommendation analysis
+- popularity drift evaluation
+- session-based recommendation
+- cross-domain comparison
+
+The dataset complements the existing evaluation setup:
+
+| Dataset | Domain |
+|---|---|
+| MovieLens | long-term movie preferences |
+| Amazon | product recommendation |
+| Yoochoose | e-commerce sessions |
+| Globo | news recommendation |
+| Adressa | highly dynamic news recommendation |
+
+---
+
+## Planned Next Steps
+
+- finalize the Adressa preprocessing pipeline
+- generate the first Adressa sample dataset
+- execute initial RecBole experiments on Adressa
+- integrate Adressa into the automated tuning framework
+- compare session-based model behavior across multiple news datasets
+
+
+
+# 2026-05-18 – Preparation of the full-scale session-based tuning pipeline
+
+## Overview
+
+Designed and implemented a dedicated full-scale tuning pipeline for long-running recommendation experiments.
+
+Separated the lightweight sample-based tuning workflow from the large-scale evaluation workflow.
+
+Added support for:
+
+- full dataset evaluation
+- large hyperparameter grids
+- automatic resume functionality
+- completed-run skipping
+- persistent result storage
+- long-running experiment execution
+
+The new infrastructure is intended for multi-day or week-long experimental runs on high-performance hardware.
+
+---
+
+## Motivation for a Separate Full Tuning Pipeline
+
+The existing tuning pipeline was primarily designed for:
+
+- debugging
+- rapid iteration
+- preprocessing validation
+- quick metric verification
+
+using smaller dataset samples.
+
+As the project evolved toward large-scale experimentation, a separate full tuning workflow became necessary in order to:
+
+- avoid accidental modification of the lightweight test pipeline
+- support stable long-running execution
+- simplify server-side experiment management
+- allow interruption and continuation of experiments
+- improve reproducibility of large-scale evaluations
+
+The project now distinguishes between:
+
+### `tune_session_models.py`
+
+Sample-based testing and debugging.
+
+and
+
+### `tune_session_models_full.py`
+
+Large-scale experimental evaluation.
+
+---
+
+## Full Dataset Configuration
+
+The full tuning pipeline currently targets:
+
+- `yoochoose_recbole`
+- `globo_recbole`
+- `adressa_recbole`
+
+These datasets represent different recommendation domains:
+
+- e-commerce recommendation
+- news recommendation
+- highly dynamic temporal recommendation settings
+
+---
+
+## Hyperparameter Grid Design
+
+The selected hyperparameter grids were intentionally designed as a balanced compromise between:
+
+- experimental diversity
+- computational feasibility
+- runtime limitations
+- recommendation quality exploration
+
+The goal is to generate sufficiently diverse configurations while still remaining executable within approximately one week on modern high-performance hardware.
+
+---
+
+## Selected Hyperparameter Grids
+
+### VS-KNN
+
+```python
+k = [100, 200, 500]
+sample_size = [500, 1000]
+```
+
+#### Rationale
+
+- explores different neighborhood sizes
+- evaluates local vs. broader session similarity
+- balances recommendation quality and runtime complexity
+
+---
+
+### VSTAN
+
+```python
+k = [100, 200, 500]
+sample_size = [500, 1000]
+position_decay = [0.05, 0.1, 0.2]
+idf_weighting = [True, False]
+```
+
+#### Rationale
+
+- evaluates different temporal weighting strengths
+- compares popularity-aware vs. IDF-based weighting
+- explores trade-offs between short-term and broader session influence
+
+---
+
+### GRU4Rec
+
+```python
+hidden_size = [128, 256]
+learning_rate = [0.001, 0.0005, 0.0001]
+dropout_prob = [0.1, 0.2]
+epochs = [10, 20]
+```
+
+#### Rationale
+
+- explores different neural model capacities
+- evaluates training stability under different learning rates
+- analyzes regularization effects through dropout
+- compares shorter vs. longer training durations
+
+---
+
+## Infrastructure Improvements
+
+The full tuning pipeline additionally supports:
+
+- automatic experiment resumption
+- completed-run detection
+- fault-tolerant execution
+- runtime tracking
+- experiment logging
+- configuration serialization
+- beyond-accuracy metrics
+
+All experiment results are stored incrementally after each completed run to reduce the risk of data loss during long-running experiments.
+
+---
+
+## Expected Runtime Characteristics
+
+The current tuning configuration is expected to generate:
+
+- several hundred experiment runs
+- multi-day runtime behavior
+- large-scale result logs
+- extensive cross-dataset evaluation data
+
+The tuning setup is specifically intended for execution on GPU-enabled high-performance systems.
+
+---
+
+## Importance for the Thesis
+
+This marks the transition from:
+
+### implementation-focused development
+
+toward:
+
+### large-scale experimental evaluation
+### cross-dataset benchmarking
+### reproducible recommendation system analysis
+
+The resulting infrastructure forms the foundation for the empirical evaluation phase of the thesis.
+
+---
+
+## Planned Next Steps
+
+- validate the full tuning pipeline on small smoke-test runs
+- execute large-scale multi-day experiments
+- analyze runtime scalability across datasets
+- generate comparative plots and result tables
+- investigate popularity bias and coverage behavior across models
+- compare simple neighborhood-based models against neural recommenders on large-scale datasets
+
+
+
+
+## 2026-05-18 – Initial session-based experiments on Adressa
+
+### Overview
+
+* Successfully executed the first session-based recommendation experiments on the Adressa dataset
+* Evaluated:
+  * VS-KNN
+  * VSTAN
+  * GRU4Rec
+* using the RecBole-based session tuning infrastructure
+
+---
+
+### Initial Observations
+
+The first Adressa experiments produced noticeably different model behavior compared to Yoochoose.
+
+Current ranking performance:
+
+* GRU4Rec achieved the strongest recommendation accuracy
+* VSTAN remained competitive
+* VS-KNN showed lower performance on the highly dynamic news recommendation setting
+
+---
+
+### Runtime Observations
+
+A major runtime difference between neural and neighborhood-based approaches was observed.
+
+* GRU4Rec executed significantly faster due to GPU acceleration
+* VS-KNN and VSTAN required substantially longer runtime because of large-scale session similarity computations
+
+---
+
+### Scientific Relevance
+
+The first Adressa results indicate that:
+
+* dataset characteristics strongly influence recommender performance
+* neural sequential models may benefit from highly dynamic news environments
+* recommendation quality and runtime scalability differ significantly across domains
+
+These observations directly support the thesis focus on:
+
+* fair recommender evaluation
+* cross-domain comparison
+* temporal recommendation analysis
+* neural vs. non-neural recommendation behavior
+
+---
+
+### Next Steps
+
+* integrate Adressa into the full-scale tuning pipeline
+* execute larger multi-dataset experiments
+* analyze runtime scalability across datasets
+* compare popularity bias and coverage behavior
+* generate comparative plots and evaluation tables
+
+
+## 2026-05-19 – Multi-dataset session tuning results on Yoochoose, Globo, and Adressa
+
+### Overview
+
+* Executed the session-based tuning pipeline on three sample datasets:
+  * Yoochoose sample
+  * Globo sample
+  * Adressa sample
+* Evaluated the implemented session-based recommenders:
+  * VS-KNN
+  * VSTAN
+  * GRU4Rec
+* Used the unified RecBole-based tuning infrastructure with:
+  * ranking metrics
+  * beyond-accuracy metrics
+  * runtime measurements
+  * persistent experiment logging
+  * CUDA acceleration
+
+---
+
+### Evaluation Setup
+
+The experiments used the sample-based tuning pipeline with the following datasets:
+
+* `yoochoose_recbole_sample`
+* `globo_recbole_sample`
+* `adressa_recbole_sample`
+
+The evaluation included:
+
+* Hit@10
+* NDCG@10
+* MRR@10
+* Coverage@10
+* Average Recommendation Popularity@10
+* training runtime
+* evaluation runtime
+* total runtime
+
+---
+
+### Main Results
+
+#### Yoochoose
+
+The best observed Yoochoose results were achieved by VSTAN:
+
+* Hit@10: approximately 0.514
+* NDCG@10: approximately 0.328
+* MRR@10: approximately 0.270
+
+VS-KNN remained highly competitive, while GRU4Rec achieved competitive results with substantially lower runtime.
+
+---
+
+#### Adressa
+
+The best observed Adressa results were achieved by GRU4Rec:
+
+* Hit@10: approximately 0.518
+* Runtime: around one minute for the tested configuration
+
+This differs from Yoochoose, where the nearest-neighbor models achieved the strongest ranking results.
+
+---
+
+#### Globo
+
+Globo was successfully included in the multi-dataset tuning pipeline.
+
+Although Globo did not appear among the global Top-10 configurations by MRR@10 in the current run, it is now fully supported by the same automated evaluation infrastructure.
+
+---
+
+### Observations
+
+* The strongest model differs by dataset:
+  * VSTAN performs best on Yoochoose
+  * GRU4Rec performs best on Adressa
+* This confirms that recommendation performance is highly dataset-dependent.
+* Neighborhood-based session models remain strong and competitive.
+* Neural sequential models can be especially effective on dynamic news recommendation data.
+* GRU4Rec benefits strongly from GPU acceleration and shows substantially lower runtime.
+* VS-KNN and VSTAN require more runtime due to session-neighborhood computations.
+
+---
+
+### Interpretation
+
+The results support an important thesis argument:
+
+There is no universally best recommender model. Instead, model performance depends strongly on:
+
+* dataset characteristics
+* temporal dynamics
+* session structure
+* item popularity distribution
+* scalability constraints
+
+The results also highlight the importance of evaluating both:
+
+* recommendation accuracy
+* computational efficiency
+
+---
+
+### Role of This Step
+
+This step establishes the first complete multi-dataset session-based evaluation setup.
+
+It shows that the implemented framework can now compare different model families across different domains using the same evaluation and logging infrastructure.
+
+---
+
+### Next Steps
+
+* use the analysis outputs to compare best configurations per dataset and model
+* prepare full-scale tuning runs using `tune_session_models_full.py`
+* execute longer server-based experiments on full datasets
+* further analyze coverage and popularity-bias behavior
+* generate thesis-ready result tables and plots

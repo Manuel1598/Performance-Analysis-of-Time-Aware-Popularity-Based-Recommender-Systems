@@ -5,7 +5,7 @@ from recbole.config import Config
 from recbole.data import create_dataset, data_preparation
 from recbole.trainer import Trainer
 
-from src.recbole_framework.custom_models.decaypop_recbole import DecayPopRecBole
+from src.recbole_framework.custom_models.topn.decaypop_recbole import DecayPopRecBole
 
 
 # =========================
@@ -24,7 +24,7 @@ DATASETS = {
 
 
 def run_for_dataset(dataset_key: str, dataset_config: dict) -> None:
-    project_root = Path(__file__).resolve().parents[3]
+    project_root = Path(__file__).resolve().parents[4]
 
     recbole_dataset_name = dataset_config["recbole_name"]
     output_prefix = dataset_config["output_prefix"]

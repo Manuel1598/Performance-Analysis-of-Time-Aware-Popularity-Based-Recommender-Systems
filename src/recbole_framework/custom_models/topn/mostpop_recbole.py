@@ -30,10 +30,18 @@ class MostPopRecBole(GeneralRecommender):
         item_ids = dataset.inter_feat[self.ITEM_ID]
 
         # Count item occurrences
-        for item_id in item_ids:
-            self.item_popularity[item_id] += 1.0
+        item_ids = dataset.inter_feat[self.ITEM_ID].long()
+        self.item_popularity = torch.bincount(
+            item_ids,
+            minlength=self.n_items
+        ).float()
+        self.item_popularity = self.item_popularity.to(self.device)
 
         self.item_popularity = self.item_popularity.to(self.device)
+
+        print("DEBUG MostPop nonzero items:", torch.count_nonzero(self.item_popularity).item())
+        print("DEBUG MostPop max popularity:", torch.max(self.item_popularity).item())
+        print("DEBUG MostPop top items:", torch.topk(self.item_popularity, k=10).indices.tolist())
 
     def forward(self, interaction):
         item = interaction[self.ITEM_ID]
@@ -51,8 +59,15 @@ class MostPopRecBole(GeneralRecommender):
         user = interaction[self.USER_ID]
         batch_size = user.shape[0]
 
-        # Return one popularity score vector per user in the batch
         scores = self.item_popularity.unsqueeze(0).repeat(batch_size, 1)
 
-        # RecBole expects a flattened tensor here
+        # Padding-Item sicher ausschließen
+        scores[:, 0] = -float("inf")
+
+        if not hasattr(self, "_debug_printed"):
+            self._debug_printed = True
+            print("DEBUG MostPop top item ids:", torch.topk(scores[0], k=10).indices.tolist())
+            print("DEBUG MostPop top scores:", torch.topk(scores[0], k=10).values.tolist())
+
         return scores.view(-1)
+

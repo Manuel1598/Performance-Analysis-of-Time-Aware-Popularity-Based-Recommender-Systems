@@ -1,0 +1,10 @@
+dataset,model,hit@10,ndcg@10,mrr@10,coverage@10,avg_recommendation_popularity@10,runtime_seconds,train_runtime_seconds,eval_runtime_seconds,extra_metrics_runtime_seconds,vsknn_k,vsknn_sample_size,vstan_k,vstan_sample_size,vstan_position_decay,vstan_idf_weighting,hidden_size,learning_rate,dropout_prob,epochs,train_batch_size,eval_batch_size,device,status
+adressa_recbole_sample,GRU4Rec,0.5183,0.2857,0.2148,0.1336405529953917,5785.919505067463,60.16,52.29,0.56,1.48,,,,,,,256.0,0.001,0.2,20,2048,2048,cuda,success
+adressa_recbole_sample,VS-KNN,0.3408,0.1723,0.1215,0.202279893281591,6516.366410184667,1080.65,288.69,392.89,391.82,100.0,250.0,,,,,,,,1,2048,1024,cuda,success
+adressa_recbole_sample,VSTAN,0.3904,0.2021,0.1456,0.3536260004850837,5970.856542622645,1163.14,308.15,422.11,425.3,,,100.0,250.0,0.1,True,,,,1,2048,1024,cuda,success
+globo_recbole_sample,GRU4Rec,0.3664,0.2016,0.1515,0.1937721760313509,519.1714647903373,71.92,63.96,0.6,1.74,,,,,,,256.0,0.001,0.2,20,2048,2048,cuda,success
+globo_recbole_sample,VS-KNN,0.3407,0.1347,0.073,0.4681459513848435,546.7438667958068,268.09,50.53,105.76,104.6,100.0,250.0,,,,,,,,1,2048,1024,cuda,success
+globo_recbole_sample,VSTAN,0.3506,0.1422,0.0794,0.4929301488110999,540.8971214106655,292.76,54.07,115.45,116.2,,,100.0,250.0,0.1,False,,,,1,2048,1024,cuda,success
+yoochoose_recbole_sample,GRU4Rec,0.48,0.2992,0.2428,0.6497299729972997,103.50530954879328,87.64,79.17,0.66,2.01,,,,,,,256.0,0.001,0.2,20,2048,2048,cuda,success
+yoochoose_recbole_sample,VS-KNN,0.4956,0.3179,0.2624,0.7072007200720072,111.25515914655476,564.52,111.34,217.98,226.39,100.0,250.0,,,,,,,,1,2048,1024,cuda,success
+yoochoose_recbole_sample,VSTAN,0.5141,0.328,0.2697,0.7882988298829883,99.8786456803078,1378.38,474.54,659.29,222.06,,,100.0,250.0,0.1,True,,,,1,2048,1024,cuda,success
