@@ -285,7 +285,7 @@ def main() -> None:
 
         for k, sample_size in product(
             [100, 200, 500],
-            [500, 1000],
+            [100, 250, 500],
         ):
             config_updates = {
                 "vsknn_k": k,
@@ -307,7 +307,7 @@ def main() -> None:
 
         for k, sample_size, position_decay, idf_weighting in product(
             [100, 200, 500],
-            [500, 1000],
+            [100, 250, 500],
             [0.05, 0.1, 0.2],
             [True, False],
         ):
@@ -332,7 +332,7 @@ def main() -> None:
             )
 
         for hidden_size, learning_rate, dropout_prob, epochs in product(
-            [128, 256],
+            [100, 128, 256],
             [0.001, 0.0005, 0.0001],
             [0.1, 0.2],
             [10, 20],

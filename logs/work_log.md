@@ -2509,3 +2509,135 @@ It shows that the implemented framework can now compare different model families
 * execute longer server-based experiments on full datasets
 * further analyze coverage and popularity-bias behavior
 * generate thesis-ready result tables and plots
+
+
+## 2026-05-27 - Updated full tuning grids for session-based and Top-N models
+
+### Overview
+
+Updated the large-scale full tuning configuration for both session-based recommendation models and Top-N recommendation models.
+
+Changed files:
+
+- `src/recbole_framework/tuning/tune_session_models_full.py`
+- `src/recbole_framework/tuning/tune_topn_models_full.py`
+
+---
+
+### Session-Based Recommendation Grid Updates
+
+#### VS-KNN
+
+Updated the grid to:
+
+```python
+vsknn_k = [100, 200, 500]
+vsknn_sample_size = [100, 250, 500]
+```
+
+This expands the search over different neighborhood sizes and candidate-session sample sizes.
+The goal is to compare focused local neighborhoods against broader neighbor sets and to measure how larger candidate pools influence recommendation quality and runtime.
+
+#### VSTAN
+
+Updated the grid to:
+
+```python
+vstan_k = [100, 200, 500]
+vstan_sample_size = [100, 250, 500]
+vstan_position_decay = [0.05, 0.1, 0.2]
+vstan_idf_weighting = [True, False]
+```
+
+This extends VS-KNN with position-aware weighting and optional IDF-based popularity normalization.
+The grid makes it possible to analyze whether stronger focus on recent session positions improves ranking quality and whether reducing the influence of very popular items improves diversity and mitigates popularity bias.
+
+#### GRU4Rec
+
+Updated the grid to:
+
+```python
+hidden_size = [100, 128, 256]
+learning_rate = [0.001, 0.0005, 0.0001]
+dropout_prob = [0.1, 0.2]
+epochs = [10, 20]
+```
+
+This broadens the neural sequential model search across model capacity, learning stability, regularization strength, and training duration.
+The chosen grid supports analysis of whether GRU4Rec benefits from larger hidden representations and longer training, while still keeping the number of runs manageable for server execution.
+
+---
+
+### Top-N Recommendation Grid Updates
+
+#### MostPop
+
+MostPop remains without hyperparameters.
+It continues to serve as the global popularity baseline and minimal reference point for comparing time-aware popularity models and personalized models.
+
+#### RecentPop
+
+Updated the grid to:
+
+```python
+window_days = [1, 3, 7, 14, 30, 60, 90, 180]
+```
+
+The added 180-day window allows comparison between short-term trend sensitivity and longer-term popularity stability.
+This is important for contrasting highly dynamic domains such as news with more stable domains such as movies or product recommendation.
+
+#### DecayPop
+
+Updated the grid to:
+
+```python
+decay_lambda = [
+    1e-9,
+    5e-9,
+    1e-8,
+    5e-8,
+    1e-7,
+    5e-7,
+    1e-6,
+]
+```
+
+The expanded lambda range tests both weak and strong exponential time decay.
+Small lambda values preserve older interactions for longer, while larger values emphasize recent interactions more strongly.
+
+#### BPR
+
+Updated the grid to:
+
+```python
+embedding_size = [32, 64, 128]
+learning_rate = [0.001, 0.0005, 0.0001]
+epochs = [50]
+```
+
+The number of epochs was fixed at 50 to reduce unnecessary runs and keep the full tuning setup computationally efficient.
+The grid still explores the most important BPR dimensions: latent factor size and learning rate.
+
+### Scientific Motivation
+
+The updated grids support a stronger experimental design.
+The goal is not only to find the single best configuration, but also to analyze which hyperparameter regions work well for different model classes and dataset domains.
+
+This enables more meaningful thesis analysis across:
+
+- session-based neighborhood methods
+- neural sequential recommendation
+- static popularity
+- recent-window popularity
+- exponential time-decayed popularity
+- personalized matrix factorization
+
+Expected insights include:
+
+- VS-KNN and VSTAN should be strong on session datasets.
+- Position weighting and IDF weighting may improve recommendation quality and reduce popularity bias.
+- RecentPop and DecayPop should be especially relevant in news and trend-heavy domains.
+- Larger time windows and weaker decay may be better for long-term domains.
+- GRU4Rec may scale well with GPU acceleration, but is not guaranteed to outperform simpler methods.
+
+Overall, this tuning setup is better suited for fair cross-model and cross-dataset evaluation than a narrow accuracy-only search.

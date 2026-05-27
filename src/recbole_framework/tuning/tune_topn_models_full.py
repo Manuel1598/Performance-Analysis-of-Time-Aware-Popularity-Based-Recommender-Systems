@@ -239,7 +239,7 @@ def main() -> None:
             device,
         )
 
-        for window_days in [1, 3, 7, 14, 30, 60, 90]:
+        for window_days in [1, 3, 7, 14, 30, 60, 90, 180]:
             run_and_store(
                 all_results,
                 output_file,
@@ -251,7 +251,7 @@ def main() -> None:
                 device,
             )
 
-        for decay_lambda in [1e-8, 5e-8, 1e-7, 5e-7, 1e-6]:
+        for decay_lambda in [1e-9, 5e-9, 1e-8, 5e-8, 1e-7, 5e-7, 1e-6]:
             run_and_store(
                 all_results,
                 output_file,
@@ -266,7 +266,7 @@ def main() -> None:
         for embedding_size, learning_rate, epochs in product(
             [32, 64, 128],
             [0.001, 0.0005, 0.0001],
-            [10, 20, 50],
+            [50],
         ):
             run_and_store(
                 all_results,
