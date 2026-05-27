@@ -15,6 +15,7 @@ class VSKNNRecBole(SequentialRecommender):
         super(VSKNNRecBole, self).__init__(config, dataset)
 
         self.device = config["device"]
+        self.seed = config["seed"]
 
         self.k = config["vsknn_k"]
         self.sample_size = config["vsknn_sample_size"]
@@ -140,8 +141,10 @@ class VSKNNRecBole(SequentialRecommender):
             candidate_sessions.update(self.item_sessions.get(item_id, set()))
 
         if self.sample_size > 0 and len(candidate_sessions) > self.sample_size:
+            seed_key = f"{self.seed}:{','.join(map(str, sorted(current_item_set)))}"
+            rng = random.Random(seed_key)
             candidate_sessions = set(
-                random.sample(list(candidate_sessions), self.sample_size)
+                rng.sample(sorted(candidate_sessions), self.sample_size)
             )
 
         return candidate_sessions

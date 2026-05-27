@@ -2641,3 +2641,130 @@ Expected insights include:
 - GRU4Rec may scale well with GPU acceleration, but is not guaranteed to outperform simpler methods.
 
 Overall, this tuning setup is better suited for fair cross-model and cross-dataset evaluation than a narrow accuracy-only search.
+
+
+## 2026-05-27 - Improved tuning reliability and result analysis workflow
+
+### Overview
+
+After reviewing the tuning and evaluation pipeline, several infrastructure-level improvements were implemented.
+These changes do not alter the scientific model logic or the selected hyperparameter grids.
+Instead, they make long-running experiments more reproducible, easier to resume, and safer to analyze.
+
+Changed files:
+
+- `src/recbole_framework/custom_models/session/vsknn_recbole.py`
+- `src/recbole_framework/custom_models/session/vstan_recbole.py`
+- `src/recbole_framework/custom_models/topn/mostpop_recbole.py`
+- `src/recbole_framework/tuning/tune_topn_models_full.py`
+- `src/recbole_framework/analysis/analyze_topn_tuning_results.py`
+- `src/recbole_framework/analysis/analyze_session_tuning_results.py`
+- `.gitignore`
+
+---
+
+### Deterministic Candidate Sampling for VS-KNN and VSTAN
+
+VS-KNN and VSTAN use candidate-session sampling when the number of possible neighbor sessions is larger than the configured sample size.
+Previously, this sampling used Python's global `random.sample`.
+
+This was changed to use a deterministic local random generator based on:
+
+- the configured experiment seed
+- the current session item set
+
+#### Why this was done
+
+The goal is to improve reproducibility.
+For thesis experiments, repeated runs with the same seed and configuration should evaluate the same sampled candidate sessions.
+This makes comparison across hyperparameter settings more reliable and avoids small random differences caused by uncontrolled sampling.
+
+---
+
+### Removed Debug Output from MostPop
+
+Temporary debug print statements were removed from the RecBole-native MostPop model.
+
+#### Why this was done
+
+MostPop is used as a baseline in repeated tuning and evaluation runs.
+Debug output during large-scale experiments makes logs harder to read and can create unnecessary noise during server execution.
+Removing these prints does not change the model scores or evaluation behavior.
+
+---
+
+### Robust Resume Support for Top-N Full Tuning
+
+The Top-N full tuning script was updated to follow the same fault-tolerant structure already used in the session-based full tuning pipeline.
+
+Added:
+
+- stable `run_id` generation
+- detection of already completed successful runs
+- skipping of completed configurations
+- incremental result persistence after each run
+- failed-run persistence in the result CSV
+
+#### Why this was done
+
+Full tuning can run for many hours or days.
+If a run is interrupted, the script should continue from already completed configurations instead of starting from scratch.
+This is especially important for server-based experiments and prevents unnecessary repeated computation.
+
+---
+
+### Full-Tuning Analysis File Alignment
+
+The tuning analysis scripts were updated to read the full tuning result files:
+
+```python
+topn_full_tuning_results.csv
+session_full_tuning_results.csv
+```
+
+instead of the smaller non-full tuning result files.
+
+#### Why this was done
+
+The expanded grids write their results to the full tuning output files.
+The analysis scripts must read those same files so that best-configuration reports reflect the current full tuning experiments rather than older sample or debugging runs.
+
+---
+
+### Added Git Ignore Rules for Local Artifacts
+
+A `.gitignore` file was added to exclude local and generated artifacts such as:
+
+- virtual environments
+- raw and processed datasets
+- RecBole-formatted datasets
+- experiment results
+- TensorBoard logs
+- model checkpoints
+- Python cache files
+- IDE-local metadata
+
+#### Why this was done
+
+The workspace contains many large generated files and local machine artifacts.
+These should not be accidentally committed because they make the repository hard to maintain and can mix local experiment state with reproducible source code.
+
+---
+
+### Methodological Note on Data Splitting
+
+During the review, one remaining methodological issue was identified but not changed automatically:
+
+The current Top-N RecBole preparation is not fully consistent across datasets.
+MovieLens is prepared from `movielens_train.csv`, while Amazon is prepared from `amazon_interactions.csv`.
+Both are then split again internally by RecBole using the configured temporal split.
+
+For the final thesis evaluation, the recommended approach is to use one consistent strategy:
+
+- prepare both MovieLens and Amazon from the full interaction files
+- let RecBole apply the same time-ordered train/validation/test split to both datasets
+- document this as the unified evaluation protocol
+
+This would better match the thesis goal of fair cross-model and cross-dataset comparison.
+
+The change was not applied in this step because it changes the evaluation protocol and should be treated as a deliberate experimental-design decision.
