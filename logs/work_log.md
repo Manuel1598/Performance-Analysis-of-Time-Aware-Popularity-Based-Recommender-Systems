@@ -2717,9 +2717,9 @@ This is especially important for server-based experiments and prevents unnecessa
 
 The tuning analysis scripts were updated to read the full tuning result files:
 
-```python
-topn_full_tuning_results.csv
-session_full_tuning_results.csv
+``` python
+  topn_full_tuning_results.csv
+  session_full_tuning_results.csv
 ```
 
 instead of the smaller non-full tuning result files.
@@ -2768,3 +2768,116 @@ For the final thesis evaluation, the recommended approach is to use one consiste
 This would better match the thesis goal of fair cross-model and cross-dataset comparison.
 
 The change was not applied in this step because it changes the evaluation protocol and should be treated as a deliberate experimental-design decision.
+
+
+## 2026-05-27 - Unified Top-N data preparation and sample-to-full session evaluation
+
+### Overview
+
+The experimental workflow was updated to separate hyperparameter search from final full-dataset evaluation more clearly.
+
+Changed files:
+
+- `src/recbole_framework/datasets/topn/prepare_recbole_movielens.py`
+- `src/recbole_framework/tuning/evaluate_session_models_final.py`
+- `src/recbole_framework/tuning/run_all_full_tuning.py`
+
+---
+
+### Unified Top-N RecBole Data Preparation
+
+MovieLens RecBole preparation was changed from:
+
+```python
+movielens_train.csv
+```
+
+to:
+
+```python
+movielens_interactions.csv
+```
+
+Amazon already uses the full interaction file.
+With this change, both Top-N datasets are prepared from their complete interaction histories and are then split by RecBole using the same configured time-ordered evaluation protocol.
+
+#### Why this was done
+
+The previous setup mixed two strategies:
+
+- MovieLens was prepared from a pre-split training file.
+- Amazon was prepared from the full interaction file.
+- Both were then split again internally by RecBole.
+
+This could make cross-dataset comparisons harder to interpret because the evaluation protocol was not aligned.
+Preparing both datasets from full interactions makes the Top-N setup methodologically cleaner and better suited for fair comparison between MostPop, RecentPop, DecayPop, and BPR.
+
+---
+
+### Session-Based Final Full-Dataset Evaluation
+
+Added a dedicated final evaluation script:
+
+```python
+evaluate_session_models_final.py
+```
+
+This script:
+
+- reads the sample-based session tuning results
+- selects the top configurations per dataset and model
+- maps sample datasets to their full dataset versions
+- evaluates only these selected configurations on the full datasets
+- stores results separately in `session_final_full_evaluation_results.csv`
+
+The sample-to-full mapping is:
+
+```python
+yoochoose_recbole_sample -> yoochoose_recbole
+globo_recbole_sample -> globo_recbole
+adressa_recbole_sample -> adressa_recbole
+```
+
+#### Why this was done
+
+Running the complete VS-KNN/VSTAN/GRU4Rec grid on full session datasets is computationally expensive.
+Neighborhood-based models such as VS-KNN and VSTAN are especially costly because they search over candidate sessions during prediction.
+
+The new workflow follows a more scalable and scientifically defensible design:
+
+1. run broad hyperparameter tuning on representative samples
+2. identify the best configurations per model and dataset
+3. run only those selected configurations on the full datasets
+
+This keeps the experimental setup feasible while still allowing final conclusions to be based on full-dataset evaluation.
+
+---
+
+### Updated Full Tuning Runner
+
+`run_all_full_tuning.py` now runs:
+
+1. sample-based session full-grid tuning
+2. selected session full-dataset final evaluation
+3. Top-N full-grid tuning
+
+#### Why this was done
+
+The runner now reflects the intended experimental workflow:
+
+- sample grids for expensive session-model tuning
+- full-data final validation for selected session configurations
+- full-data Top-N tuning where the datasets and models are computationally more manageable
+
+---
+
+### Scientific Rationale
+
+Using samples for hyperparameter search is scientifically acceptable when it is clearly documented and followed by full-dataset validation.
+
+This distinction is important:
+
+- sample results are used for model selection and hyperparameter exploration
+- full results are used for final reporting and cross-dataset comparison
+
+This makes the project more computationally realistic without weakening the evaluation design.

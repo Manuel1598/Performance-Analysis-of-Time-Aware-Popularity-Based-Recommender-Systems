@@ -23,6 +23,7 @@ def main() -> None:
 
     scripts = [
         project_root / "src" / "recbole_framework" / "tuning" / "tune_session_models_full.py",
+        project_root / "src" / "recbole_framework" / "tuning" / "evaluate_session_models_final.py",
         project_root / "src" / "recbole_framework" / "tuning" / "tune_topn_models_full.py",
     ]
 
