@@ -254,8 +254,8 @@ def main() -> None:
 
         # VS-KNN tuning
         for k, sample_size in product(
-                [50, 100],
-                [250],
+                [100],
+                [100],
         ):
             config_updates = {
                 "vsknn_k": k,
@@ -277,10 +277,10 @@ def main() -> None:
 
         # VSTAN tuning
         for k, sample_size, position_decay, idf_weighting in product(
-                [50, 100],
-                [250],
+                [100],
+                [100],
                 [0.1],
-                [True, False],
+                [True,False],
         ):
             config_updates = {
                 "vstan_k": k,
@@ -305,9 +305,9 @@ def main() -> None:
         # GRU4Rec tuning
         for hidden_size, learning_rate, dropout_prob, epochs in product(
                 [128, 256],
-                [0.001],
+                [0.001, 0.0005],
                 [0.2],
-                [10, 20],
+                [10],
         ):
             config_updates = {
                 "model": "GRU4Rec",

@@ -15,6 +15,9 @@ from src.recbole_framework.custom_models.session.vstan_recbole import VSTANRecBo
 from src.recbole_framework.measurement.experiment_logger import ExperimentLogger
 
 
+ENABLE_EXTRA_METRICS = False
+
+
 def extract_interaction(batch_data):
     if isinstance(batch_data, tuple):
         return batch_data[0]
@@ -42,11 +45,16 @@ def load_completed_run_ids(output_file: Path) -> set[str]:
         return set()
 
     successful_runs = df[df["status"] == "success"]
-
     return set(successful_runs["run_id"].dropna().astype(str))
 
 
-def calculate_extra_metrics(model, test_data, train_data, config, top_k: int = 10) -> dict:
+def calculate_extra_metrics(
+    model,
+    test_data,
+    train_data,
+    config,
+    top_k: int = 10,
+) -> dict:
     model.eval()
 
     item_field = config["ITEM_ID_FIELD"]
@@ -150,15 +158,24 @@ def run_experiment(
     test_result = trainer.evaluate(test_data, load_best_model=False)
     eval_runtime_seconds = round(time.time() - eval_start, 2)
 
-    extra_metrics_start = time.time()
-    extra_metrics = calculate_extra_metrics(
-        model=model,
-        test_data=test_data,
-        train_data=train_data,
-        config=config,
-        top_k=10,
-    )
-    extra_metrics_runtime_seconds = round(time.time() - extra_metrics_start, 2)
+    if ENABLE_EXTRA_METRICS:
+        extra_metrics_start = time.time()
+
+        extra_metrics = calculate_extra_metrics(
+            model=model,
+            test_data=test_data,
+            train_data=train_data,
+            config=config,
+            top_k=10,
+        )
+
+        extra_metrics_runtime_seconds = round(
+            time.time() - extra_metrics_start,
+            2,
+        )
+    else:
+        extra_metrics = {}
+        extra_metrics_runtime_seconds = 0.0
 
     return {
         "model": model_name,
@@ -244,7 +261,10 @@ def run_and_store(
         append_result(output_file, failed_result)
         logger.log_result(failed_result)
 
-        print(f"Run failed for {model_name} on {dataset_name} with config {config_updates}")
+        print(
+            f"Run failed for {model_name} on {dataset_name} "
+            f"with config {config_updates}"
+        )
         print(f"Error: {error}")
 
 
@@ -272,12 +292,13 @@ def main() -> None:
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using device: {device}")
+    print(f"Extra metrics enabled: {ENABLE_EXTRA_METRICS}")
     print(f"Already completed runs: {len(completed_run_ids)}")
 
     datasets = [
-        "yoochoose_recbole",
-        "globo_recbole",
-        "adressa_recbole",
+        "yoochoose_recbole_sample",
+        "globo_recbole_sample",
+        "adressa_recbole_sample",
     ]
 
     for dataset_name in datasets:
