@@ -140,7 +140,6 @@ Supporting ranking metrics:
 - `NDCG@5`
 - `NDCG@10`
 - `MRR@5`
-- `MRR@10`
 
 Popularity-bias and recommendation-diversity metrics:
 
