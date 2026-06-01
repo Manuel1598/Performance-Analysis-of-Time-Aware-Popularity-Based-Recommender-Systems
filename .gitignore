@@ -17,7 +17,6 @@ data/recbole/
 data/*.zip
 
 # Experiment outputs
-recbole_results/
 results_prototype/
 src/**/log_tensorboard/
 src/**/artifacts/
