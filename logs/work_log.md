@@ -2788,14 +2788,14 @@ Changed files:
 
 MovieLens RecBole preparation was changed from:
 
-```python
-movielens_train.csv
+``` python
+ movielens_train.csv
 ```
 
 to:
 
-```python
-movielens_interactions.csv
+``` python
+ movielens_interactions.csv
 ```
 
 Amazon already uses the full interaction file.
@@ -2818,7 +2818,7 @@ Preparing both datasets from full interactions makes the Top-N setup methodologi
 
 Added a dedicated final evaluation script:
 
-```python
+``` python
 evaluate_session_models_final.py
 ```
 
@@ -2832,7 +2832,7 @@ This script:
 
 The sample-to-full mapping is:
 
-```python
+``` python
 yoochoose_recbole_sample -> yoochoose_recbole
 globo_recbole_sample -> globo_recbole
 adressa_recbole_sample -> adressa_recbole
