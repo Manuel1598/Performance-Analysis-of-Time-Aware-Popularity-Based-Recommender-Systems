@@ -9,7 +9,7 @@ from src.recbole_framework.custom_models.session.vstan_recbole import VSTANRecBo
 
 
 def main() -> None:
-    project_root = Path(__file__).resolve().parents[3]
+    project_root = Path(__file__).resolve().parents[4]
 
     config_dict = {
         "model": VSTANRecBole,

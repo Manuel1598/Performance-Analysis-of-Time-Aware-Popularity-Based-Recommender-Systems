@@ -19,6 +19,24 @@ from src.recbole_framework.measurement.experiment_logger import ExperimentLogger
 ENABLE_EXTRA_METRICS = True
 
 
+def make_run_id(model_name: str, dataset_name: str, config_updates: dict) -> str:
+    config_string = ExperimentLogger.serialize_config(config_updates)
+    return f"{dataset_name}::{model_name}::{config_string}"
+
+
+def load_completed_run_ids(output_file: Path) -> set[str]:
+    if not output_file.exists():
+        return set()
+
+    df = pd.read_csv(output_file)
+
+    if "run_id" not in df.columns or "status" not in df.columns:
+        return set()
+
+    successful_runs = df[df["status"] == "success"]
+    return set(successful_runs["run_id"].dropna().astype(str))
+
+
 def calculate_extra_metrics(model, test_data, train_data, config, top_k: int = 10) -> dict:
     model.eval()
 
@@ -145,16 +163,32 @@ def run_experiment(
     }
 
 
+def append_result(output_file: Path, result: dict) -> None:
+    result_df = pd.DataFrame([result])
+
+    if output_file.exists():
+        existing_df = pd.read_csv(output_file)
+        result_df = pd.concat([existing_df, result_df], ignore_index=True)
+
+    result_df.to_csv(output_file, index=False)
+
+
 def run_and_store(
-    all_results,
-    output_file,
-    logger,
+    output_file: Path,
+    logger: ExperimentLogger,
+    completed_run_ids: set[str],
     model_class,
-    model_name,
-    dataset_name,
-    config_updates,
-    device,
-):
+    model_name: str,
+    dataset_name: str,
+    config_updates: dict,
+    device: str,
+) -> None:
+    run_id = make_run_id(model_name, dataset_name, config_updates)
+
+    if run_id in completed_run_ids:
+        print(f"Skipping completed run: {run_id}")
+        return
+
     start_time = time.time()
 
     try:
@@ -166,17 +200,19 @@ def run_and_store(
             device=device,
         )
 
+        result["run_id"] = run_id
         result["status"] = "success"
         result["error_message"] = ""
         result["runtime_seconds"] = round(time.time() - start_time, 2)
         result["config_json"] = ExperimentLogger.serialize_config(config_updates)
 
-        all_results.append(result)
-        pd.DataFrame(all_results).to_csv(output_file, index=False)
+        append_result(output_file, result)
         logger.log_result(result)
+        completed_run_ids.add(run_id)
 
     except Exception as error:
         failed_result = {
+            "run_id": run_id,
             "model": model_name,
             "dataset": dataset_name,
             "device": device,
@@ -187,6 +223,7 @@ def run_and_store(
             **config_updates,
         }
 
+        append_result(output_file, failed_result)
         logger.log_result(failed_result)
 
         print(f"Run failed for {model_name} on {dataset_name}: {config_updates}")
@@ -213,12 +250,12 @@ def main() -> None:
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
     logger = ExperimentLogger(log_file)
+    completed_run_ids = load_completed_run_ids(output_file)
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     print(f"Using device: {device}")
     print(f"Extra metrics enabled: {ENABLE_EXTRA_METRICS}")
-
-    all_results = []
+    print(f"Already completed runs: {len(completed_run_ids)}")
 
     datasets = [
         "movielens_recbole",
@@ -229,53 +266,53 @@ def main() -> None:
         print(f"\n===== DATASET: {dataset_name} =====")
 
         run_and_store(
-            all_results,
-            output_file,
-            logger,
-            MostPopRecBole,
-            "MostPop",
-            dataset_name,
-            {},
-            device,
+            output_file=output_file,
+            logger=logger,
+            completed_run_ids=completed_run_ids,
+            model_class=MostPopRecBole,
+            model_name="MostPop",
+            dataset_name=dataset_name,
+            config_updates={},
+            device=device,
         )
 
-        for window_days in [1, 3, 7, 14, 30, 60, 90]:
+        for window_days in [1, 3, 7, 14, 30, 60, 90, 180]:
             run_and_store(
-                all_results,
-                output_file,
-                logger,
-                RecentPopRecBole,
-                "RecentPop",
-                dataset_name,
-                {"window_days": window_days},
-                device,
+                output_file=output_file,
+                logger=logger,
+                completed_run_ids=completed_run_ids,
+                model_class=RecentPopRecBole,
+                model_name="RecentPop",
+                dataset_name=dataset_name,
+                config_updates={"window_days": window_days},
+                device=device,
             )
 
-        for decay_lambda in [1e-8, 5e-8, 1e-7, 5e-7, 1e-6]:
+        for decay_lambda in [1e-9, 5e-9, 1e-8, 5e-8, 1e-7, 5e-7, 1e-6]:
             run_and_store(
-                all_results,
-                output_file,
-                logger,
-                DecayPopRecBole,
-                "DecayPop",
-                dataset_name,
-                {"decay_lambda": decay_lambda},
-                device,
+                output_file=output_file,
+                logger=logger,
+                completed_run_ids=completed_run_ids,
+                model_class=DecayPopRecBole,
+                model_name="DecayPop",
+                dataset_name=dataset_name,
+                config_updates={"decay_lambda": decay_lambda},
+                device=device,
             )
 
         for embedding_size, learning_rate, epochs in product(
             [32, 64, 128],
             [0.001, 0.0005, 0.0001],
-            [10, 20, 50],
+            [50],
         ):
             run_and_store(
-                all_results,
-                output_file,
-                logger,
-                BPR,
-                "BPR",
-                dataset_name,
-                {
+                output_file=output_file,
+                logger=logger,
+                completed_run_ids=completed_run_ids,
+                model_class=BPR,
+                model_name="BPR",
+                dataset_name=dataset_name,
+                config_updates={
                     "embedding_size": embedding_size,
                     "learning_rate": learning_rate,
                     "epochs": epochs,
@@ -287,7 +324,7 @@ def main() -> None:
                         "candidate_num": 0,
                     },
                 },
-                device,
+                device=device,
             )
 
     print(f"\nSaved Top-N full tuning results to: {output_file}")

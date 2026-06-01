@@ -1,228 +1,309 @@
 # Performance Analysis of Time-Aware Popularity-Based Recommender Systems
 
-**Master Thesis Project**  
+**Master thesis project**  
 Author: Manuel Weilguni  
 University: AAU  
-Year: 2026  
+Year: 2026
 
----
+## Overview
 
-# Project Overview
+This repository contains the implementation, tuning runs, and analysis pipeline
+for the thesis project:
 
-This repository contains the implementation and experiments for the master thesis:
+**Performance Analysis of Time-Aware Popularity-Based Recommender Systems**
 
-**"Performance Analysis of Time-Aware Popularity-Based Recommender Systems"**
+The project studies whether simple popularity-based recommender systems become
+stronger and more informative baselines when temporal information is included.
+The main focus is on:
 
-The goal of this work is to analyze the performance of popularity-based recommendation methods, with a particular focus on:
+- ranking quality
+- temporal popularity dynamics
+- popularity bias
+- runtime and computational efficiency
+- differences between Top-N and session-based recommendation
 
-- temporal dynamics  
-- trendiness  
-- popularity bias  
+The final experimental system is based on **RecBole**. Earlier prototype code is
+kept in the repository for traceability, but the main results are produced with
+the RecBole framework.
 
-The project follows a **framework-based approach using RecBole**, where both existing and custom models are implemented and evaluated in a unified environment.
+## Current Project Status
 
----
+The project has moved beyond the prototype phase. The current state includes:
 
-# Research Motivation
+- RecBole-native custom Top-N models:
+  - `MostPop`
+  - `RecentPop`
+  - `DecayPop`
+- RecBole-compatible session models:
+  - `VS-KNN`
+  - `VSTAN`
+  - `GRU4Rec`
+- RecBole Top-N baseline:
+  - `BPR`
+- prepared RecBole datasets in `.inter` format
+- full tuning result files for Top-N and session experiments
+- structured analysis reports, comparison tables, runtime summaries, and plots
 
-Popularity-based recommender systems are widely used as baselines due to their simplicity and strong empirical performance.
+The current full-tuning result files are:
 
-The standard baseline, **MostPop**, ranks items based on global interaction frequency. However, this approach ignores that:
+- `recbole_results/tuning_results/session_full_tuning_results.csv`
+- `recbole_results/tuning_results/topn_full_tuning_results.csv`
+- `recbole_results/experiment_logs/session_full_tuning_experiment_log.csv`
+- `recbole_results/experiment_logs/topn_full_tuning_experiment_log.csv`
 
-- popularity evolves over time  
-- items may only be relevant within specific time windows  
-- evaluation without temporal awareness can lead to misleading conclusions  
+The structured evaluation report is generated here:
 
-This thesis revisits popularity-based recommendation and investigates whether **time-aware extensions provide stronger and more realistic baselines**, especially when compared to model-based methods.
+- `recbole_results/tuning_results/analysis_results/structured_report/recbole_structured_evaluation.md`
 
----
+## Research Questions
 
-# Research Objectives
+The central research question is:
 
-The main objectives of this thesis are:
-
-- Implement popularity-based models:
-  - MostPop  
-  - RecentPop  
-  - DecayPop  
-
-- Integrate these models as **custom implementations within the RecBole framework**
-
-- Compare them with model-based recommender systems:
-  - BPR  
-  - NeuMF  
-  - SVD  
-
-- Extend the analysis to **session-based recommendation**:
-  - GRU4Rec  
-
-- Analyze:
-  - temporal effects  
-  - popularity bias  
-  - fairness aspects  
-
-- Evaluate generalization across multiple datasets and domains  
-
----
-
-# Research Questions
-
-> How does incorporating temporal information affect the performance and behavior of popularity-based recommender systems?
+> How does incorporating temporal information affect the performance and
+> behavior of popularity-based recommender systems?
 
 Sub-questions:
 
-- Do time-aware popularity models improve ranking performance?  
-- How do they compare to model-based approaches?  
-- How does popularity bias influence results?  
-- Do findings generalize across datasets?  
-- How do results differ between Top-N and session-based settings?  
+- Do time-aware popularity models improve ranking performance compared with
+  standard popularity baselines?
+- How do popularity-based models compare with model-based recommender systems?
+- How much popularity bias is visible in the recommendations?
+- Do results differ across domains and datasets?
+- How do Top-N and session-based recommendation results differ?
+- Are quality improvements computationally efficient when runtime is included?
 
----
+## Datasets
 
-# Methodology
+The project uses RecBole-formatted datasets under `data/recbole/`.
 
-The project follows a two-phase approach:
+### Top-N Recommendation
 
-## Phase 1 – Prototype Pipeline
+- `movielens_recbole`
+- `amazon_recbole`
 
-- standalone implementation of popularity-based models  
-- custom evaluation pipeline  
-- validation of model logic and reproducibility  
+### Session-Based Recommendation
 
-## Phase 2 – RecBole-Based Framework (Main System)
+- `yoochoose_recbole_sample`
+- `globo_recbole_sample`
+- `adressa_recbole_sample`
 
-- integration of all models into RecBole  
-- implementation of custom models:
-  - MostPop  
-  - RecentPop  
-  - DecayPop  
+The structured analysis computes dataset characteristics directly from the
+`.inter` files, including:
 
-- standardized training and evaluation  
-- direct comparison with RecBole baselines  
+- number of interactions
+- number of users or sessions
+- number of items
+- average interactions per user/session
+- average interactions per item
+- interaction matrix density
+- timestamp range
 
----
+## Models
 
-# Datasets
+### Top-N Models
 
-## Top-N Recommendation
+Custom RecBole models:
 
-- MovieLens (primary benchmark)  
-- Amazon Reviews (cross-domain validation)  
+- `MostPop`: global popularity baseline
+- `RecentPop`: popularity within a recent time window
+- `DecayPop`: popularity with time-decayed interaction weights
 
-## Session-Based Recommendation
+Baseline:
 
-- Yoochoose (e-commerce)  
-- Globo (news recommendation)  
-- Adressa (optional news dataset)  
+- `BPR`: Bayesian Personalized Ranking
 
----
+### Session-Based Models
 
-# Implemented Models
+Custom session models:
 
-## Custom Models (RecBole)
+- `VS-KNN`: session-neighborhood baseline
+- `VSTAN`: time-aware session-neighborhood model
 
-- MostPop  
-- RecentPop  
-- DecayPop  
+Baseline:
 
-These models are implemented as **native RecBole models**.
+- `GRU4Rec`: neural session recommendation model
 
----
+## Evaluation Metrics
 
-## Baselines (RecBole)
+The main evaluation metric for model quality is:
 
-- BPR (Bayesian Personalized Ranking)  
-- NeuMF (Neural Matrix Factorization)  
-- SVD  
-- GRU4Rec (session-based)  
+- `MRR@10`
 
----
+`MRR@10` is used as the primary metric because it rewards models that rank the
+first relevant item very high. This is especially important for session-based
+recommendation, where the next useful item should appear near the top.
 
-# Evaluation
+Supporting ranking metrics:
 
-Evaluation is performed using RecBole’s ranking-based metrics:
+- `Hit@5`
+- `Hit@10`
+- `NDCG@5`
+- `NDCG@10`
+- `MRR@5`
+- `MRR@10`
 
-- NDCG@k  
-- MRR@k  
+Popularity-bias and recommendation-diversity metrics:
 
-Additionally analyzed:
+- `coverage@10`
+- `avg_recommendation_popularity@10`
 
-- coverage  
-- popularity bias  
-- distribution of recommended items  
+Runtime and efficiency metrics:
 
----
+- `runtime_seconds`
+- `train_runtime_seconds`
+- `eval_runtime_seconds`
+- `extra_metrics_runtime_seconds`
+- `runtime_minutes`
+- `mrr@10_per_minute`
+- `ndcg@10_per_minute`
+- `hit@10_per_minute`
+- `runtime_relative_to_dataset_fastest`
+- `quality_runtime_pareto_efficient`
 
-# Project Structure
+The final analysis should not rely on ranking metrics alone. For this project,
+the most important combined view is:
 
-The project is organized into:
+1. `MRR@10` for primary quality
+2. `NDCG@10` for ranked relevance quality
+3. `Hit@10` for intuitive top-k success
+4. `coverage@10` for recommendation breadth
+5. `avg_recommendation_popularity@10` for popularity bias
+6. `runtime_seconds` and `mrr@10_per_minute` for efficiency
 
-- `src/` → source code  
-- `data/` → datasets  
-- `results/` → outputs and metrics  
-- `docs/` → documentation  
-- `logs/` → work log  
+## Project Structure
 
-The codebase separates:
+```text
+data/
+  raw/                         raw downloaded datasets
+  processed/                   prototype-stage processed data
+  recbole/                     RecBole .inter datasets
 
-- prototype implementation (exploratory phase)  
-- RecBole-based implementation (final system)  
+docs/                          additional project documentation
+logs/                          work log
+notebooks/                     exploratory notebooks
+recbole_results/               RecBole tuning logs, result CSVs, reports, plots
+results_prototype/             prototype-stage outputs
 
----
+src/
+  prototype/                   initial standalone implementation
+  recbole_framework/
+    analysis/                  comparison and structured evaluation scripts
+    custom_models/             custom RecBole and session model implementations
+    datasets/                  dataset preparation scripts
+    measurement/               extra metrics and experiment logging
+    runners/                   single-model runner scripts
+    tuning/                    tuning and full-experiment scripts
+```
 
-# Reproducibility
+## Important Scripts
 
-The project is designed for full reproducibility:
+### Dataset Preparation
 
-- documented preprocessing  
-- deterministic data splits  
-- unified evaluation within RecBole  
+Top-N:
 
-See:
+- `src/recbole_framework/datasets/topn/prepare_recbole_movielens.py`
+- `src/recbole_framework/datasets/topn/prepare_recbole_amazon.py`
 
-- `docs/`  
-- `logs/`  
-- `data/`  
+Session:
 
----
+- `src/recbole_framework/datasets/session/prepare_yoochoose_recbole.py`
+- `src/recbole_framework/datasets/session/prepare_yoochoose_recbole_sample.py`
+- `src/recbole_framework/datasets/session/prepare_globo_recbole.py`
+- `src/recbole_framework/datasets/session/prepare_adressa_recbole.py`
 
-# Current Status
+### Full Tuning
 
-Completed:
+- `src/recbole_framework/tuning/tune_session_models_full.py`
+- `src/recbole_framework/tuning/evaluate_session_models_final.py`
+- `src/recbole_framework/tuning/tune_topn_models_full.py`
+- `src/recbole_framework/tuning/run_all_full_tuning.py`
 
-- prototype pipeline for Top-N recommendation  
-- implementation of MostPop, RecentPop, DecayPop  
-- integration of MovieLens and Amazon datasets  
+### Analysis
 
-Ongoing:
+- `src/recbole_framework/analysis/analyze_session_tuning_results.py`
+- `src/recbole_framework/analysis/analyze_topn_tuning_results.py`
+- `src/recbole_framework/analysis/compare_recbole_session_models.py`
+- `src/recbole_framework/analysis/compare_recbole_topn_models.py`
+- `src/recbole_framework/analysis/evaluate_recbole_results.py`
 
-- RecBole integration of custom models  
-- implementation of MostPop as first RecBole-native model  
+The main analysis entry point is:
 
----
+```powershell
+python src\recbole_framework\analysis\evaluate_recbole_results.py --scope full
+```
 
-# Next Steps
+If the local virtual environment launcher is broken, use a valid Python 3.12
+interpreter and make sure the project environment packages are available.
 
-- implement MostPop in RecBole  
-- extend to RecentPop and DecayPop  
-- integrate additional RecBole baselines  
-- extend to session-based recommendation  
-- perform systematic hyperparameter tuning  
+## Structured Result Analysis
 
----
+The structured evaluator reads the full tuning results and creates:
 
-# Summary
+- `dataset_summary.csv`
+- `model_summary.csv`
+- `tuning_summary.csv`
+- `best_overall.csv`
+- `best_per_model.csv`
+- `comparative_summary.csv`
+- `runtime_summary.csv`
+- `efficiency_summary.csv`
+- plots under `structured_report/plots/`
+- `recbole_structured_evaluation.md`
 
-This project transitions from a standalone experimental setup to a **framework-based evaluation using RecBole**, enabling:
+The `comparative_summary.csv` file is the most useful compact table for thesis
+interpretation because it combines quality, bias-related metrics, runtime, and
+efficiency.
 
-- standardized comparison  
-- reproducibility  
-- extensibility  
+## Current Full-Tuning Scope
 
-The goal is to better understand the role of:
+The current structured report is based on the full tuning files and contains:
 
-- popularity  
-- time  
-- model complexity  
+- 356 cleaned result rows
+- 355 successful result rows
+- 5 datasets
+- 7 evaluated models
 
-in modern recommender systems.
+Evaluated datasets:
+
+- `adressa_recbole_sample`
+- `amazon_recbole`
+- `globo_recbole_sample`
+- `movielens_recbole`
+- `yoochoose_recbole_sample`
+
+Evaluated models:
+
+- `BPR`
+- `DecayPop`
+- `GRU4Rec`
+- `MostPop`
+- `RecentPop`
+- `VS-KNN`
+- `VSTAN`
+
+## Reproducibility Notes
+
+The project is designed around reproducible experiment stages:
+
+1. prepare raw datasets into RecBole `.inter` files
+2. run RecBole model tuning
+3. store experiment logs and result CSVs
+4. generate structured reports and plots from result CSVs
+
+The generated result directories are experiment artifacts and may be ignored by
+Git depending on local settings. The code required to reproduce the analysis is
+kept under `src/recbole_framework/`.
+
+## Summary
+
+This repository now contains both the historical prototype pipeline and the
+current RecBole-based experimental system. The current project focus is no
+longer basic model integration, but systematic comparison of Top-N and
+session-based recommender models with respect to:
+
+- ranking performance
+- time-aware popularity effects
+- popularity bias
+- dataset differences
+- runtime and efficiency
+

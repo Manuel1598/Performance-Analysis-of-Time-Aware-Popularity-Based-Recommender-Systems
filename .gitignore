@@ -1,0 +1,28 @@
+# Python/cache artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Local environments
+.venv/
+venv/
+
+# IDE-local files
+.idea/
+
+# Data artifacts
+data/raw/
+data/processed/
+data/recbole/
+data/*.zip
+
+# Experiment outputs
+results_prototype/
+src/**/log_tensorboard/
+src/**/artifacts/
+*.pth
+*.zip
+
+# OS files
+Thumbs.db
+.DS_Store

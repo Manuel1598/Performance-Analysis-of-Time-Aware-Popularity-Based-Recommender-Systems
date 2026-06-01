@@ -10,7 +10,7 @@ def main() -> None:
         project_root
         / "recbole_results"
         / "tuning_results"
-        / "topn_tuning_results.csv"
+        / "topn_full_tuning_results.csv"
     )
 
     output_dir = (

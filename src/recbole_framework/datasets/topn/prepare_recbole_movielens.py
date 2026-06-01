@@ -41,9 +41,9 @@ def save_recbole_inter_file(
 
 
 def main() -> None:
-    project_root = Path(__file__).resolve().parents[3]
+    project_root = Path(__file__).resolve().parents[4]
 
-    input_file = project_root / "data" / "processed" / "movielens_train.csv"
+    input_file = project_root / "data" / "processed" / "movielens_interactions.csv"
     output_file = (
         project_root
         / "data"
@@ -52,17 +52,19 @@ def main() -> None:
         / "movielens_recbole.inter"
     )
 
-    train_df = load_data(
+    interactions_df = load_data(
         input_file,
-        "MovieLens training data",
+        "MovieLens interaction data",
         required_columns=REQUIRED_INTERACTION_COLUMNS
     )
 
-    print(f"\nLoaded training interactions: {len(train_df):,}")
-    print(f"Users: {train_df['user_id'].nunique():,}")
-    print(f"Items: {train_df['item_id'].nunique():,}")
+    interactions_df = interactions_df.sort_values(["user_id", "timestamp"])
 
-    recbole_df = convert_to_recbole_interaction_format(train_df)
+    print(f"\nLoaded interactions: {len(interactions_df):,}")
+    print(f"Users: {interactions_df['user_id'].nunique():,}")
+    print(f"Items: {interactions_df['item_id'].nunique():,}")
+
+    recbole_df = convert_to_recbole_interaction_format(interactions_df)
 
     print("\nPreview of RecBole-formatted interactions:")
     print(recbole_df.head())

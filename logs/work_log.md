@@ -2509,3 +2509,375 @@ It shows that the implemented framework can now compare different model families
 * execute longer server-based experiments on full datasets
 * further analyze coverage and popularity-bias behavior
 * generate thesis-ready result tables and plots
+
+
+## 2026-05-27 - Updated full tuning grids for session-based and Top-N models
+
+### Overview
+
+Updated the large-scale full tuning configuration for both session-based recommendation models and Top-N recommendation models.
+
+Changed files:
+
+- `src/recbole_framework/tuning/tune_session_models_full.py`
+- `src/recbole_framework/tuning/tune_topn_models_full.py`
+
+---
+
+### Session-Based Recommendation Grid Updates
+
+#### VS-KNN
+
+Updated the grid to:
+
+```python
+vsknn_k = [100, 200, 500]
+vsknn_sample_size = [100, 250, 500]
+```
+
+This expands the search over different neighborhood sizes and candidate-session sample sizes.
+The goal is to compare focused local neighborhoods against broader neighbor sets and to measure how larger candidate pools influence recommendation quality and runtime.
+
+#### VSTAN
+
+Updated the grid to:
+
+```python
+vstan_k = [100, 200, 500]
+vstan_sample_size = [100, 250, 500]
+vstan_position_decay = [0.05, 0.1, 0.2]
+vstan_idf_weighting = [True, False]
+```
+
+This extends VS-KNN with position-aware weighting and optional IDF-based popularity normalization.
+The grid makes it possible to analyze whether stronger focus on recent session positions improves ranking quality and whether reducing the influence of very popular items improves diversity and mitigates popularity bias.
+
+#### GRU4Rec
+
+Updated the grid to:
+
+```python
+hidden_size = [100, 128, 256]
+learning_rate = [0.001, 0.0005, 0.0001]
+dropout_prob = [0.1, 0.2]
+epochs = [10, 20]
+```
+
+This broadens the neural sequential model search across model capacity, learning stability, regularization strength, and training duration.
+The chosen grid supports analysis of whether GRU4Rec benefits from larger hidden representations and longer training, while still keeping the number of runs manageable for server execution.
+
+---
+
+### Top-N Recommendation Grid Updates
+
+#### MostPop
+
+MostPop remains without hyperparameters.
+It continues to serve as the global popularity baseline and minimal reference point for comparing time-aware popularity models and personalized models.
+
+#### RecentPop
+
+Updated the grid to:
+
+```python
+window_days = [1, 3, 7, 14, 30, 60, 90, 180]
+```
+
+The added 180-day window allows comparison between short-term trend sensitivity and longer-term popularity stability.
+This is important for contrasting highly dynamic domains such as news with more stable domains such as movies or product recommendation.
+
+#### DecayPop
+
+Updated the grid to:
+
+```python
+decay_lambda = [
+    1e-9,
+    5e-9,
+    1e-8,
+    5e-8,
+    1e-7,
+    5e-7,
+    1e-6,
+]
+```
+
+The expanded lambda range tests both weak and strong exponential time decay.
+Small lambda values preserve older interactions for longer, while larger values emphasize recent interactions more strongly.
+
+#### BPR
+
+Updated the grid to:
+
+```python
+embedding_size = [32, 64, 128]
+learning_rate = [0.001, 0.0005, 0.0001]
+epochs = [50]
+```
+
+The number of epochs was fixed at 50 to reduce unnecessary runs and keep the full tuning setup computationally efficient.
+The grid still explores the most important BPR dimensions: latent factor size and learning rate.
+
+### Scientific Motivation
+
+The updated grids support a stronger experimental design.
+The goal is not only to find the single best configuration, but also to analyze which hyperparameter regions work well for different model classes and dataset domains.
+
+This enables more meaningful thesis analysis across:
+
+- session-based neighborhood methods
+- neural sequential recommendation
+- static popularity
+- recent-window popularity
+- exponential time-decayed popularity
+- personalized matrix factorization
+
+Expected insights include:
+
+- VS-KNN and VSTAN should be strong on session datasets.
+- Position weighting and IDF weighting may improve recommendation quality and reduce popularity bias.
+- RecentPop and DecayPop should be especially relevant in news and trend-heavy domains.
+- Larger time windows and weaker decay may be better for long-term domains.
+- GRU4Rec may scale well with GPU acceleration, but is not guaranteed to outperform simpler methods.
+
+Overall, this tuning setup is better suited for fair cross-model and cross-dataset evaluation than a narrow accuracy-only search.
+
+
+## 2026-05-27 - Improved tuning reliability and result analysis workflow
+
+### Overview
+
+After reviewing the tuning and evaluation pipeline, several infrastructure-level improvements were implemented.
+These changes do not alter the scientific model logic or the selected hyperparameter grids.
+Instead, they make long-running experiments more reproducible, easier to resume, and safer to analyze.
+
+Changed files:
+
+- `src/recbole_framework/custom_models/session/vsknn_recbole.py`
+- `src/recbole_framework/custom_models/session/vstan_recbole.py`
+- `src/recbole_framework/custom_models/topn/mostpop_recbole.py`
+- `src/recbole_framework/tuning/tune_topn_models_full.py`
+- `src/recbole_framework/analysis/analyze_topn_tuning_results.py`
+- `src/recbole_framework/analysis/analyze_session_tuning_results.py`
+- `.gitignore`
+
+---
+
+### Deterministic Candidate Sampling for VS-KNN and VSTAN
+
+VS-KNN and VSTAN use candidate-session sampling when the number of possible neighbor sessions is larger than the configured sample size.
+Previously, this sampling used Python's global `random.sample`.
+
+This was changed to use a deterministic local random generator based on:
+
+- the configured experiment seed
+- the current session item set
+
+#### Why this was done
+
+The goal is to improve reproducibility.
+For thesis experiments, repeated runs with the same seed and configuration should evaluate the same sampled candidate sessions.
+This makes comparison across hyperparameter settings more reliable and avoids small random differences caused by uncontrolled sampling.
+
+---
+
+### Removed Debug Output from MostPop
+
+Temporary debug print statements were removed from the RecBole-native MostPop model.
+
+#### Why this was done
+
+MostPop is used as a baseline in repeated tuning and evaluation runs.
+Debug output during large-scale experiments makes logs harder to read and can create unnecessary noise during server execution.
+Removing these prints does not change the model scores or evaluation behavior.
+
+---
+
+### Robust Resume Support for Top-N Full Tuning
+
+The Top-N full tuning script was updated to follow the same fault-tolerant structure already used in the session-based full tuning pipeline.
+
+Added:
+
+- stable `run_id` generation
+- detection of already completed successful runs
+- skipping of completed configurations
+- incremental result persistence after each run
+- failed-run persistence in the result CSV
+
+#### Why this was done
+
+Full tuning can run for many hours or days.
+If a run is interrupted, the script should continue from already completed configurations instead of starting from scratch.
+This is especially important for server-based experiments and prevents unnecessary repeated computation.
+
+---
+
+### Full-Tuning Analysis File Alignment
+
+The tuning analysis scripts were updated to read the full tuning result files:
+
+``` python
+  topn_full_tuning_results.csv
+  session_full_tuning_results.csv
+```
+
+instead of the smaller non-full tuning result files.
+
+#### Why this was done
+
+The expanded grids write their results to the full tuning output files.
+The analysis scripts must read those same files so that best-configuration reports reflect the current full tuning experiments rather than older sample or debugging runs.
+
+---
+
+### Added Git Ignore Rules for Local Artifacts
+
+A `.gitignore` file was added to exclude local and generated artifacts such as:
+
+- virtual environments
+- raw and processed datasets
+- RecBole-formatted datasets
+- experiment results
+- TensorBoard logs
+- model checkpoints
+- Python cache files
+- IDE-local metadata
+
+#### Why this was done
+
+The workspace contains many large generated files and local machine artifacts.
+These should not be accidentally committed because they make the repository hard to maintain and can mix local experiment state with reproducible source code.
+
+---
+
+### Methodological Note on Data Splitting
+
+During the review, one remaining methodological issue was identified but not changed automatically:
+
+The current Top-N RecBole preparation is not fully consistent across datasets.
+MovieLens is prepared from `movielens_train.csv`, while Amazon is prepared from `amazon_interactions.csv`.
+Both are then split again internally by RecBole using the configured temporal split.
+
+For the final thesis evaluation, the recommended approach is to use one consistent strategy:
+
+- prepare both MovieLens and Amazon from the full interaction files
+- let RecBole apply the same time-ordered train/validation/test split to both datasets
+- document this as the unified evaluation protocol
+
+This would better match the thesis goal of fair cross-model and cross-dataset comparison.
+
+The change was not applied in this step because it changes the evaluation protocol and should be treated as a deliberate experimental-design decision.
+
+
+## 2026-05-27 - Unified Top-N data preparation and sample-to-full session evaluation
+
+### Overview
+
+The experimental workflow was updated to separate hyperparameter search from final full-dataset evaluation more clearly.
+
+Changed files:
+
+- `src/recbole_framework/datasets/topn/prepare_recbole_movielens.py`
+- `src/recbole_framework/tuning/evaluate_session_models_final.py`
+- `src/recbole_framework/tuning/run_all_full_tuning.py`
+
+---
+
+### Unified Top-N RecBole Data Preparation
+
+MovieLens RecBole preparation was changed from:
+
+``` python
+ movielens_train.csv
+```
+
+to:
+
+``` python
+ movielens_interactions.csv
+```
+
+Amazon already uses the full interaction file.
+With this change, both Top-N datasets are prepared from their complete interaction histories and are then split by RecBole using the same configured time-ordered evaluation protocol.
+
+#### Why this was done
+
+The previous setup mixed two strategies:
+
+- MovieLens was prepared from a pre-split training file.
+- Amazon was prepared from the full interaction file.
+- Both were then split again internally by RecBole.
+
+This could make cross-dataset comparisons harder to interpret because the evaluation protocol was not aligned.
+Preparing both datasets from full interactions makes the Top-N setup methodologically cleaner and better suited for fair comparison between MostPop, RecentPop, DecayPop, and BPR.
+
+---
+
+### Session-Based Final Full-Dataset Evaluation
+
+Added a dedicated final evaluation script:
+
+``` python
+evaluate_session_models_final.py
+```
+
+This script:
+
+- reads the sample-based session tuning results
+- selects the top configurations per dataset and model
+- maps sample datasets to their full dataset versions
+- evaluates only these selected configurations on the full datasets
+- stores results separately in `session_final_full_evaluation_results.csv`
+
+The sample-to-full mapping is:
+
+``` python
+yoochoose_recbole_sample -> yoochoose_recbole
+globo_recbole_sample -> globo_recbole
+adressa_recbole_sample -> adressa_recbole
+```
+
+#### Why this was done
+
+Running the complete VS-KNN/VSTAN/GRU4Rec grid on full session datasets is computationally expensive.
+Neighborhood-based models such as VS-KNN and VSTAN are especially costly because they search over candidate sessions during prediction.
+
+The new workflow follows a more scalable and scientifically defensible design:
+
+1. run broad hyperparameter tuning on representative samples
+2. identify the best configurations per model and dataset
+3. run only those selected configurations on the full datasets
+
+This keeps the experimental setup feasible while still allowing final conclusions to be based on full-dataset evaluation.
+
+---
+
+### Updated Full Tuning Runner
+
+`run_all_full_tuning.py` now runs:
+
+1. sample-based session full-grid tuning
+2. selected session full-dataset final evaluation
+3. Top-N full-grid tuning
+
+#### Why this was done
+
+The runner now reflects the intended experimental workflow:
+
+- sample grids for expensive session-model tuning
+- full-data final validation for selected session configurations
+- full-data Top-N tuning where the datasets and models are computationally more manageable
+
+---
+
+### Scientific Rationale
+
+Using samples for hyperparameter search is scientifically acceptable when it is clearly documented and followed by full-dataset validation.
+
+This distinction is important:
+
+- sample results are used for model selection and hyperparameter exploration
+- full results are used for final reporting and cross-dataset comparison
+
+This makes the project more computationally realistic without weakening the evaluation design.

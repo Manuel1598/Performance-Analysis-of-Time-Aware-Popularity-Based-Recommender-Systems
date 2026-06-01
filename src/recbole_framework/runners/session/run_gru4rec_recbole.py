@@ -9,7 +9,7 @@ from recbole.trainer import Trainer
 
 
 def main() -> None:
-    project_root = Path(__file__).resolve().parents[3]
+    project_root = Path(__file__).resolve().parents[4]
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using device: {device}")
