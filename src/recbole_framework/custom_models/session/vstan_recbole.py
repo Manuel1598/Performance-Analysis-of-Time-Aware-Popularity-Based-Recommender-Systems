@@ -1,6 +1,5 @@
 from collections import defaultdict
 import math
-import random
 
 import torch
 
@@ -15,7 +14,7 @@ class VSTANRecBole(SequentialRecommender):
         super(VSTANRecBole, self).__init__(config, dataset)
 
         self.device = config["device"]
-        self.seed = config["seed"]
+        self.time_field = config["TIME_FIELD"]
 
         self.k = config["vstan_k"]
         self.sample_size = config["vstan_sample_size"]
@@ -26,6 +25,7 @@ class VSTANRecBole(SequentialRecommender):
 
         self.reference_sessions: list[list[int]] = []
         self.reference_session_sets: list[set[int]] = []
+        self.reference_session_timestamps: list[float] = []
         self.item_sessions: dict[int, set[int]] = defaultdict(set)
         self.item_idf: dict[int, float] = {}
 
@@ -36,6 +36,7 @@ class VSTANRecBole(SequentialRecommender):
         item_seq_data = dataset.inter_feat[self.ITEM_SEQ]
         item_seq_len_data = dataset.inter_feat[self.ITEM_SEQ_LEN]
         target_items = dataset.inter_feat[self.ITEM_ID]
+        timestamps = dataset.inter_feat[self.time_field]
 
         for row_idx in range(len(item_seq_data)):
             seq_len = int(item_seq_len_data[row_idx])
@@ -53,6 +54,7 @@ class VSTANRecBole(SequentialRecommender):
             session_index = len(self.reference_sessions)
 
             self.reference_sessions.append(session_items)
+            self.reference_session_timestamps.append(float(timestamps[row_idx]))
 
             session_item_set = set(session_items)
             self.reference_session_sets.append(session_item_set)
@@ -166,10 +168,15 @@ class VSTANRecBole(SequentialRecommender):
             candidate_sessions.update(self.item_sessions.get(item_id, set()))
 
         if self.sample_size > 0 and len(candidate_sessions) > self.sample_size:
-            seed_key = f"{self.seed}:{','.join(map(str, sorted(current_item_set)))}"
-            rng = random.Random(seed_key)
             candidate_sessions = set(
-                rng.sample(sorted(candidate_sessions), self.sample_size)
+                sorted(
+                    candidate_sessions,
+                    key=lambda session_index: (
+                        self.reference_session_timestamps[session_index],
+                        session_index,
+                    ),
+                    reverse=True,
+                )[: self.sample_size]
             )
 
         return candidate_sessions

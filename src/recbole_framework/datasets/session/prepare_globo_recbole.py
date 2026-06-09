@@ -77,21 +77,23 @@ def convert_to_recbole_interaction_format(df: pd.DataFrame) -> pd.DataFrame:
 def sample_sessions(
     df: pd.DataFrame,
     max_interactions: int = 500_000,
-    random_state: int = 42,
 ) -> pd.DataFrame:
-    session_sizes = df.groupby("user_id").size().reset_index(name="session_length")
-
-    sampled_sessions = session_sizes.sample(
-        frac=1.0,
-        random_state=random_state,
+    session_summary = (
+        df.groupby("user_id")
+        .agg(
+            session_length=("item_id", "size"),
+            latest_timestamp=("timestamp", "max"),
+        )
+        .reset_index()
+        .sort_values("latest_timestamp", ascending=False)
     )
 
-    sampled_sessions["cumulative_interactions"] = sampled_sessions[
+    session_summary["cumulative_interactions"] = session_summary[
         "session_length"
     ].cumsum()
 
-    selected_sessions = sampled_sessions[
-        sampled_sessions["cumulative_interactions"] <= max_interactions
+    selected_sessions = session_summary[
+        session_summary["cumulative_interactions"] <= max_interactions
     ]["user_id"]
 
     sampled_df = df[df["user_id"].isin(selected_sessions)].copy()
@@ -160,7 +162,6 @@ def main() -> None:
     sampled_df = sample_sessions(
         processed_df,
         max_interactions=500_000,
-        random_state=42,
     )
 
     print("\nAfter session sampling:")

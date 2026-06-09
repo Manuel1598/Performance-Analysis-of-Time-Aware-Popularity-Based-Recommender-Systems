@@ -119,7 +119,7 @@ def main() -> None:
 
     sample_size = 500_000
 
-    sample_df = recbole_df.head(sample_size)
+    sample_df = recbole_df.tail(sample_size)
 
     print("\nAfter sample creation:")
     print(f"Interactions: {len(sample_df):,}")
