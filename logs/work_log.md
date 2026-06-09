@@ -2881,3 +2881,142 @@ This distinction is important:
 - full results are used for final reporting and cross-dataset comparison
 
 This makes the project more computationally realistic without weakening the evaluation design.
+
+
+## 2026-06-09 - Time-based session sampling and session popularity baselines
+
+### Overview
+
+The session-based experimental setup was extended in two ways:
+
+- sample-size handling was changed to prefer the newest temporal data
+- popularity baselines were added to the session-based RecBole tuning pipeline
+
+Changed files:
+
+- `src/recbole_framework/datasets/session/prepare_yoochoose_recbole_sample.py`
+- `src/recbole_framework/datasets/session/prepare_globo_recbole.py`
+- `src/recbole_framework/datasets/session/prepare_adressa_recbole.py`
+- `src/recbole_framework/custom_models/session/vsknn_recbole.py`
+- `src/recbole_framework/custom_models/session/vstan_recbole.py`
+- `src/recbole_framework/custom_models/session/popularity_recbole.py`
+- `src/recbole_framework/tuning/tune_session_models.py`
+- `src/recbole_framework/tuning/tune_session_models_full.py`
+- `src/recbole_framework/tuning/evaluate_session_models_final.py`
+- `src/recbole_framework/analysis/analyze_session_tuning_results.py`
+
+---
+
+### Time-Based Sample Selection
+
+Session dataset sample creation was changed from random or oldest-first sampling to newest-first sampling.
+
+For Yoochoose and Globo, sessions are now ranked by their latest interaction timestamp.
+The sample is then filled with the newest sessions until the configured interaction budget is reached.
+This keeps sessions intact while making the sample temporally recent.
+
+For Adressa, sample creation was changed from:
+
+``` python
+recbole_df.head(sample_size)
+```
+
+to:
+
+``` python
+recbole_df.tail(sample_size)
+```
+
+Because Adressa interactions are sorted by timestamp before conversion, this selects the newest interactions instead of the oldest ones.
+
+#### Why this was done
+
+The project evaluates time-aware popularity and session-based recommendation models.
+Using old or random samples can weaken temporal interpretability because the sample may not represent the latest interaction behavior.
+
+The updated sampling strategy makes sample datasets more appropriate for experiments that depend on recency.
+
+---
+
+### Newest Candidate Sessions for VS-KNN and VSTAN
+
+The `sample_size` parameters in the session-neighborhood models were changed:
+
+- `vsknn_sample_size`
+- `vstan_sample_size`
+
+Previously, when the candidate session set was larger than the configured sample size, candidates were selected randomly with a deterministic seed.
+Now, candidate sessions are sorted by their reference timestamp and the newest candidates are selected.
+
+This means values such as `100`, `250`, `500`, or `1000` now represent the most recent candidate sessions rather than random candidate sessions.
+
+#### Why this was done
+
+VS-KNN and VSTAN are session-neighborhood methods.
+Their candidate sampling directly affects which historical sessions can influence the recommendation.
+
+Selecting the newest candidates better matches the time-aware goal of the project and makes the `sample_size` parameter easier to interpret experimentally.
+
+---
+
+### Session-Based Popularity Baselines
+
+Added session-compatible popularity models:
+
+- `SessionMostPopRecBole`
+- `SessionRecentPopRecBole`
+- `SessionDecayPopRecBole`
+
+These models inherit from RecBole's sequential recommender interface so they can run inside the same session-based evaluation setup as:
+
+- VS-KNN
+- VSTAN
+- GRU4Rec
+
+The models act as global popularity baselines under a session-based protocol:
+
+- MostPop ranks items by overall interaction count
+- RecentPop ranks items by interaction count within a recent time window
+- DecayPop ranks items with exponential time-decayed interaction weights
+
+#### Why this was done
+
+This makes it possible to compare simple popularity-based methods against session-aware models under the same data split, metrics, and sample datasets.
+It helps answer whether time-aware popularity remains competitive in a session-based environment.
+
+---
+
+### Session Grid Search Extensions
+
+The session tuning scripts now include MostPop, RecentPop, and DecayPop.
+
+Small session tuning uses:
+
+``` python
+RecentPop window_days = [7, 30]
+DecayPop decay_lambda = [1e-7, 1e-6]
+```
+
+Full session tuning uses:
+
+``` python
+RecentPop window_days = [1, 3, 7, 14, 30, 60, 90, 180]
+DecayPop decay_lambda = [1e-9, 5e-9, 1e-8, 5e-8, 1e-7, 5e-7, 1e-6]
+```
+
+MostPop is run once per session sample dataset as a non-parametric baseline.
+
+The analysis and final evaluation scripts were also extended so that:
+
+- `window_days` and `decay_lambda` remain visible in session result summaries
+- the best sample-based popularity configurations can be evaluated on the full session datasets
+
+---
+
+### Validation
+
+The modified Python files were checked with `py_compile`.
+The syntax check passed.
+
+A direct import check with the bundled Codex Python runtime was not possible because that runtime does not include `torch`.
+The actual project environment with RecBole and PyTorch is still required for execution.
