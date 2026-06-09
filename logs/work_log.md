@@ -3020,3 +3020,96 @@ The syntax check passed.
 
 A direct import check with the bundled Codex Python runtime was not possible because that runtime does not include `torch`.
 The actual project environment with RecBole and PyTorch is still required for execution.
+
+
+## 2026-06-09 - Popularity weighting for session-neighborhood scoring
+
+### Overview
+
+VS-KNN and VSTAN were extended with an optional popularity-weighting feature inspired by the RSC18 session-KNN implementation.
+
+Changed files:
+
+- `src/recbole_framework/custom_models/session/vsknn_recbole.py`
+- `src/recbole_framework/custom_models/session/vstan_recbole.py`
+- `src/recbole_framework/tuning/tune_session_models.py`
+- `src/recbole_framework/tuning/tune_session_models_full.py`
+- `src/recbole_framework/tuning/evaluate_session_models_final.py`
+- `src/recbole_framework/analysis/analyze_session_tuning_results.py`
+- `src/recbole_framework/analysis/evaluate_recbole_results.py`
+
+Reference implementation:
+
+- `https://github.com/rn5l/rsc18/blob/master/algorithms/knn/sknn.py`
+
+---
+
+### Scoring Change
+
+The new feature follows the same general idea as the `pop_weight` option in the referenced session-KNN code:
+candidate item scores can be divided by item popularity during scoring.
+
+The implementation uses a numeric exponent instead of a boolean flag:
+
+``` python
+weighted_score = score / (item_popularity ** popularity_weight)
+```
+
+This makes the feature tunable:
+
+- `0.0` disables popularity weighting and preserves the previous behavior
+- `0.5` applies a softer inverse-popularity correction
+- `1.0` applies the full inverse-popularity correction
+
+Item popularity is computed once during model initialization from the training interactions available in RecBole's internal dataset.
+The feature does not require a separate sampling step.
+
+---
+
+### New Hyperparameters
+
+Added to VS-KNN:
+
+``` python
+vsknn_popularity_weight
+```
+
+Added to VSTAN:
+
+``` python
+vstan_popularity_weight
+```
+
+The small session tuning script now tests:
+
+``` python
+[0.0, 1.0]
+```
+
+The full session tuning script now tests:
+
+``` python
+[0.0, 0.5, 1.0]
+```
+
+This keeps the old behavior in the grid while adding explicit popularity-weighted variants.
+
+---
+
+### Evaluation and Runtime Tracking
+
+The new hyperparameters are included in:
+
+- session tuning result CSVs
+- session tuning analysis tables
+- final full-dataset session evaluation
+- structured RecBole report configuration summaries
+
+No new runtime-measurement mechanism was needed because the existing session tuning pipeline already records:
+
+- `runtime_seconds`
+- `train_runtime_seconds`
+- `eval_runtime_seconds`
+- `extra_metrics_runtime_seconds`
+
+Every popularity-weighted configuration therefore receives the same runtime tracking as the existing VS-KNN and VSTAN configurations.
