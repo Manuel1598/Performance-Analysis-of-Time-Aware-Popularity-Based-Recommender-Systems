@@ -353,13 +353,15 @@ def main() -> None:
                 device=device,
             )
 
-        for k, sample_size in product(
+        for k, sample_size, popularity_weight in product(
             [100, 200, 500],
             [100, 250, 500],
+            [0.0, 0.5, 1.0],
         ):
             config_updates = {
                 "vsknn_k": k,
                 "vsknn_sample_size": sample_size,
+                "vsknn_popularity_weight": popularity_weight,
             }
 
             print(f"Running VS-KNN on {dataset_name}: {config_updates}")
@@ -375,17 +377,19 @@ def main() -> None:
                 device=device,
             )
 
-        for k, sample_size, position_decay, idf_weighting in product(
+        for k, sample_size, position_decay, idf_weighting, popularity_weight in product(
             [100, 200, 500],
             [100, 250, 500],
             [0.05, 0.1, 0.2],
             [True, False],
+            [0.0, 0.5, 1.0],
         ):
             config_updates = {
                 "vstan_k": k,
                 "vstan_sample_size": sample_size,
                 "vstan_position_decay": position_decay,
                 "vstan_idf_weighting": idf_weighting,
+                "vstan_popularity_weight": popularity_weight,
             }
 
             print(f"Running VSTAN on {dataset_name}: {config_updates}")

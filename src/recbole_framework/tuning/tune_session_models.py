@@ -302,13 +302,15 @@ def main() -> None:
             )
 
         # VS-KNN tuning
-        for k, sample_size in product(
+        for k, sample_size, popularity_weight in product(
                 [100],
                 [100],
+                [0.0, 1.0],
         ):
             config_updates = {
                 "vsknn_k": k,
                 "vsknn_sample_size": sample_size,
+                "vsknn_popularity_weight": popularity_weight,
             }
 
             print(f"Running VS-KNN on {dataset_name}: {config_updates}")
@@ -325,17 +327,19 @@ def main() -> None:
             )
 
         # VSTAN tuning
-        for k, sample_size, position_decay, idf_weighting in product(
+        for k, sample_size, position_decay, idf_weighting, popularity_weight in product(
                 [100],
                 [100],
                 [0.1],
                 [True,False],
+                [0.0, 1.0],
         ):
             config_updates = {
                 "vstan_k": k,
                 "vstan_sample_size": sample_size,
                 "vstan_position_decay": position_decay,
                 "vstan_idf_weighting": idf_weighting,
+                "vstan_popularity_weight": popularity_weight,
             }
 
             print(f"Running VSTAN on {dataset_name}: {config_updates}")
@@ -400,10 +404,12 @@ def main() -> None:
         "avg_recommendation_popularity@10",
         "vsknn_k",
         "vsknn_sample_size",
+        "vsknn_popularity_weight",
         "vstan_k",
         "vstan_sample_size",
         "vstan_position_decay",
         "vstan_idf_weighting",
+        "vstan_popularity_weight",
         "window_days",
         "decay_lambda",
         "hidden_size",

@@ -47,12 +47,14 @@ MODEL_CONFIG_FIELDS = {
     "VS-KNN": {
         "vsknn_k": int,
         "vsknn_sample_size": int,
+        "vsknn_popularity_weight": float,
     },
     "VSTAN": {
         "vstan_k": int,
         "vstan_sample_size": int,
         "vstan_position_decay": float,
         "vstan_idf_weighting": bool,
+        "vstan_popularity_weight": float,
     },
     "GRU4Rec": {
         "hidden_size": int,

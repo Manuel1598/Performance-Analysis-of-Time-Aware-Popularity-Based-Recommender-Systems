@@ -20,6 +20,11 @@ class VSTANRecBole(SequentialRecommender):
         self.sample_size = config["vstan_sample_size"]
         self.position_decay = config["vstan_position_decay"]
         self.idf_weighting = config["vstan_idf_weighting"]
+        self.popularity_weight = self._get_config_float(
+            config=config,
+            key="vstan_popularity_weight",
+            default=0.0,
+        )
 
         self.dummy_param = torch.nn.Parameter(torch.zeros(1))
 
@@ -28,9 +33,29 @@ class VSTANRecBole(SequentialRecommender):
         self.reference_session_timestamps: list[float] = []
         self.item_sessions: dict[int, set[int]] = defaultdict(set)
         self.item_idf: dict[int, float] = {}
+        self.item_popularity = self._compute_item_popularity(dataset)
 
         self._build_reference_sessions(dataset)
         self._compute_idf_weights()
+
+    @staticmethod
+    def _get_config_float(config, key: str, default: float) -> float:
+        try:
+            return float(config[key])
+        except KeyError:
+            return default
+
+    def _compute_item_popularity(self, dataset) -> torch.Tensor:
+        item_ids = dataset.inter_feat[self.ITEM_ID].long()
+        item_counts = torch.bincount(
+            item_ids,
+            minlength=self.n_items,
+        ).float()
+
+        interaction_count = max(float(len(item_ids)), 1.0)
+        item_popularity = item_counts / interaction_count
+
+        return item_popularity.clamp_min(1.0 / interaction_count)
 
     def _build_reference_sessions(self, dataset) -> None:
         item_seq_data = dataset.inter_feat[self.ITEM_SEQ]
@@ -157,9 +182,21 @@ class VSTANRecBole(SequentialRecommender):
                 if self.idf_weighting:
                     item_score *= self.item_idf.get(item_id, 1.0)
 
+                item_score = self._apply_popularity_weight(
+                    item_id=item_id,
+                    score=item_score,
+                )
+
                 scores[item_id] += item_score
 
         return scores
+
+    def _apply_popularity_weight(self, item_id: int, score: float) -> float:
+        if self.popularity_weight <= 0.0:
+            return score
+
+        popularity = float(self.item_popularity[item_id].item())
+        return score / (popularity ** self.popularity_weight)
 
     def _find_candidate_sessions(self, current_item_set: set[int]) -> set[int]:
         candidate_sessions = set()
