@@ -11,6 +11,11 @@ from recbole.model.sequential_recommender import GRU4Rec
 from recbole.trainer import Trainer
 
 from src.recbole_framework.measurement.experiment_logger import ExperimentLogger
+from src.recbole_framework.custom_models.session.popularity_recbole import (
+    SessionDecayPopRecBole,
+    SessionMostPopRecBole,
+    SessionRecentPopRecBole,
+)
 from src.recbole_framework.custom_models.session.vsknn_recbole import VSKNNRecBole
 from src.recbole_framework.custom_models.session.vstan_recbole import VSTANRecBole
 
@@ -252,6 +257,50 @@ def main() -> None:
     for dataset_name in datasets:
         print(f"\n===== DATASET: {dataset_name} =====")
 
+        print(f"Running MostPop on {dataset_name}")
+        run_and_store(
+            all_results=all_results,
+            output_file=output_file,
+            logger=logger,
+            model_class=SessionMostPopRecBole,
+            model_name="MostPop",
+            dataset_name=dataset_name,
+            config_updates={},
+            device=device,
+        )
+
+        for window_days in [7, 30]:
+            config_updates = {"window_days": window_days}
+
+            print(f"Running RecentPop on {dataset_name}: {config_updates}")
+
+            run_and_store(
+                all_results=all_results,
+                output_file=output_file,
+                logger=logger,
+                model_class=SessionRecentPopRecBole,
+                model_name="RecentPop",
+                dataset_name=dataset_name,
+                config_updates=config_updates,
+                device=device,
+            )
+
+        for decay_lambda in [1e-7, 1e-6]:
+            config_updates = {"decay_lambda": decay_lambda}
+
+            print(f"Running DecayPop on {dataset_name}: {config_updates}")
+
+            run_and_store(
+                all_results=all_results,
+                output_file=output_file,
+                logger=logger,
+                model_class=SessionDecayPopRecBole,
+                model_name="DecayPop",
+                dataset_name=dataset_name,
+                config_updates=config_updates,
+                device=device,
+            )
+
         # VS-KNN tuning
         for k, sample_size in product(
                 [100],
@@ -355,6 +404,8 @@ def main() -> None:
         "vstan_sample_size",
         "vstan_position_decay",
         "vstan_idf_weighting",
+        "window_days",
+        "decay_lambda",
         "hidden_size",
         "learning_rate",
         "dropout_prob",

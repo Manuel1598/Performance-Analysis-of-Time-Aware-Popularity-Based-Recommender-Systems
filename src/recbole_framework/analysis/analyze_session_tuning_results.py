@@ -43,6 +43,8 @@ def main() -> None:
         "vstan_sample_size",
         "vstan_position_decay",
         "vstan_idf_weighting",
+        "window_days",
+        "decay_lambda",
         "hidden_size",
         "learning_rate",
         "dropout_prob",

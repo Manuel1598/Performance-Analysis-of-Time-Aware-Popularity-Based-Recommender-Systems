@@ -5,6 +5,11 @@ import torch
 
 from recbole.model.sequential_recommender import GRU4Rec
 
+from src.recbole_framework.custom_models.session.popularity_recbole import (
+    SessionDecayPopRecBole,
+    SessionMostPopRecBole,
+    SessionRecentPopRecBole,
+)
 from src.recbole_framework.custom_models.session.vsknn_recbole import VSKNNRecBole
 from src.recbole_framework.custom_models.session.vstan_recbole import VSTANRecBole
 from src.recbole_framework.measurement.experiment_logger import ExperimentLogger
@@ -23,12 +28,22 @@ SAMPLE_TO_FULL_DATASET = {
 }
 
 MODEL_CLASSES = {
+    "MostPop": SessionMostPopRecBole,
+    "RecentPop": SessionRecentPopRecBole,
+    "DecayPop": SessionDecayPopRecBole,
     "VS-KNN": VSKNNRecBole,
     "VSTAN": VSTANRecBole,
     "GRU4Rec": GRU4Rec,
 }
 
 MODEL_CONFIG_FIELDS = {
+    "MostPop": {},
+    "RecentPop": {
+        "window_days": int,
+    },
+    "DecayPop": {
+        "decay_lambda": float,
+    },
     "VS-KNN": {
         "vsknn_k": int,
         "vsknn_sample_size": int,
