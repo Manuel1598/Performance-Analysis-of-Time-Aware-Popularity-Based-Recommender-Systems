@@ -6,12 +6,16 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
-import matplotlib
 import pandas as pd
 
 
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
+try:
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+except ModuleNotFoundError:
+    plt = None
 
 METRIC_COLUMNS = [
     "hit@5",
@@ -171,6 +175,7 @@ class RecboleResultEvaluator:
     ) -> dict[str, Path]:
         specs = list(experiments or self.full_experiments())
         results = self.load_results(specs)
+        results = self._drop_legacy_session_knn_rows(results)
         successful = self.successful_results(results)
         dataset_summary = self.dataset_summary(successful["dataset"].unique())
         model_summary = self.model_summary(results)
@@ -179,6 +184,7 @@ class RecboleResultEvaluator:
         best_per_model = self.best_per_model(successful)
         runtime_summary = self.runtime_summary(successful)
         efficiency_summary = self.efficiency_summary(successful)
+        popularity_weighting_summary = self.popularity_weighting_summary(successful)
         comparative_summary = self.comparative_summary(best_per_model)
 
         paths = self.write_tables(
@@ -189,6 +195,7 @@ class RecboleResultEvaluator:
             best_per_model=best_per_model,
             runtime_summary=runtime_summary,
             efficiency_summary=efficiency_summary,
+            popularity_weighting_summary=popularity_weighting_summary,
             comparative_summary=comparative_summary,
         )
         plot_paths = self.create_plots(successful, best_per_model)
@@ -201,6 +208,7 @@ class RecboleResultEvaluator:
             best_per_model=best_per_model,
             runtime_summary=runtime_summary,
             efficiency_summary=efficiency_summary,
+            popularity_weighting_summary=popularity_weighting_summary,
             comparative_summary=comparative_summary,
             plot_paths=plot_paths,
         )
@@ -232,6 +240,30 @@ class RecboleResultEvaluator:
             if column in results.columns:
                 results[column] = pd.to_numeric(results[column], errors="coerce")
         return self.add_derived_metrics(results)
+
+    @staticmethod
+    def _drop_legacy_session_knn_rows(results: pd.DataFrame) -> pd.DataFrame:
+        """Ignore stale session KNN rows when newer weighted-grid rows exist."""
+        frame = results.copy()
+        legacy_mask = pd.Series(False, index=frame.index)
+        model_weight_columns = {
+            "VS-KNN": "vsknn_popularity_weight",
+            "VSTAN": "vstan_popularity_weight",
+        }
+
+        for model, weight_column in model_weight_columns.items():
+            if weight_column not in frame.columns:
+                continue
+
+            model_mask = (
+                frame["experiment_type"].eq("session")
+                & frame["model"].eq(model)
+            )
+            for _, group in frame[model_mask].groupby("dataset", dropna=False):
+                if group[weight_column].notna().any():
+                    legacy_mask.loc[group[group[weight_column].isna()].index] = True
+
+        return frame.loc[~legacy_mask].reset_index(drop=True)
 
     @staticmethod
     def add_derived_metrics(results: pd.DataFrame) -> pd.DataFrame:
@@ -460,6 +492,107 @@ class RecboleResultEvaluator:
         )
 
     @staticmethod
+    def popularity_weighting_summary(
+        results: pd.DataFrame,
+        metric: str = "mrr@10",
+    ) -> pd.DataFrame:
+        rows = []
+
+        model_weight_columns = {
+            "VS-KNN": "vsknn_popularity_weight",
+            "VSTAN": "vstan_popularity_weight",
+        }
+
+        for model, weight_column in model_weight_columns.items():
+            if weight_column not in results.columns:
+                continue
+
+            model_results = results[results["model"] == model].copy()
+
+            if model_results.empty:
+                continue
+
+            model_results[weight_column] = pd.to_numeric(
+                model_results[weight_column],
+                errors="coerce",
+            )
+
+            for keys, group in model_results.groupby(
+                ["experiment_type", "dataset"],
+                dropna=False,
+            ):
+                experiment_type, dataset = keys
+
+                explicit = group[group[weight_column].notna()].copy()
+                unweighted = explicit[explicit[weight_column] == 0.0]
+                weighted = explicit[explicit[weight_column] > 0.0]
+
+                if unweighted.empty:
+                    unweighted = group[group[weight_column].isna()]
+
+                if unweighted.empty or weighted.empty:
+                    continue
+
+                best_unweighted = unweighted.sort_values(
+                    metric,
+                    ascending=False,
+                ).iloc[0]
+                best_weighted = weighted.sort_values(
+                    metric,
+                    ascending=False,
+                ).iloc[0]
+
+                row = {
+                    "experiment_type": experiment_type,
+                    "dataset": dataset,
+                    "model": model,
+                    "best_unweighted_mrr@10": best_unweighted.get("mrr@10"),
+                    "best_weighted_mrr@10": best_weighted.get("mrr@10"),
+                    "delta_mrr@10_weighted_minus_unweighted": (
+                        best_weighted.get("mrr@10")
+                        - best_unweighted.get("mrr@10")
+                    ),
+                    "weighted_improves_mrr@10": (
+                        best_weighted.get("mrr@10")
+                        > best_unweighted.get("mrr@10")
+                    ),
+                    "best_unweighted_hit@10": best_unweighted.get("hit@10"),
+                    "best_weighted_hit@10": best_weighted.get("hit@10"),
+                    "delta_hit@10_weighted_minus_unweighted": (
+                        best_weighted.get("hit@10")
+                        - best_unweighted.get("hit@10")
+                    ),
+                    "best_unweighted_ndcg@10": best_unweighted.get("ndcg@10"),
+                    "best_weighted_ndcg@10": best_weighted.get("ndcg@10"),
+                    "delta_ndcg@10_weighted_minus_unweighted": (
+                        best_weighted.get("ndcg@10")
+                        - best_unweighted.get("ndcg@10")
+                    ),
+                    "best_weighted_popularity_weight": best_weighted.get(
+                        weight_column
+                    ),
+                    "best_unweighted_runtime_seconds": best_unweighted.get(
+                        "runtime_seconds"
+                    ),
+                    "best_weighted_runtime_seconds": best_weighted.get(
+                        "runtime_seconds"
+                    ),
+                    "best_unweighted_config": best_unweighted.get(
+                        "config_json"
+                    ),
+                    "best_weighted_config": best_weighted.get("config_json"),
+                }
+
+                rows.append(row)
+
+        summary = pd.DataFrame(rows)
+
+        if not summary.empty:
+            summary = summary.sort_values(["experiment_type", "dataset", "model"])
+
+        return summary
+
+    @staticmethod
     def comparative_summary(best_per_model: pd.DataFrame) -> pd.DataFrame:
         desired_columns = [
             "experiment_type",
@@ -506,6 +639,9 @@ class RecboleResultEvaluator:
         results: pd.DataFrame,
         best_per_model: pd.DataFrame,
     ) -> dict[str, Path]:
+        if plt is None:
+            return {}
+
         plot_dir = self.output_dir / "plots"
         plot_dir.mkdir(parents=True, exist_ok=True)
         paths: dict[str, Path] = {}
@@ -542,6 +678,7 @@ class RecboleResultEvaluator:
         best_per_model: pd.DataFrame,
         runtime_summary: pd.DataFrame,
         efficiency_summary: pd.DataFrame,
+        popularity_weighting_summary: pd.DataFrame,
         comparative_summary: pd.DataFrame,
         plot_paths: dict[str, Path],
     ) -> Path:
@@ -581,6 +718,11 @@ class RecboleResultEvaluator:
         )
         self._append_section(lines, "Runtime Summary", runtime_summary)
         self._append_section(lines, "Efficiency Summary", efficiency_summary)
+        self._append_section(
+            lines,
+            "Popularity Weighting Comparison",
+            popularity_weighting_summary,
+        )
 
         if plot_paths:
             lines.extend(["## Plots", ""])
@@ -634,7 +776,31 @@ class RecboleResultEvaluator:
             column for column in preview.columns if column not in preferred_columns
         ]
         preview = preview[preferred_columns + remaining_columns]
-        lines.extend([preview.head(20).to_markdown(index=False), ""])
+        lines.extend(
+            [
+                RecboleResultEvaluator._to_markdown_table(preview.head(20)),
+                "",
+            ]
+        )
+
+    @staticmethod
+    def _to_markdown_table(table: pd.DataFrame) -> str:
+        if table.empty:
+            return "No data available."
+
+        text_table = table.fillna("").astype(str)
+        headers = list(text_table.columns)
+        rows = text_table.values.tolist()
+
+        lines = [
+            "| " + " | ".join(headers) + " |",
+            "| " + " | ".join(["---"] * len(headers)) + " |",
+        ]
+
+        for row in rows:
+            lines.append("| " + " | ".join(row) + " |")
+
+        return "\n".join(lines)
 
     @staticmethod
     def _plot_best_metric(

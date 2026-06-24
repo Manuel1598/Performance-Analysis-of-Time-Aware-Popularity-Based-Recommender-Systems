@@ -1,13 +1,22 @@
 experiment_type,dataset,model,model_family,runs,successful_runs,failed_runs
+session,adressa_recbole_sample,DecayPop,time-aware popularity,7,7,0
 session,adressa_recbole_sample,GRU4Rec,neural session model,36,36,0
-session,adressa_recbole_sample,VS-KNN,session neighborhood,9,9,0
-session,adressa_recbole_sample,VSTAN,time-aware session neighborhood,54,54,0
+session,adressa_recbole_sample,MostPop,popularity baseline,1,1,0
+session,adressa_recbole_sample,RecentPop,time-aware popularity,8,8,0
+session,adressa_recbole_sample,VS-KNN,session neighborhood,27,27,0
+session,adressa_recbole_sample,VSTAN,time-aware session neighborhood,86,86,0
+session,globo_recbole_sample,DecayPop,time-aware popularity,7,7,0
 session,globo_recbole_sample,GRU4Rec,neural session model,36,36,0
-session,globo_recbole_sample,VS-KNN,session neighborhood,9,9,0
-session,globo_recbole_sample,VSTAN,time-aware session neighborhood,55,54,1
+session,globo_recbole_sample,MostPop,popularity baseline,1,1,0
+session,globo_recbole_sample,RecentPop,time-aware popularity,8,8,0
+session,globo_recbole_sample,VS-KNN,session neighborhood,27,27,0
+session,globo_recbole_sample,VSTAN,time-aware session neighborhood,162,162,0
+session,yoochoose_recbole_sample,DecayPop,time-aware popularity,7,7,0
 session,yoochoose_recbole_sample,GRU4Rec,neural session model,36,36,0
-session,yoochoose_recbole_sample,VS-KNN,session neighborhood,9,9,0
-session,yoochoose_recbole_sample,VSTAN,time-aware session neighborhood,54,54,0
+session,yoochoose_recbole_sample,MostPop,popularity baseline,1,1,0
+session,yoochoose_recbole_sample,RecentPop,time-aware popularity,8,8,0
+session,yoochoose_recbole_sample,VS-KNN,session neighborhood,27,27,0
+session,yoochoose_recbole_sample,VSTAN,time-aware session neighborhood,162,162,0
 topn,amazon_recbole,BPR,latent factor baseline,10,10,0
 topn,amazon_recbole,DecayPop,time-aware popularity,8,8,0
 topn,amazon_recbole,MostPop,popularity baseline,2,2,0
