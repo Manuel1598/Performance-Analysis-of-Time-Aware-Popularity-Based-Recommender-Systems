@@ -3113,3 +3113,158 @@ No new runtime-measurement mechanism was needed because the existing session tun
 - `extra_metrics_runtime_seconds`
 
 Every popularity-weighted configuration therefore receives the same runtime tracking as the existing VS-KNN and VSTAN configurations.
+
+
+## 2026-06-24 - Refined session popularity baselines
+
+### Motivation
+
+The first session-based popularity evaluation showed that `MostPop`, `RecentPop`, and `DecayPop` were often identical or nearly identical in the best-result tables.
+
+This was not caused by a broken scorer. The issue was the temporal parameterization:
+
+- large fixed `RecentPop` windows often covered nearly the whole sampled dataset
+- very small `DecayPop` lambdas produced almost no temporal decay
+- both effects can make the time-aware popularity baselines collapse back into global `MostPop`
+
+Observed sample time spans:
+
+| Dataset | Approximate time span |
+|---|---:|
+| `adressa_recbole_sample` | 1.4 days |
+| `globo_recbole_sample` | 30.8 days |
+| `yoochoose_recbole_sample` | 182.0 days |
+
+Because these spans differ strongly, fixed day windows are difficult to compare across datasets.
+
+---
+
+### Implementation Changes
+
+Changed files:
+
+- `src/recbole_framework/custom_models/session/popularity_recbole.py`
+- `src/recbole_framework/tuning/tune_session_popularity_refined.py`
+- `src/recbole_framework/tuning/evaluate_session_models_final.py`
+- `src/recbole_framework/analysis/evaluate_recbole_results.py`
+- `src/recbole_framework/analysis/analyze_session_tuning_results.py`
+
+`MostPop` remains unchanged and continues to act as the global popularity anchor.
+
+`RecentPop` now supports an additional relative time-window parameter:
+
+``` python
+recent_fraction
+```
+
+This selects the most recent fraction of the training time span. For example:
+
+``` text
+recent_fraction = 0.25
+```
+
+means that only interactions in the most recent 25% of the observed training time span are counted.
+
+The old fixed-day parameter remains supported:
+
+``` python
+window_days
+```
+
+`DecayPop` now supports an additional half-life parameter:
+
+``` python
+decay_half_life_days
+```
+
+This is converted internally into an exponential decay lambda:
+
+``` python
+decay_lambda = log(2) / half_life_seconds
+```
+
+This makes the decay easier to explain because a half-life of `1` day means that an interaction loses half of its weight after one day.
+
+The old direct lambda parameter remains supported:
+
+``` python
+decay_lambda
+```
+
+---
+
+### Isolated Refined Popularity Run
+
+A new isolated tuning script was added:
+
+``` text
+src/recbole_framework/tuning/tune_session_popularity_refined.py
+```
+
+It writes separate outputs:
+
+``` text
+recbole_results/tuning_results/session_popularity_refined_results.csv
+recbole_results/experiment_logs/session_popularity_refined_log.csv
+```
+
+The refined grid tests:
+
+``` python
+RecentPop recent_fraction = [0.01, 0.05, 0.10, 0.25, 0.50]
+DecayPop decay_half_life_days = [0.25, 0.5, 1, 3, 7, 14, 30]
+```
+
+`MostPop` is run once per dataset.
+
+Total planned runs:
+
+``` text
+3 datasets * (1 MostPop + 5 RecentPop + 7 DecayPop) = 39 runs
+```
+
+The first DecayPop attempt failed because RecBole returned `None` for an unset optional config value. The config helper was updated to treat `None` like a missing value. The successful rerun produced all 39 successful refined runs. The result CSV still contains the 21 earlier failed rows, so evaluation should filter:
+
+``` python
+status == "success"
+```
+
+---
+
+### Best Refined Popularity Results
+
+Best successful refined configurations by `MRR@10`:
+
+| Dataset | Model | Best refined config | Hit@10 | NDCG@10 | MRR@10 |
+|---|---|---:|---:|---:|---:|
+| `adressa_recbole_sample` | `DecayPop` | `decay_half_life_days = 0.25` | 0.4046 | 0.2231 | 0.1682 |
+| `adressa_recbole_sample` | `RecentPop` | `recent_fraction = 0.25` | 0.3830 | 0.2131 | 0.1619 |
+| `adressa_recbole_sample` | `MostPop` | global popularity | 0.3734 | 0.1841 | 0.1268 |
+| `globo_recbole_sample` | `DecayPop` | `decay_half_life_days = 30` | 0.0619 | 0.0316 | 0.0226 |
+| `globo_recbole_sample` | `MostPop` | global popularity | 0.0626 | 0.0316 | 0.0224 |
+| `globo_recbole_sample` | `RecentPop` | `recent_fraction = 0.50` | 0.0212 | 0.0110 | 0.0080 |
+| `yoochoose_recbole_sample` | `MostPop` | global popularity | 0.0215 | 0.0112 | 0.0080 |
+| `yoochoose_recbole_sample` | `RecentPop` | `recent_fraction = 0.25` | 0.0166 | 0.0094 | 0.0072 |
+| `yoochoose_recbole_sample` | `DecayPop` | `decay_half_life_days = 30` | 0.0166 | 0.0091 | 0.0069 |
+
+---
+
+### Findings
+
+The refined baselines no longer all collapse into identical `MostPop` results.
+
+Main findings:
+
+- `Adressa` benefits strongly from refined time-aware popularity.
+- `DecayPop` with a short half-life is the best popularity-only session baseline on `Adressa`.
+- `RecentPop` with a relative window also improves clearly on `Adressa`.
+- `Globo` does not benefit meaningfully from global time-aware popularity. `MostPop` and `DecayPop` are almost tied, while `RecentPop` is weaker.
+- `Yoochoose` also does not benefit from the refined time-aware popularity variants. `MostPop` remains the strongest popularity-only baseline.
+
+Interpretation:
+
+``` text
+Time-aware popularity is dataset-dependent. It can substantially improve a popularity-only baseline on Adressa, but it does not replace session-aware modeling on Globo or Yoochoose.
+```
+
+The refined setup is methodologically stronger than the original fixed-window/lambda setup because it avoids unintentionally comparing several near-`MostPop` variants and uses parameters that are easier to explain in the thesis.
