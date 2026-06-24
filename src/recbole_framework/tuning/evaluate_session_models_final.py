@@ -40,9 +40,11 @@ MODEL_CONFIG_FIELDS = {
     "MostPop": {},
     "RecentPop": {
         "window_days": int,
+        "recent_fraction": float,
     },
     "DecayPop": {
         "decay_lambda": float,
+        "decay_half_life_days": float,
     },
     "VS-KNN": {
         "vsknn_k": int,
@@ -79,6 +81,9 @@ def build_config_updates(model_name: str, row: pd.Series) -> dict:
     config_updates = {}
 
     for field_name, caster in MODEL_CONFIG_FIELDS[model_name].items():
+        if field_name not in row:
+            continue
+
         value = row[field_name]
 
         if pd.isna(value):

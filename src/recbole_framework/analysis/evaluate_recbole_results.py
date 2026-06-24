@@ -63,7 +63,9 @@ BASE_COLUMNS = [
 
 KNOWN_CONFIG_COLUMNS = [
     "window_days",
+    "recent_fraction",
     "decay_lambda",
+    "decay_half_life_days",
     "embedding_size",
     "learning_rate",
     "train_neg_sample_args",
