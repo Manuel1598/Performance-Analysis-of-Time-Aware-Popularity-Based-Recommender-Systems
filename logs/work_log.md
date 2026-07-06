@@ -3482,3 +3482,14 @@ docs/server_docker_run.md
 ```
 
 This separates the short project overview from the detailed scientific reproduction workflow.
+
+### README Synchronization
+
+The README was synchronized with the current Docker/server state.
+
+It now explicitly distinguishes between:
+
+- the currently checked-in structured report based on local full-tuning files and session sample datasets
+- the new Docker/server reproduction workflow, which uses the full session dataset names by default
+
+The README also links the server runner and the Docker/reproducibility documentation from the script overview.
