@@ -3414,6 +3414,23 @@ If the run is stopped and restarted with the same `--output-prefix`, already com
 
 This is important for long-running full-dataset experiments, especially for `VSTAN` on session data.
 
+### Persistent Server Execution
+
+The server runbook was extended with a dedicated `tmux` section.
+
+The intended server workflow is:
+
+``` text
+tmux new -s recbole-full
+docker run --rm --gpus all ...
+Ctrl+B, then d
+tmux attach -t recbole-full
+```
+
+This ensures the Docker experiment keeps running even if the SSH connection is closed.
+
+The documentation explicitly warns that `Ctrl+C` should only be used when the run should really be stopped.
+
 ### Validation
 
 The new server runner was syntax-checked locally with:
