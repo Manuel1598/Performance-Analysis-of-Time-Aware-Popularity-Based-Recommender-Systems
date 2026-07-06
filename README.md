@@ -293,6 +293,13 @@ The generated result directories are experiment artifacts and may be ignored by
 Git depending on local settings. The code required to reproduce the analysis is
 kept under `src/recbole_framework/`.
 
+For a complete step-by-step reproduction workflow, including Docker server runs,
+dataset placement, output files, result archiving, and structured evaluation,
+see:
+
+- `docs/reproducibility.md`
+- `docs/server_docker_run.md`
+
 ## Summary
 
 This repository now contains both the historical prototype pipeline and the

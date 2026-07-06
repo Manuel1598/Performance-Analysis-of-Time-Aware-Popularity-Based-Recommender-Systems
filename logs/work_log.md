@@ -3440,3 +3440,45 @@ python -m py_compile src/recbole_framework/tuning/run_server_full_experiments.py
 ```
 
 Docker build and GPU execution were not run locally because they require the target server environment.
+
+---
+
+## 2026-07-06 - Reproducibility Documentation
+
+### Goal
+
+Document how the project results can be reproduced in a scientifically traceable way.
+
+### Added Documentation
+
+A new reproducibility guide was added:
+
+``` text
+docs/reproducibility.md
+```
+
+It describes:
+
+- recording the exact Git branch and commit hash
+- choosing Docker/server reproduction or a local Python environment
+- expected RecBole dataset folder structure
+- dataset provenance information to record
+- RecBole evaluation settings
+- primary and supporting metrics
+- Docker server execution with `tmux`
+- server output files
+- local full-tuning output files
+- how server output files relate to the existing structured evaluator
+- how to generate the structured evaluation report
+- which artifacts should be archived for a reproducible result package
+- which information should be reported in the thesis
+- expected limitations, especially for runtime comparability
+
+The README now links to:
+
+``` text
+docs/reproducibility.md
+docs/server_docker_run.md
+```
+
+This separates the short project overview from the detailed scientific reproduction workflow.
