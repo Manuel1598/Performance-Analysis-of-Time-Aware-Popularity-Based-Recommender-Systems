@@ -206,7 +206,56 @@ WARNING: dataset directory not found: /app/data/recbole/adressa_recbole
 
 then the mounted data path is wrong or the dataset folder name does not match.
 
-## 8. Run All Default Server Experiments
+## 8. Start A Persistent Server Session
+
+The full run can take a long time. Start it inside `tmux` so it keeps running after the SSH connection is closed.
+
+Create a new `tmux` session:
+
+```bash
+tmux new -s recbole-full
+```
+
+Inside the `tmux` session, go to the project root:
+
+```bash
+cd /server/projects/TimeAware-Popularity-Models
+```
+
+Build the Docker image if it has not been built yet:
+
+```bash
+docker build -t timeaware-recbole .
+```
+
+Then start the full run from inside this `tmux` session.
+
+Detach from `tmux` without stopping the run:
+
+```text
+Ctrl+B
+d
+```
+
+This means: press `Ctrl+B`, release the keys, then press `d`.
+
+Do not use `Ctrl+C` unless the run should really be stopped.
+
+Reconnect later:
+
+```bash
+tmux attach -t recbole-full
+```
+
+List running `tmux` sessions:
+
+```bash
+tmux ls
+```
+
+If `tmux` is not installed, install it on the server or use `screen` as an alternative. For this project, `tmux` is the recommended option.
+
+## 9. Run All Default Server Experiments
 
 Start the full default run:
 
@@ -233,7 +282,9 @@ docker run --rm --gpus all \
   python3 src/recbole_framework/tuning/run_server_full_experiments.py
 ```
 
-## 9. Expected Number Of Runs
+Important: for real server runs, execute this command inside the `tmux` session from the previous section.
+
+## 10. Expected Number Of Runs
 
 Default Top-N grid:
 
@@ -264,7 +315,7 @@ Total default without BPR:
 
 Optional Top-N BPR adds 9 runs per Top-N dataset, so 18 additional runs.
 
-## 10. Run Only Top-N
+## 11. Run Only Top-N
 
 ```bash
 docker run --rm --gpus all \
@@ -287,7 +338,7 @@ docker run --rm --gpus all \
   --include-bpr
 ```
 
-## 11. Run Only Session Models
+## 12. Run Only Session Models
 
 ```bash
 docker run --rm --gpus all \
@@ -298,7 +349,7 @@ docker run --rm --gpus all \
   --skip-topn
 ```
 
-## 12. Run Selected Models Or Datasets
+## 13. Run Selected Models Or Datasets
 
 Only run `VSTAN` on `globo_recbole`:
 
@@ -344,7 +395,7 @@ docker run --rm --gpus all \
   --output-prefix server_knn_small
 ```
 
-## 13. Resume After Stopping
+## 14. Resume After Stopping
 
 The server runner is resumable. It reads the existing result CSVs and skips already successful `run_id`s.
 
@@ -374,7 +425,7 @@ server_full_session_results.csv
 
 If you change `--output-prefix`, the run starts or resumes a different result set.
 
-## 14. Useful Monitoring Commands
+## 15. Useful Monitoring Commands
 
 Watch GPU usage in another terminal:
 
@@ -400,7 +451,7 @@ Count successful session runs:
 grep -c ",success," /server/results/timeaware/recbole_results/tuning_results/server_full_session_results.csv
 ```
 
-## 15. Common Problems
+## 16. Common Problems
 
 ### Docker cannot access the GPU
 
@@ -474,7 +525,7 @@ Or run only one dataset first:
 --session-datasets adressa_recbole
 ```
 
-## 16. Final Output Files To Collect
+## 17. Final Output Files To Collect
 
 After the full run, collect:
 
