@@ -3268,3 +3268,158 @@ Time-aware popularity is dataset-dependent. It can substantially improve a popul
 ```
 
 The refined setup is methodologically stronger than the original fixed-window/lambda setup because it avoids unintentionally comparing several near-`MostPop` variants and uses parameters that are easier to explain in the thesis.
+
+---
+
+## 2026-07-06 - Docker Server Preparation
+
+### Goal
+
+Prepare the project so the full RecBole experiments can be executed reproducibly on an external GPU server.
+
+The server run should cover:
+
+- Top-N models:
+  - `MostPop`
+  - `RecentPop`
+  - `DecayPop`
+  - optional `BPR`
+- Session-based models:
+  - `MostPop`
+  - `RecentPop`
+  - `DecayPop`
+  - `VS-KNN`
+  - `VSTAN`
+  - `GRU4Rec`
+- Full prepared RecBole datasets:
+  - `movielens_recbole`
+  - `amazon_recbole`
+  - `adressa_recbole`
+  - `globo_recbole`
+  - `yoochoose_recbole`
+
+### Docker Setup
+
+A Docker-based server setup was added:
+
+``` text
+Dockerfile
+docker/requirements-server.txt
+.dockerignore
+```
+
+The Docker image is based on an NVIDIA CUDA image and installs the project dependencies needed for the RecBole experiments.
+
+The datasets are intentionally not copied into the image. They are mounted at runtime so the same image can be used on different servers and with different dataset/result locations.
+
+### Server Runner
+
+A new server entry point was added:
+
+``` text
+src/recbole_framework/tuning/run_server_full_experiments.py
+```
+
+It combines the full Top-N and session-based tuning runs into one resumable server script.
+
+Default Top-N outputs:
+
+``` text
+recbole_results/tuning_results/server_full_topn_results.csv
+recbole_results/experiment_logs/server_full_topn_log.csv
+```
+
+Default session outputs:
+
+``` text
+recbole_results/tuning_results/server_full_session_results.csv
+recbole_results/experiment_logs/server_full_session_log.csv
+```
+
+The output filenames use the `server_full` prefix so local experiment files are not overwritten.
+
+### Default Server Grid
+
+Top-N default grid:
+
+- `MostPop`: 1 run per dataset
+- `RecentPop`: 8 time windows per dataset
+- `DecayPop`: 7 decay lambdas per dataset
+- default total: 32 Top-N runs across MovieLens and Amazon
+
+Session default grid:
+
+- `MostPop`: 1 run per dataset
+- `RecentPop`: 5 relative recent fractions per dataset
+- `DecayPop`: 7 half-life values per dataset
+- `VS-KNN`: 36 configurations per dataset
+- `VSTAN`: 216 configurations per dataset
+- `GRU4Rec`: 36 configurations per dataset
+- default total: 903 session runs across Adressa, Globo, and Yoochoose
+
+Total default server run without BPR:
+
+``` text
+935 runs
+```
+
+### Data Mount Structure
+
+The server runbook now documents that the server data folder must be mounted so the container sees:
+
+``` text
+/app/data/recbole/adressa_recbole/
+/app/data/recbole/globo_recbole/
+/app/data/recbole/yoochoose_recbole/
+/app/data/recbole/movielens_recbole/
+/app/data/recbole/amazon_recbole/
+```
+
+Each dataset folder must contain the matching RecBole `.inter` file, for example:
+
+``` text
+globo_recbole/globo_recbole.inter
+```
+
+### Runbook Documentation
+
+The server documentation was expanded:
+
+``` text
+docs/server_docker_run.md
+```
+
+It now includes:
+
+- server requirements
+- expected project location
+- exact dataset folder structure
+- exact result folder structure
+- Docker build command
+- smoke test command
+- full run command
+- Top-N-only command
+- session-only command
+- selected model/dataset examples
+- resume behavior after interruption
+- monitoring commands
+- common error cases
+- final files to collect after the server run
+
+### Resume Behavior
+
+The server runner reuses the existing `run_id` based resume logic.
+
+If the run is stopped and restarted with the same `--output-prefix`, already completed successful runs are skipped.
+
+This is important for long-running full-dataset experiments, especially for `VSTAN` on session data.
+
+### Validation
+
+The new server runner was syntax-checked locally with:
+
+``` text
+python -m py_compile src/recbole_framework/tuning/run_server_full_experiments.py
+```
+
+Docker build and GPU execution were not run locally because they require the target server environment.
