@@ -43,6 +43,8 @@ The project has moved beyond the prototype phase. The current state includes:
 - prepared RecBole datasets in `.inter` format
 - full tuning result files for Top-N and session experiments
 - structured analysis reports, comparison tables, runtime summaries, and plots
+- Docker-based server execution for reproducible full-dataset reruns
+- a dedicated reproducibility guide for thesis result replication
 
 The current full-tuning result files are:
 
@@ -83,9 +85,18 @@ The project uses RecBole-formatted datasets under `data/recbole/`.
 
 ### Session-Based Recommendation
 
+- `yoochoose_recbole`
+- `globo_recbole`
+- `adressa_recbole`
+
+The current checked-in structured report is based on the available local
+session sample results:
+
 - `yoochoose_recbole_sample`
 - `globo_recbole_sample`
 - `adressa_recbole_sample`
+
+The Docker server runner is configured for the full session datasets by default.
 
 The structured analysis computes dataset characteristics directly from the
 `.inter` files, including:
@@ -216,6 +227,14 @@ Session:
 - `src/recbole_framework/tuning/evaluate_session_models_final.py`
 - `src/recbole_framework/tuning/tune_topn_models_full.py`
 - `src/recbole_framework/tuning/run_all_full_tuning.py`
+- `src/recbole_framework/tuning/run_server_full_experiments.py`
+
+### Docker And Reproducibility
+
+- `Dockerfile`
+- `docker/requirements-server.txt`
+- `docs/server_docker_run.md`
+- `docs/reproducibility.md`
 
 ### Analysis
 
@@ -255,7 +274,8 @@ efficiency.
 
 ## Current Full-Tuning Scope
 
-The current structured report is based on the full tuning files and contains:
+The currently checked-in structured report is based on the latest local full
+tuning files and contains:
 
 - 356 cleaned result rows
 - 355 successful result rows
@@ -269,6 +289,18 @@ Evaluated datasets:
 - `globo_recbole_sample`
 - `movielens_recbole`
 - `yoochoose_recbole_sample`
+
+For a new server-side reproduction run, the Docker runner uses the full session
+datasets by default:
+
+- `adressa_recbole`
+- `globo_recbole`
+- `yoochoose_recbole`
+
+and the Top-N datasets:
+
+- `amazon_recbole`
+- `movielens_recbole`
 
 Evaluated models:
 
@@ -292,6 +324,13 @@ The project is designed around reproducible experiment stages:
 The generated result directories are experiment artifacts and may be ignored by
 Git depending on local settings. The code required to reproduce the analysis is
 kept under `src/recbole_framework/`.
+
+For a complete step-by-step reproduction workflow, including Docker server runs,
+dataset placement, output files, result archiving, and structured evaluation,
+see:
+
+- `docs/reproducibility.md`
+- `docs/server_docker_run.md`
 
 ## Summary
 
