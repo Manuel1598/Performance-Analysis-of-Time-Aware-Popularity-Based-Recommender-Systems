@@ -1,0 +1,18 @@
+experiment_type,dataset,model,runs,unique_configurations,learning_rate,hidden_size,dropout_prob,num_layers,loss_type,vsknn_k,vsknn_sample_size,vstan_k,vstan_sample_size,vstan_position_decay,vstan_idf_weighting,embedding_size,train_neg_sample_args,decay_lambda,window_days
+session,adressa_recbole_sample,GRU4Rec,36.0,36.0,"0.0001, 0.0005, 0.001","100.0, 128.0, 256.0","0.1, 0.2",1.0,CE,,,,,,,,,,
+session,adressa_recbole_sample,VS-KNN,9.0,9.0,,,,,,"100.0, 200.0, 500.0","100.0, 250.0, 500.0",,,,,,,,
+session,adressa_recbole_sample,VSTAN,54.0,54.0,,,,,,,,"100.0, 200.0, 500.0","100.0, 250.0, 500.0","0.05, 0.1, 0.2","False, True",,,,
+session,globo_recbole_sample,GRU4Rec,36.0,36.0,"0.0001, 0.0005, 0.001","100.0, 128.0, 256.0","0.1, 0.2",1.0,CE,,,,,,,,,,
+session,globo_recbole_sample,VS-KNN,9.0,9.0,,,,,,"100.0, 200.0, 500.0","100.0, 250.0, 500.0",,,,,,,,
+session,globo_recbole_sample,VSTAN,55.0,55.0,,,,,,,,"100.0, 200.0, 500.0","100.0, 250.0, 500.0","0.05, 0.1, 0.2","False, True",,,,
+session,yoochoose_recbole_sample,GRU4Rec,36.0,36.0,"0.0001, 0.0005, 0.001","100.0, 128.0, 256.0","0.1, 0.2",1.0,CE,,,,,,,,,,
+session,yoochoose_recbole_sample,VS-KNN,9.0,9.0,,,,,,"100.0, 200.0, 500.0","100.0, 250.0, 500.0",,,,,,,,
+session,yoochoose_recbole_sample,VSTAN,54.0,54.0,,,,,,,,"100.0, 200.0, 500.0","100.0, 250.0, 500.0","0.05, 0.1, 0.2","False, True",,,,
+topn,amazon_recbole,BPR,10.0,10.0,"0.0001, 0.0005, 0.001",,,,,,,,,,,"128.0, 32.0, 64.0","{'distribution': 'uniform', 'sample_num': 1, 'alpha': 1.0, 'dynamic': False, 'candidate_num': 0}",,
+topn,amazon_recbole,DecayPop,8.0,7.0,,,,,,,,,,,,,,"1e-06, 1e-07, 1e-08, 1e-09, 5e-07, 5e-08, 5e-09",
+topn,amazon_recbole,MostPop,2.0,1.0,,,,,,,,,,,,,,,
+topn,amazon_recbole,RecentPop,9.0,8.0,,,,,,,,,,,,,,,"1.0, 14.0, 180.0, 3.0, 30.0, 60.0, 7.0, 90.0"
+topn,movielens_recbole,BPR,10.0,10.0,"0.0001, 0.0005, 0.001",,,,,,,,,,,"128.0, 32.0, 64.0","{'distribution': 'uniform', 'sample_num': 1, 'alpha': 1.0, 'dynamic': False, 'candidate_num': 0}",,
+topn,movielens_recbole,DecayPop,8.0,7.0,,,,,,,,,,,,,,"1e-06, 1e-07, 1e-08, 1e-09, 5e-07, 5e-08, 5e-09",
+topn,movielens_recbole,MostPop,2.0,1.0,,,,,,,,,,,,,,,
+topn,movielens_recbole,RecentPop,9.0,8.0,,,,,,,,,,,,,,,"1.0, 14.0, 180.0, 3.0, 30.0, 60.0, 7.0, 90.0"

@@ -1,0 +1,6 @@
+experiment_type,dataset,model,runtime_seconds_count,runtime_seconds_mean,runtime_seconds_median,runtime_seconds_min,runtime_seconds_max,eval_runtime_seconds_mean,train_runtime_seconds_mean
+session,adressa_recbole_sample,GRU4Rec,36,19.7431,18.265,14.73,26.18,0.2069,13.8367
+session,globo_recbole_sample,GRU4Rec,36,21.0381,21.255,15.33,27.56,0.2617,15.1283
+session,yoochoose_recbole_sample,GRU4Rec,36,24.3256,24.75,17.45,32.21,0.2722,18.3744
+topn,amazon_recbole,MostPop,2,1662.84,1662.84,1662.26,1663.41,1162.23,200.905
+topn,movielens_recbole,MostPop,2,292.535,292.535,284.62,300.45,81.265,105.135

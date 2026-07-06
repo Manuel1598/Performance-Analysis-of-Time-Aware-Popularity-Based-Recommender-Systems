@@ -1,0 +1,13 @@
+dataset,model,weighting_variant,popularity_weight,mrr@10,hit@10,ndcg@10,runtime_seconds,vsknn_k,vsknn_sample_size,vstan_k,vstan_sample_size,vstan_position_decay,vstan_idf_weighting,config_json
+adressa_recbole_sample,VS-KNN,unweighted,0.0,0.1497,0.4237,0.2132,3081.12,200.0,250.0,,,,,"{""vsknn_k"": 200, ""vsknn_popularity_weight"": 0.0, ""vsknn_sample_size"": 250}"
+adressa_recbole_sample,VS-KNN,weighted,0.5,0.0858,0.1932,0.1106,3067.49,200.0,500.0,,,,,"{""vsknn_k"": 200, ""vsknn_popularity_weight"": 0.5, ""vsknn_sample_size"": 500}"
+adressa_recbole_sample,VSTAN,unweighted,0.0,0.1619,0.4204,0.2221,2795.94,,,100.0,500.0,0.2,False,"{""vstan_idf_weighting"": false, ""vstan_k"": 100, ""vstan_popularity_weight"": 0.0, ""vstan_position_decay"": 0.2, ""vstan_sample_size"": 500}"
+adressa_recbole_sample,VSTAN,weighted,0.5,0.0966,0.2226,0.1255,2841.16,,,100.0,500.0,0.2,False,"{""vstan_idf_weighting"": false, ""vstan_k"": 100, ""vstan_popularity_weight"": 0.5, ""vstan_position_decay"": 0.2, ""vstan_sample_size"": 500}"
+globo_recbole_sample,VS-KNN,unweighted,,0.0787,0.3597,0.1436,738.02,500.0,500.0,,,,,"{""vsknn_k"": 500, ""vsknn_sample_size"": 500}"
+globo_recbole_sample,VS-KNN,weighted,0.5,0.0241,0.114,0.0448,352.73,200.0,500.0,,,,,"{""vsknn_k"": 200, ""vsknn_popularity_weight"": 0.5, ""vsknn_sample_size"": 500}"
+globo_recbole_sample,VSTAN,unweighted,,0.0831,0.3644,0.1482,287.73,,,200.0,500.0,0.2,False,"{""vstan_idf_weighting"": false, ""vstan_k"": 200, ""vstan_position_decay"": 0.2, ""vstan_sample_size"": 500}"
+globo_recbole_sample,VSTAN,weighted,0.5,0.0278,0.1272,0.0508,1270.37,,,500.0,500.0,0.2,False,"{""vstan_idf_weighting"": false, ""vstan_k"": 500, ""vstan_popularity_weight"": 0.5, ""vstan_position_decay"": 0.2, ""vstan_sample_size"": 500}"
+yoochoose_recbole_sample,VS-KNN,unweighted,,0.2625,0.4987,0.3187,458.5,200.0,500.0,,,,,"{""vsknn_k"": 200, ""vsknn_sample_size"": 500}"
+yoochoose_recbole_sample,VS-KNN,weighted,0.5,0.2477,0.445,0.2948,580.15,200.0,500.0,,,,,"{""vsknn_k"": 200, ""vsknn_popularity_weight"": 0.5, ""vsknn_sample_size"": 500}"
+yoochoose_recbole_sample,VSTAN,unweighted,,0.2773,0.5334,0.3384,541.25,,,200.0,500.0,0.2,True,"{""vstan_idf_weighting"": true, ""vstan_k"": 200, ""vstan_position_decay"": 0.2, ""vstan_sample_size"": 500}"
+yoochoose_recbole_sample,VSTAN,weighted,0.5,0.2601,0.4596,0.308,2198.43,,,500.0,500.0,0.2,False,"{""vstan_idf_weighting"": false, ""vstan_k"": 500, ""vstan_popularity_weight"": 0.5, ""vstan_position_decay"": 0.2, ""vstan_sample_size"": 500}"

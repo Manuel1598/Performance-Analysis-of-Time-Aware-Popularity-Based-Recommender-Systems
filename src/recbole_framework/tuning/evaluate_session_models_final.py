@@ -5,6 +5,11 @@ import torch
 
 from recbole.model.sequential_recommender import GRU4Rec
 
+from src.recbole_framework.custom_models.session.popularity_recbole import (
+    SessionDecayPopRecBole,
+    SessionMostPopRecBole,
+    SessionRecentPopRecBole,
+)
 from src.recbole_framework.custom_models.session.vsknn_recbole import VSKNNRecBole
 from src.recbole_framework.custom_models.session.vstan_recbole import VSTANRecBole
 from src.recbole_framework.measurement.experiment_logger import ExperimentLogger
@@ -23,21 +28,35 @@ SAMPLE_TO_FULL_DATASET = {
 }
 
 MODEL_CLASSES = {
+    "MostPop": SessionMostPopRecBole,
+    "RecentPop": SessionRecentPopRecBole,
+    "DecayPop": SessionDecayPopRecBole,
     "VS-KNN": VSKNNRecBole,
     "VSTAN": VSTANRecBole,
     "GRU4Rec": GRU4Rec,
 }
 
 MODEL_CONFIG_FIELDS = {
+    "MostPop": {},
+    "RecentPop": {
+        "window_days": int,
+        "recent_fraction": float,
+    },
+    "DecayPop": {
+        "decay_lambda": float,
+        "decay_half_life_days": float,
+    },
     "VS-KNN": {
         "vsknn_k": int,
         "vsknn_sample_size": int,
+        "vsknn_popularity_weight": float,
     },
     "VSTAN": {
         "vstan_k": int,
         "vstan_sample_size": int,
         "vstan_position_decay": float,
         "vstan_idf_weighting": bool,
+        "vstan_popularity_weight": float,
     },
     "GRU4Rec": {
         "hidden_size": int,
@@ -62,6 +81,9 @@ def build_config_updates(model_name: str, row: pd.Series) -> dict:
     config_updates = {}
 
     for field_name, caster in MODEL_CONFIG_FIELDS[model_name].items():
+        if field_name not in row:
+            continue
+
         value = row[field_name]
 
         if pd.isna(value):

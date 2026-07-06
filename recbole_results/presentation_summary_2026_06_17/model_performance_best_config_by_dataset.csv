@@ -1,0 +1,19 @@
+dataset,model,mrr@10,hit@10,ndcg@10,runtime_seconds,vsknn_k,vsknn_sample_size,vsknn_popularity_weight,vstan_k,vstan_sample_size,vstan_position_decay,vstan_idf_weighting,vstan_popularity_weight,window_days,decay_lambda,hidden_size,learning_rate,dropout_prob,epochs,config_json
+adressa_recbole_sample,GRU4Rec,0.2181,0.522,0.2892,26.18,,,,,,,,,,,256.0,0.001,0.1,20,"{""dropout_prob"": 0.1, ""epochs"": 20, ""eval_batch_size"": 2048, ""hidden_size"": 256, ""learning_rate"": 0.001, ""loss_type"": ""CE"", ""model"": ""GRU4Rec"", ""num_layers"": 1, ""train_batch_size"": 2048, ""train_neg_sample_args"": null}"
+adressa_recbole_sample,VSTAN,0.1619,0.4204,0.2221,2795.94,,,,100.0,500.0,0.2,False,0.0,,,,,,1,"{""vstan_idf_weighting"": false, ""vstan_k"": 100, ""vstan_popularity_weight"": 0.0, ""vstan_position_decay"": 0.2, ""vstan_sample_size"": 500}"
+adressa_recbole_sample,VS-KNN,0.1497,0.4237,0.2132,3081.12,200.0,250.0,0.0,,,,,,,,,,,1,"{""vsknn_k"": 200, ""vsknn_popularity_weight"": 0.0, ""vsknn_sample_size"": 250}"
+adressa_recbole_sample,RecentPop,0.1296,0.3815,0.1884,6.48,,,,,,,,,1.0,,,,,1,"{""window_days"": 1}"
+adressa_recbole_sample,MostPop,0.1268,0.3734,0.1841,6.4,,,,,,,,,,,,,,1,{}
+adressa_recbole_sample,DecayPop,0.1268,0.3734,0.1841,8.43,,,,,,,,,,1e-09,,,,1,"{""decay_lambda"": 1e-09}"
+globo_recbole_sample,GRU4Rec,0.1493,0.3614,0.1988,27.36,,,,,,,,,,,256.0,0.001,0.1,20,"{""dropout_prob"": 0.1, ""epochs"": 20, ""eval_batch_size"": 2048, ""hidden_size"": 256, ""learning_rate"": 0.001, ""loss_type"": ""CE"", ""model"": ""GRU4Rec"", ""num_layers"": 1, ""train_batch_size"": 2048, ""train_neg_sample_args"": null}"
+globo_recbole_sample,VSTAN,0.0831,0.3644,0.1482,287.73,,,,200.0,500.0,0.2,False,,,,,,,1,"{""vstan_idf_weighting"": false, ""vstan_k"": 200, ""vstan_position_decay"": 0.2, ""vstan_sample_size"": 500}"
+globo_recbole_sample,VS-KNN,0.0787,0.3597,0.1436,738.02,500.0,500.0,,,,,,,,,,,,1,"{""vsknn_k"": 500, ""vsknn_sample_size"": 500}"
+globo_recbole_sample,RecentPop,0.0224,0.0626,0.0316,7.13,,,,,,,,,90.0,,,,,1,"{""window_days"": 90}"
+globo_recbole_sample,DecayPop,0.0224,0.0626,0.0316,8.58,,,,,,,,,,5e-08,,,,1,"{""decay_lambda"": 5e-08}"
+globo_recbole_sample,MostPop,0.0224,0.0626,0.0316,6.93,,,,,,,,,,,,,,1,{}
+yoochoose_recbole_sample,VSTAN,0.2773,0.5334,0.3384,541.25,,,,200.0,500.0,0.2,True,,,,,,,1,"{""vstan_idf_weighting"": true, ""vstan_k"": 200, ""vstan_position_decay"": 0.2, ""vstan_sample_size"": 500}"
+yoochoose_recbole_sample,VS-KNN,0.2625,0.4987,0.3187,458.5,200.0,500.0,,,,,,,,,,,,1,"{""vsknn_k"": 200, ""vsknn_sample_size"": 500}"
+yoochoose_recbole_sample,GRU4Rec,0.2469,0.4818,0.3027,32.13,,,,,,,,,,,256.0,0.001,0.1,20,"{""dropout_prob"": 0.1, ""epochs"": 20, ""eval_batch_size"": 2048, ""hidden_size"": 256, ""learning_rate"": 0.001, ""loss_type"": ""CE"", ""model"": ""GRU4Rec"", ""num_layers"": 1, ""train_batch_size"": 2048, ""train_neg_sample_args"": null}"
+yoochoose_recbole_sample,DecayPop,0.0084,0.0216,0.0115,8.91,,,,,,,,,,5e-08,,,,1,"{""decay_lambda"": 5e-08}"
+yoochoose_recbole_sample,RecentPop,0.008,0.0212,0.0111,7.26,,,,,,,,,180.0,,,,,1,"{""window_days"": 180}"
+yoochoose_recbole_sample,MostPop,0.008,0.0215,0.0112,7.25,,,,,,,,,,,,,,1,{}

@@ -10,6 +10,11 @@ from recbole.data import create_dataset, data_preparation
 from recbole.model.sequential_recommender import GRU4Rec
 from recbole.trainer import Trainer
 
+from src.recbole_framework.custom_models.session.popularity_recbole import (
+    SessionDecayPopRecBole,
+    SessionMostPopRecBole,
+    SessionRecentPopRecBole,
+)
 from src.recbole_framework.custom_models.session.vsknn_recbole import VSKNNRecBole
 from src.recbole_framework.custom_models.session.vstan_recbole import VSTANRecBole
 from src.recbole_framework.measurement.experiment_logger import ExperimentLogger
@@ -304,13 +309,59 @@ def main() -> None:
     for dataset_name in datasets:
         print(f"\n===== DATASET: {dataset_name} =====")
 
-        for k, sample_size in product(
+        print(f"Running MostPop on {dataset_name}")
+        run_and_store(
+            output_file=output_file,
+            logger=logger,
+            completed_run_ids=completed_run_ids,
+            model_class=SessionMostPopRecBole,
+            model_name="MostPop",
+            dataset_name=dataset_name,
+            config_updates={},
+            device=device,
+        )
+
+        for window_days in [1, 3, 7, 14, 30, 60, 90, 180]:
+            config_updates = {"window_days": window_days}
+
+            print(f"Running RecentPop on {dataset_name}: {config_updates}")
+
+            run_and_store(
+                output_file=output_file,
+                logger=logger,
+                completed_run_ids=completed_run_ids,
+                model_class=SessionRecentPopRecBole,
+                model_name="RecentPop",
+                dataset_name=dataset_name,
+                config_updates=config_updates,
+                device=device,
+            )
+
+        for decay_lambda in [1e-9, 5e-9, 1e-8, 5e-8, 1e-7, 5e-7, 1e-6]:
+            config_updates = {"decay_lambda": decay_lambda}
+
+            print(f"Running DecayPop on {dataset_name}: {config_updates}")
+
+            run_and_store(
+                output_file=output_file,
+                logger=logger,
+                completed_run_ids=completed_run_ids,
+                model_class=SessionDecayPopRecBole,
+                model_name="DecayPop",
+                dataset_name=dataset_name,
+                config_updates=config_updates,
+                device=device,
+            )
+
+        for k, sample_size, popularity_weight in product(
             [100, 200, 500],
             [100, 250, 500],
+            [0.0, 0.5, 1.0],
         ):
             config_updates = {
                 "vsknn_k": k,
                 "vsknn_sample_size": sample_size,
+                "vsknn_popularity_weight": popularity_weight,
             }
 
             print(f"Running VS-KNN on {dataset_name}: {config_updates}")
@@ -326,17 +377,19 @@ def main() -> None:
                 device=device,
             )
 
-        for k, sample_size, position_decay, idf_weighting in product(
+        for k, sample_size, position_decay, idf_weighting, popularity_weight in product(
             [100, 200, 500],
             [100, 250, 500],
             [0.05, 0.1, 0.2],
             [True, False],
+            [0.0, 0.5, 1.0],
         ):
             config_updates = {
                 "vstan_k": k,
                 "vstan_sample_size": sample_size,
                 "vstan_position_decay": position_decay,
                 "vstan_idf_weighting": idf_weighting,
+                "vstan_popularity_weight": popularity_weight,
             }
 
             print(f"Running VSTAN on {dataset_name}: {config_updates}")

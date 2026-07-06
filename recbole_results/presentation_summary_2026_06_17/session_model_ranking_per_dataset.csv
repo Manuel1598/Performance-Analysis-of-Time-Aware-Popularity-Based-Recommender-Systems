@@ -1,0 +1,10 @@
+experiment_type,dataset,model,mrr@10,hit@10,ndcg@10,coverage@10,avg_recommendation_popularity@10,runtime_seconds,runtime_minutes,mrr@10_per_minute,rank_by_mrr@10,relative_mrr@10_to_dataset_best,mrr@10_gap_to_dataset_best,quality_runtime_pareto_efficient
+session,adressa_recbole_sample,GRU4Rec,0.2181,0.522,0.2892,,,26.18,0.436333,0.499847,1,1.0,0.0,True
+session,adressa_recbole_sample,VSTAN,0.1604,0.4308,0.2229,,,698.26,11.6377,0.0137828,24,0.735442,0.0577,False
+session,adressa_recbole_sample,VS-KNN,0.1225,0.3428,0.1735,,,659.7,10.995,0.0111414,91,0.561669,0.0956,False
+session,globo_recbole_sample,GRU4Rec,0.1493,0.3614,0.1988,,,27.36,0.456,0.327412,1,1.0,0.0,True
+session,globo_recbole_sample,VSTAN,0.0831,0.3644,0.1482,,,287.73,4.7955,0.0173287,19,0.556597,0.0662,False
+session,globo_recbole_sample,VS-KNN,0.0787,0.3597,0.1436,,,738.02,12.3003,0.0063982,33,0.527127,0.0706,False
+session,yoochoose_recbole_sample,VSTAN,0.2773,0.5334,0.3384,,,541.25,9.02083,0.03074,1,1.0,0.0,True
+session,yoochoose_recbole_sample,VS-KNN,0.2625,0.4987,0.3187,,,458.5,7.64167,0.0343511,52,0.946628,0.0148,False
+session,yoochoose_recbole_sample,GRU4Rec,0.2469,0.4818,0.3027,,,32.13,0.5355,0.461064,64,0.890371,0.0304,True

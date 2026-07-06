@@ -1,6 +1,5 @@
 from collections import defaultdict
 import math
-import random
 
 import torch
 
@@ -15,27 +14,54 @@ class VSTANRecBole(SequentialRecommender):
         super(VSTANRecBole, self).__init__(config, dataset)
 
         self.device = config["device"]
-        self.seed = config["seed"]
+        self.time_field = config["TIME_FIELD"]
 
         self.k = config["vstan_k"]
         self.sample_size = config["vstan_sample_size"]
         self.position_decay = config["vstan_position_decay"]
         self.idf_weighting = config["vstan_idf_weighting"]
+        self.popularity_weight = self._get_config_float(
+            config=config,
+            key="vstan_popularity_weight",
+            default=0.0,
+        )
 
         self.dummy_param = torch.nn.Parameter(torch.zeros(1))
 
         self.reference_sessions: list[list[int]] = []
         self.reference_session_sets: list[set[int]] = []
+        self.reference_session_timestamps: list[float] = []
         self.item_sessions: dict[int, set[int]] = defaultdict(set)
         self.item_idf: dict[int, float] = {}
+        self.item_popularity = self._compute_item_popularity(dataset)
 
         self._build_reference_sessions(dataset)
         self._compute_idf_weights()
+
+    @staticmethod
+    def _get_config_float(config, key: str, default: float) -> float:
+        try:
+            return float(config[key])
+        except KeyError:
+            return default
+
+    def _compute_item_popularity(self, dataset) -> torch.Tensor:
+        item_ids = dataset.inter_feat[self.ITEM_ID].long()
+        item_counts = torch.bincount(
+            item_ids,
+            minlength=self.n_items,
+        ).float()
+
+        interaction_count = max(float(len(item_ids)), 1.0)
+        item_popularity = item_counts / interaction_count
+
+        return item_popularity.clamp_min(1.0 / interaction_count)
 
     def _build_reference_sessions(self, dataset) -> None:
         item_seq_data = dataset.inter_feat[self.ITEM_SEQ]
         item_seq_len_data = dataset.inter_feat[self.ITEM_SEQ_LEN]
         target_items = dataset.inter_feat[self.ITEM_ID]
+        timestamps = dataset.inter_feat[self.time_field]
 
         for row_idx in range(len(item_seq_data)):
             seq_len = int(item_seq_len_data[row_idx])
@@ -53,6 +79,7 @@ class VSTANRecBole(SequentialRecommender):
             session_index = len(self.reference_sessions)
 
             self.reference_sessions.append(session_items)
+            self.reference_session_timestamps.append(float(timestamps[row_idx]))
 
             session_item_set = set(session_items)
             self.reference_session_sets.append(session_item_set)
@@ -155,9 +182,21 @@ class VSTANRecBole(SequentialRecommender):
                 if self.idf_weighting:
                     item_score *= self.item_idf.get(item_id, 1.0)
 
+                item_score = self._apply_popularity_weight(
+                    item_id=item_id,
+                    score=item_score,
+                )
+
                 scores[item_id] += item_score
 
         return scores
+
+    def _apply_popularity_weight(self, item_id: int, score: float) -> float:
+        if self.popularity_weight <= 0.0:
+            return score
+
+        popularity = float(self.item_popularity[item_id].item())
+        return score / (popularity ** self.popularity_weight)
 
     def _find_candidate_sessions(self, current_item_set: set[int]) -> set[int]:
         candidate_sessions = set()
@@ -166,10 +205,15 @@ class VSTANRecBole(SequentialRecommender):
             candidate_sessions.update(self.item_sessions.get(item_id, set()))
 
         if self.sample_size > 0 and len(candidate_sessions) > self.sample_size:
-            seed_key = f"{self.seed}:{','.join(map(str, sorted(current_item_set)))}"
-            rng = random.Random(seed_key)
             candidate_sessions = set(
-                rng.sample(sorted(candidate_sessions), self.sample_size)
+                sorted(
+                    candidate_sessions,
+                    key=lambda session_index: (
+                        self.reference_session_timestamps[session_index],
+                        session_index,
+                    ),
+                    reverse=True,
+                )[: self.sample_size]
             )
 
         return candidate_sessions
