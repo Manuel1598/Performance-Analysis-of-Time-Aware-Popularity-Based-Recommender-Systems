@@ -3783,3 +3783,85 @@ recbole_results/vsknn_audited/compact_tuning_best_by_dataset.csv
    acceptable for a non-parametric model.
 4. Only if required for the thesis, run the selected configurations on full
    datasets using consistent server hardware.
+
+## 2026-07-17: Consolidated Best-Model Overview
+
+### Why This Was Added
+
+Results were distributed across the Top-N tuning CSV, the session-model tuning
+CSV, and the new audited VSKNN tuning output. A single reproducible overview was
+needed so that every model/dataset combination, the selection rule, and each
+dataset winner can be cited without manually copying values.
+
+### Code and Documentation Changes
+
+Added:
+
+```text
+src/recbole_framework/analysis/build_best_model_overview.py
+tests/test_best_model_overview.py
+docs/audited_vsknn_and_best_models_overview.md
+recbole_results/summary/best_models_by_dataset.csv
+recbole_results/summary/best_overall_model_per_dataset.csv
+```
+
+The analysis script cleans failed or malformed rows, converts metric columns to
+numeric values, and selects the best successful configuration for each
+model/dataset pair by MRR@10. Equal MRR@10 values are resolved by lower recorded
+runtime and then stable source order. Legacy `VS-KNN` rows are excluded and
+replaced with the compact-tuned audited `VSKNN` results so that old and corrected
+implementations are not mixed.
+
+The generated Markdown document also records what changed in VSKNN and why:
+reference position weighting and neighbor decay were restored, duplicated
+prefix sessions were collapsed, the index was kept training-only, the
+thesis-specific popularity correction was removed from the upstream-faithful
+path, names were standardized, and candidate retrieval was optimized without
+changing recommendation quality.
+
+### Audited VSKNN Versus Legacy Run
+
+| Dataset | Metric | Legacy | Audited tuned | Absolute change | Relative MRR change |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Yoochoose sample | Hit@10 | 0.4947 | 0.5377 | +0.0430 | — |
+| Yoochoose sample | NDCG@10 | 0.3177 | 0.3478 | +0.0301 | — |
+| Yoochoose sample | MRR@10 | 0.2624 | 0.2880 | +0.0256 | +9.8% |
+| Globo sample | Hit@10 | 0.3373 | 0.3298 | -0.0075 | — |
+| Globo sample | NDCG@10 | 0.1326 | 0.1341 | +0.0015 | — |
+| Globo sample | MRR@10 | 0.0713 | 0.0751 | +0.0038 | +5.3% |
+| Adressa sample | Hit@10 | 0.3428 | 0.4313 | +0.0885 | — |
+| Adressa sample | NDCG@10 | 0.1735 | 0.2312 | +0.0577 | — |
+| Adressa sample | MRR@10 | 0.1225 | 0.1703 | +0.0478 | +39.0% |
+
+These differences combine the correctness changes and the subsequent compact
+tuning; they cannot be interpreted as the isolated effect of one code change.
+Globo is the only dataset where tuned audited VSKNN has lower Hit@10, while its
+ranking quality measured by NDCG@10 and the primary metric MRR@10 improves.
+
+### Overall Dataset Winners by MRR@10
+
+| Scenario | Dataset | Best model | MRR@10 |
+| --- | --- | --- | ---: |
+| Session-based | Adressa sample | GRU4Rec | 0.2181 |
+| Session-based | Globo sample | GRU4Rec | 0.1493 |
+| Session-based | Yoochoose sample | VSKNN | 0.2880 |
+| Top-N | Amazon | BPR | 0.0519 |
+| Top-N | MovieLens | BPR | 0.1546 |
+
+The detailed CSV contains 26 best model/dataset rows: six session models on
+each of three sample datasets and four Top-N models on each of two datasets.
+Top-N and session-based scenarios are reported separately and are not ranked
+against each other. Runtime remains descriptive because audited VSKNN ran on
+CPU while many stored framework runs used CUDA.
+
+### Reproduction and Validation
+
+Regenerate all three overview artifacts with:
+
+```powershell
+python -m src.recbole_framework.analysis.build_best_model_overview
+```
+
+The generator produced exactly 26 model/dataset rows and five dataset winners.
+Two additional automated tests verified malformed-row filtering and the
+MRR@10/runtime tie-breaking rule.
