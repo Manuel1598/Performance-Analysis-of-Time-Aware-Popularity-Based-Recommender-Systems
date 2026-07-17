@@ -3493,3 +3493,119 @@ It now explicitly distinguishes between:
 - the new Docker/server reproduction workflow, which uses the full session dataset names by default
 
 The README also links the server runner and the Docker/reproducibility documentation from the script overview.
+
+---
+
+## 2026-07-17 - VSKNN Reference Audit and Cross-Domain RecBole Validation
+
+### Goal
+
+Prepare the existing VSKNN model for a possible contribution to the official
+RecBole framework and verify that its implementation and evaluation are
+scientifically defensible.
+
+### Why This Work Was Necessary
+
+The previous implementation used unweighted binary cosine similarity and
+created one neighbor entry for every RecBole prefix-target row. It therefore
+behaved more like plain SKNN than the published vector-multiplication VSKNN and
+duplicated longer training sessions in the neighbor index.
+
+RecBole's `SequentialDataset` creates multiple prefix-target examples from one
+original session before splitting. The model was already initialized from
+`train_data.dataset`, so no direct validation/test leakage was detected.
+However, the augmented training rows had to be collapsed into one longest
+available training session per session ID to avoid systematic over-weighting.
+
+### Implementation Changes
+
+- renamed the primary model class from `VSKNNRecBole` to `VSKNN`;
+- retained `VSKNNRecBole` as a temporary compatibility alias;
+- introduced the preferred parameters `neighbor_size`, `sample_size`,
+  `sampling`, `similarity`, `session_weighting`, and `score_weighting`;
+- implemented the reference `vec` similarity and optional weighted cosine;
+- added position weights for the current session;
+- added neighbor-score decay based on the most recent shared click;
+- reconstructed exactly one reference session per training session ID;
+- removed the thesis-specific popularity correction from the upstream-faithful
+  VSKNN path;
+- separated the pure algorithm into `vsknn_core.py` for direct unit testing;
+- added deterministic score, weighting, reconstruction, and leakage tests.
+
+### Multi-Dataset Runner
+
+`run_vsknn_recbole.py` now accepts all sample and full session dataset names.
+Examples:
+
+```powershell
+python -m src.recbole_framework.runners.session.run_vsknn_recbole --dataset globo_recbole_sample
+python -m src.recbole_framework.runners.session.run_vsknn_recbole --all-samples
+```
+
+`--all-samples` evaluates Yoochoose, Globo, and Adressa sequentially and writes
+both separate result files and a combined summary under:
+
+```text
+recbole_results/vsknn_audited/
+```
+
+### Fixed Smoke-Test Configuration
+
+- RecBole: 1.2.1
+- Python: 3.11.9
+- PyTorch: 2.7.1 CPU
+- seed: 42
+- neighbor size: 100
+- candidate sample size: 500
+- candidate sampling: most recent sessions
+- similarity: vector multiplication (`vec`)
+- current-session weighting: division (`div`)
+- neighbor-score weighting: division (`div`)
+- split: ordered 80/10/10 ratio split
+
+### Audited VSKNN Results
+
+| Dataset | Hit@10 | NDCG@10 | MRR@10 | Reference sessions | Runtime (s) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Yoochoose sample | 0.5387 | 0.3470 | 0.2867 | 126,496 | 169.39 |
+| Globo sample | 0.2916 | 0.1211 | 0.0697 | 175,715 | 218.84 |
+| Adressa sample | 0.4276 | 0.2259 | 0.1650 | 98,032 | 2,002.70 |
+
+### Comparison With the Stored Legacy Runs
+
+The existing legacy rows with neighbor size 100 and sample size 500 report:
+
+| Dataset | Legacy Hit@10 | Audited Hit@10 | Legacy NDCG@10 | Audited NDCG@10 | Legacy MRR@10 | Audited MRR@10 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Yoochoose sample | 0.4947 | 0.5387 | 0.3177 | 0.3470 | 0.2624 | 0.2867 |
+| Globo sample | 0.3373 | 0.2916 | 0.1326 | 0.1211 | 0.0713 | 0.0697 |
+| Adressa sample | 0.3428 | 0.4276 | 0.1735 | 0.2259 | 0.1225 | 0.1650 |
+
+The audited algorithm improves all reported quality metrics on Yoochoose and
+Adressa but slightly reduces them on Globo. This domain-specific outcome is
+important: the correction does not simply inflate every score, and conclusions
+must be based on all datasets rather than Yoochoose alone.
+
+The legacy runs were recorded on CUDA while the audited validation was run on
+CPU. Their runtime numbers must therefore not be compared directly. Within the
+new CPU run, Adressa is a substantial runtime outlier. This indicates that
+candidate overlap and evaluation workload matter more than the raw number of
+reference sessions alone.
+
+### Validation
+
+- 13 automated unit/CLI tests passed;
+- RecBole constructed train/validation/test splits successfully;
+- all three sample evaluations completed without model or leakage errors;
+- repeated Yoochoose execution reproduced the same ranking metrics;
+- result files were written separately to prevent accidental overwrites.
+
+### Next Steps
+
+1. Profile and optimize candidate scoring before full-dataset tuning.
+2. Update the VSKNN tuning grid to use the audited parameter names and weighting
+   dimensions.
+3. Run the revised grid on consistent server hardware.
+4. Regenerate the structured evaluation report from audited results.
+5. Open the prepared RecBole proposal issue and request maintainer guidance for
+   the lifecycle of non-parametric models.

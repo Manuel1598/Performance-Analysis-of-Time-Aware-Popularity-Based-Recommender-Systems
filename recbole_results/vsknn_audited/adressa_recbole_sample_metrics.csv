@@ -1,0 +1,2 @@
+model,dataset,seed,device,neighbor_size,sample_size,sampling,similarity,session_weighting,score_weighting,reference_sessions,runtime_seconds,hit@5,hit@10,ndcg@5,ndcg@10,mrr@5,mrr@10
+VSKNN-audited,adressa_recbole_sample,42,cpu,100,500,recent,vec,div,div,98032,2002.7,0.2749,0.4276,0.1767,0.2259,0.1448,0.165

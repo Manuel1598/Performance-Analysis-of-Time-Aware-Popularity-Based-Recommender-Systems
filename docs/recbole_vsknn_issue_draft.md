@@ -52,6 +52,17 @@ SKNN-like implementation produced `0.4947`, `0.3177`, and `0.2624` under the
 same data split and ranking parameters. These preliminary figures are included
 as a correctness signal; a multi-dataset benchmark will follow in the PR.
 
+The identical smoke-test configuration also completed on Globo and Adressa:
+
+| Dataset | Hit@10 | NDCG@10 | MRR@10 |
+| --- | ---: | ---: | ---: |
+| Yoochoose sample | 0.5387 | 0.3470 | 0.2867 |
+| Globo sample | 0.2916 | 0.1211 | 0.0697 |
+| Adressa sample | 0.4276 | 0.2259 | 0.1650 |
+
+The mixed cross-domain change relative to the former SKNN-like implementation
+motivates reporting the full benchmark rather than selecting only Yoochoose.
+
 ## Design question for maintainers
 
 VSKNN has no gradient-based training phase. Is the preferred upstream design to

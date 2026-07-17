@@ -1,0 +1,2 @@
+model,dataset,seed,device,neighbor_size,sample_size,sampling,similarity,session_weighting,score_weighting,reference_sessions,runtime_seconds,hit@5,hit@10,ndcg@5,ndcg@10,mrr@5,mrr@10
+VSKNN-audited,globo_recbole_sample,42,cpu,100,500,recent,vec,div,div,175715,218.84,0.1627,0.2916,0.0796,0.1211,0.0526,0.0697

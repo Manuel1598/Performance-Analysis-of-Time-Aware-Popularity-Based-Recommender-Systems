@@ -64,6 +64,16 @@ For a local CPU smoke test, use Python 3.11 with RecBole 1.2.1 and run:
 python -m src.recbole_framework.runners.session.run_vsknn_recbole
 ```
 
+Select one session dataset or run all three local samples:
+
+```powershell
+python -m src.recbole_framework.runners.session.run_vsknn_recbole --dataset globo_recbole_sample
+python -m src.recbole_framework.runners.session.run_vsknn_recbole --all-samples
+```
+
+Per-dataset files and the combined sample summary are written to
+`recbole_results/vsknn_audited/`.
+
 The structured evaluation report is generated here:
 
 - `recbole_results/tuning_results/analysis_results/structured_report/recbole_structured_evaluation.md`

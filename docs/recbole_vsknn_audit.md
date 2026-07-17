@@ -75,3 +75,25 @@ size, split configuration, and ranking metrics.
 These values are a correctness smoke test, not yet a publication benchmark.
 Runtime hardware differs from the earlier CUDA experiment, so runtime values
 must not be compared until both variants are rerun on identical hardware.
+
+### Cross-domain sample results
+
+All three local session samples were then evaluated in one RecBole 1.2.1 CPU
+run with the same seed and configuration.
+
+| Dataset | Hit@10 | NDCG@10 | MRR@10 | Reference sessions | Runtime (s) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Yoochoose sample | 0.5387 | 0.3470 | 0.2867 | 126,496 | 169.39 |
+| Globo sample | 0.2916 | 0.1211 | 0.0697 | 175,715 | 218.84 |
+| Adressa sample | 0.4276 | 0.2259 | 0.1650 | 98,032 | 2,002.70 |
+
+Compared with the stored legacy `neighbor_size=100`, `sample_size=500` runs,
+the audited implementation improves all three primary metrics on Yoochoose and
+Adressa. Globo decreases from Hit@10 0.3373, NDCG@10 0.1326, and MRR@10 0.0713.
+This mixed result shows that the correction is not merely a universal score
+increase and that multi-domain reporting is necessary.
+
+Adressa is a CPU runtime outlier despite having fewer reconstructed reference
+sessions. Candidate overlap and evaluation workload, not only session count,
+therefore determine the cost. Performance profiling is required before a large
+local hyperparameter grid or full-dataset run.
