@@ -53,6 +53,17 @@ The current full-tuning result files are:
 - `recbole_results/experiment_logs/session_full_tuning_experiment_log.csv`
 - `recbole_results/experiment_logs/topn_full_tuning_experiment_log.csv`
 
+The VSKNN upstream audit and RecBole proposal draft are documented in:
+
+- `docs/recbole_vsknn_audit.md`
+- `docs/recbole_vsknn_issue_draft.md`
+
+For a local CPU smoke test, use Python 3.11 with RecBole 1.2.1 and run:
+
+```powershell
+python -m src.recbole_framework.runners.session.run_vsknn_recbole
+```
+
 The structured evaluation report is generated here:
 
 - `recbole_results/tuning_results/analysis_results/structured_report/recbole_structured_evaluation.md`

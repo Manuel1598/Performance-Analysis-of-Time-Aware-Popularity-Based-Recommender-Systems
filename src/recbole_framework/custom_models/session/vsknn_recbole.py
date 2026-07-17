@@ -1,87 +1,114 @@
+"""RecBole adapter for Vector Multiplication Session-based kNN (VSKNN)."""
+
 from collections import defaultdict
-import math
+from typing import Optional
 
 import torch
 
 from recbole.model.abstract_recommender import SequentialRecommender
 from recbole.utils import InputType
 
+from .vsknn_core import (
+    SIMILARITIES,
+    WEIGHTING_FUNCTIONS,
+    collapse_augmented_sessions,
+    score_neighbors,
+    session_similarity,
+)
 
-class VSKNNRecBole(SequentialRecommender):
+
+class VSKNN(SequentialRecommender):
+    """Non-parametric VSKNN using training sessions as the neighbor index.
+
+    Preferred configuration keys follow the reference implementation. Legacy
+    ``vsknn_*`` keys remain accepted so existing thesis experiments reproduce.
+    """
+
     input_type = InputType.POINTWISE
 
     def __init__(self, config, dataset):
-        super(VSKNNRecBole, self).__init__(config, dataset)
+        super().__init__(config, dataset)
 
         self.device = config["device"]
         self.time_field = config["TIME_FIELD"]
-
-        self.k = config["vsknn_k"]
-        self.sample_size = config["vsknn_sample_size"]
-        self.popularity_weight = self._get_config_float(
-            config=config,
-            key="vsknn_popularity_weight",
-            default=0.0,
+        self.neighbor_size = int(
+            self._config_value(config, "neighbor_size", "vsknn_k", 100)
         )
+        self.sample_size = int(
+            self._config_value(config, "sample_size", "vsknn_sample_size", 1000)
+        )
+        self.sampling = str(self._config_value(config, "sampling", None, "recent"))
+        self.similarity = str(self._config_value(config, "similarity", None, "vec"))
+        self.session_weighting = str(
+            self._config_value(config, "session_weighting", None, "div")
+        )
+        self.score_weighting = str(
+            self._config_value(config, "score_weighting", None, "div")
+        )
+        self._validate_config()
 
+        # Trainer expects a differentiable loss even though VSKNN has no training.
         self.dummy_param = torch.nn.Parameter(torch.zeros(1))
 
         self.reference_sessions: list[list[int]] = []
         self.reference_session_sets: list[set[int]] = []
         self.reference_session_timestamps: list[float] = []
         self.item_sessions: dict[int, set[int]] = defaultdict(set)
-        self.item_popularity = self._compute_item_popularity(dataset)
-
         self._build_reference_sessions(dataset)
 
     @staticmethod
-    def _get_config_float(config, key: str, default: float) -> float:
+    def _config_value(config, preferred: str, legacy: Optional[str], default):
         try:
-            return float(config[key])
+            value = config[preferred]
         except KeyError:
-            return default
+            value = None
+        if value is not None:
+            return value
+        if legacy is not None:
+            try:
+                value = config[legacy]
+            except KeyError:
+                value = None
+            if value is not None:
+                return value
+        return default
 
-    def _compute_item_popularity(self, dataset) -> torch.Tensor:
-        item_ids = dataset.inter_feat[self.ITEM_ID].long()
-        item_counts = torch.bincount(
-            item_ids,
-            minlength=self.n_items,
-        ).float()
-
-        interaction_count = max(float(len(item_ids)), 1.0)
-        item_popularity = item_counts / interaction_count
-
-        return item_popularity.clamp_min(1.0 / interaction_count)
+    def _validate_config(self) -> None:
+        if self.neighbor_size <= 0:
+            raise ValueError("neighbor_size must be greater than zero")
+        if self.sample_size < 0:
+            raise ValueError("sample_size must be non-negative")
+        if self.sampling != "recent":
+            raise ValueError("Only deterministic recent sampling is supported")
+        if self.similarity not in SIMILARITIES:
+            raise ValueError(f"similarity must be one of {sorted(SIMILARITIES)}")
+        if self.session_weighting not in WEIGHTING_FUNCTIONS:
+            raise ValueError(
+                f"session_weighting must be one of {sorted(WEIGHTING_FUNCTIONS)}"
+            )
+        if self.score_weighting not in WEIGHTING_FUNCTIONS:
+            raise ValueError(
+                f"score_weighting must be one of {sorted(WEIGHTING_FUNCTIONS)}"
+            )
 
     def _build_reference_sessions(self, dataset) -> None:
-        item_seq_data = dataset.inter_feat[self.ITEM_SEQ]
-        item_seq_len_data = dataset.inter_feat[self.ITEM_SEQ_LEN]
-        target_items = dataset.inter_feat[self.ITEM_ID]
-        timestamps = dataset.inter_feat[self.time_field]
+        inter_feat = dataset.inter_feat
+        rows = zip(
+            inter_feat[self.USER_ID].cpu().tolist(),
+            inter_feat[self.ITEM_SEQ].cpu().tolist(),
+            inter_feat[self.ITEM_SEQ_LEN].cpu().tolist(),
+            inter_feat[self.ITEM_ID].cpu().tolist(),
+            inter_feat[self.time_field].cpu().tolist(),
+        )
+        sessions = collapse_augmented_sessions(rows)
 
-        for row_idx in range(len(item_seq_data)):
-            seq_len = int(item_seq_len_data[row_idx])
-            item_seq = item_seq_data[row_idx][:seq_len].cpu().tolist()
-
-            target_item = int(target_items[row_idx])
-
-            # Historical sequence + target item as reference session
-            session_items = [int(item_id) for item_id in item_seq if int(item_id) > 0]
-
-            if target_item > 0:
-                session_items.append(target_item)
-
-            if not session_items:
-                continue
-
+        for _, items, timestamp in sessions:
             session_index = len(self.reference_sessions)
-
-            self.reference_sessions.append(session_items)
-            self.reference_session_timestamps.append(float(timestamps[row_idx]))
-            session_item_set = set(session_items)
-            self.reference_session_sets.append(session_item_set)
-
-            for item_id in session_item_set:
+            item_set = set(items)
+            self.reference_sessions.append(items)
+            self.reference_session_sets.append(item_set)
+            self.reference_session_timestamps.append(timestamp)
+            for item_id in item_set:
                 self.item_sessions[item_id].add(session_index)
 
     def forward(self, interaction):
@@ -91,121 +118,82 @@ class VSKNNRecBole(SequentialRecommender):
         return self.dummy_param.sum() * 0.0
 
     def predict(self, interaction):
-        item_seq = interaction[self.ITEM_SEQ]
-        item_seq_len = interaction[self.ITEM_SEQ_LEN]
-        target_item = interaction[self.ITEM_ID]
-
         scores = []
-
-        for seq, seq_len, item_id in zip(item_seq, item_seq_len, target_item):
-            current_items = self._extract_sequence_items(seq, int(seq_len))
-            session_scores = self._score_sequence(current_items)
-            scores.append(session_scores[int(item_id)])
-
-        return torch.tensor(scores, dtype=torch.float32, device=self.device)
+        for sequence, length, item_id in zip(
+            interaction[self.ITEM_SEQ],
+            interaction[self.ITEM_SEQ_LEN],
+            interaction[self.ITEM_ID],
+        ):
+            current_items = self._extract_sequence_items(sequence, int(length))
+            scores.append(self._score_sequence(current_items)[int(item_id)])
+        return torch.stack(scores).to(self.device)
 
     def full_sort_predict(self, interaction):
-        item_seq = interaction[self.ITEM_SEQ]
-        item_seq_len = interaction[self.ITEM_SEQ_LEN]
-
         batch_scores = []
+        for sequence, length in zip(
+            interaction[self.ITEM_SEQ], interaction[self.ITEM_SEQ_LEN]
+        ):
+            current_items = self._extract_sequence_items(sequence, int(length))
+            batch_scores.append(self._score_sequence(current_items))
+        return torch.stack(batch_scores).to(self.device).reshape(-1)
 
-        for seq, seq_len in zip(item_seq, item_seq_len):
-            current_items = self._extract_sequence_items(seq, int(seq_len))
-            scores = self._score_sequence(current_items)
-            batch_scores.append(scores)
-
-        scores_tensor = torch.stack(batch_scores, dim=0).to(self.device)
-
-        return scores_tensor.reshape(-1)
-
-    def _extract_sequence_items(self, item_seq: torch.Tensor, seq_len: int) -> list[int]:
+    @staticmethod
+    def _extract_sequence_items(item_seq: torch.Tensor, seq_len: int) -> list[int]:
         if seq_len <= 0:
             return []
-
-        items = item_seq[:seq_len].cpu().tolist()
-        return [int(item_id) for item_id in items if int(item_id) > 0]
+        return [
+            int(item)
+            for item in item_seq[:seq_len].cpu().tolist()
+            if int(item) > 0
+        ]
 
     def _score_sequence(self, current_items: list[int]) -> torch.Tensor:
         scores = torch.zeros(self.n_items, dtype=torch.float32)
-
         if not current_items:
             return scores
 
-        current_item_set = set(current_items)
-
-        candidate_sessions = self._find_candidate_sessions(current_item_set)
-
-        if not candidate_sessions:
-            return scores
-
-        similarities = []
-
-        for session_index in candidate_sessions:
-            similarity = self._cosine_similarity(
-                current_item_set=current_item_set,
-                session_index=session_index,
+        candidates = self._find_candidate_sessions(set(current_items))
+        neighbors = []
+        for session_index in candidates:
+            similarity = session_similarity(
+                current_items,
+                self.reference_session_sets[session_index],
+                self.session_weighting,
+                self.similarity,
             )
-
             if similarity > 0:
-                similarities.append((session_index, similarity))
+                neighbors.append((session_index, similarity))
 
-        similarities.sort(key=lambda x: x[1], reverse=True)
-        nearest_neighbors = similarities[: self.k]
-
-        for session_index, similarity in nearest_neighbors:
-            neighbor_items = self.reference_sessions[session_index]
-
-            for item_id in neighbor_items:
-                scores[item_id] += self._apply_popularity_weight(
-                    item_id=item_id,
-                    score=similarity,
-                )
-
+        neighbors.sort(key=lambda pair: (-pair[1], pair[0]))
+        item_scores = score_neighbors(
+            current_items,
+            (
+                (self.reference_session_sets[session_index], similarity)
+                for session_index, similarity in neighbors[: self.neighbor_size]
+            ),
+            self.score_weighting,
+        )
+        for item_id, score in item_scores.items():
+            scores[item_id] = score
         return scores
 
-    def _apply_popularity_weight(self, item_id: int, score: float) -> float:
-        if self.popularity_weight <= 0.0:
-            return score
-
-        popularity = float(self.item_popularity[item_id].item())
-        return score / (popularity ** self.popularity_weight)
-
     def _find_candidate_sessions(self, current_item_set: set[int]) -> set[int]:
-        candidate_sessions = set()
-
+        candidates: set[int] = set()
         for item_id in current_item_set:
-            candidate_sessions.update(self.item_sessions.get(item_id, set()))
-
-        if self.sample_size > 0 and len(candidate_sessions) > self.sample_size:
-            candidate_sessions = set(
+            candidates.update(self.item_sessions.get(item_id, set()))
+        if self.sample_size > 0 and len(candidates) > self.sample_size:
+            return set(
                 sorted(
-                    candidate_sessions,
-                    key=lambda session_index: (
-                        self.reference_session_timestamps[session_index],
-                        session_index,
+                    candidates,
+                    key=lambda index: (
+                        self.reference_session_timestamps[index],
+                        index,
                     ),
                     reverse=True,
                 )[: self.sample_size]
             )
+        return candidates
 
-        return candidate_sessions
 
-    def _cosine_similarity(
-        self,
-        current_item_set: set[int],
-        session_index: int,
-    ) -> float:
-        neighbor_item_set = self.reference_session_sets[session_index]
-
-        if not neighbor_item_set:
-            return 0.0
-
-        intersection_size = len(current_item_set.intersection(neighbor_item_set))
-
-        if intersection_size == 0:
-            return 0.0
-
-        denominator = math.sqrt(len(current_item_set) * len(neighbor_item_set))
-
-        return intersection_size / denominator
+# Temporary compatibility alias for existing experiment scripts/result pipelines.
+VSKNNRecBole = VSKNN

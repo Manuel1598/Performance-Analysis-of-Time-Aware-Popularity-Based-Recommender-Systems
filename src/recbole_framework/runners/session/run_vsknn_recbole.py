@@ -6,7 +6,7 @@ from recbole.data import create_dataset, data_preparation
 from recbole.trainer import Trainer
 
 from src.recbole_framework.custom_models.session.vsknn_recbole import (
-    VSKNNRecBole,
+    VSKNN,
 )
 
 
@@ -14,7 +14,7 @@ def main() -> None:
     project_root = Path(__file__).resolve().parents[4]
 
     config_dict = {
-        "model": VSKNNRecBole,
+        "model": VSKNN,
         "dataset": "yoochoose_recbole_sample",
         "data_path": str(project_root / "data" / "recbole"),
         "USER_ID_FIELD": "user_id",
@@ -35,8 +35,12 @@ def main() -> None:
             "order": "TO",
             "mode": "full",
         },
-        "vsknn_k": 100,
-        "vsknn_sample_size": 500,
+        "neighbor_size": 100,
+        "sample_size": 500,
+        "sampling": "recent",
+        "similarity": "vec",
+        "session_weighting": "div",
+        "score_weighting": "div",
         "seed": 42,
         "reproducibility": True,
         "device": "cpu",
@@ -47,7 +51,7 @@ def main() -> None:
     print("RecBole data path:", project_root / "data" / "recbole")
 
     print("Creating RecBole config...")
-    config = Config(model=VSKNNRecBole, config_dict=config_dict)
+    config = Config(model=VSKNN, config_dict=config_dict)
 
     print("Creating RecBole dataset...")
     dataset = create_dataset(config)
@@ -56,8 +60,8 @@ def main() -> None:
     print("Preparing train/valid/test data...")
     train_data, valid_data, test_data = data_preparation(config, dataset)
 
-    print("Initializing VSKNNSequentialRecBole model...")
-    model = VSKNNRecBole(config, train_data.dataset).to(config["device"])
+    print("Initializing VSKNN model...")
+    model = VSKNN(config, train_data.dataset).to(config["device"])
     print(model)
 
     print("Creating trainer...")

@@ -5,7 +5,12 @@ __pycache__/
 
 # Local environments
 .venv/
+.venv-vsknn/
+.python311/
 venv/
+
+# Local runtime installers
+python-*-amd64.exe
 
 # IDE-local files
 .idea/
@@ -19,6 +24,7 @@ data/*.zip
 # Experiment outputs
 results_prototype/
 src/**/log_tensorboard/
+log_tensorboard/
 src/**/artifacts/
 *.pth
 *.zip
