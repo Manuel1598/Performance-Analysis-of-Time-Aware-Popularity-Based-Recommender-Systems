@@ -74,6 +74,15 @@ python -m src.recbole_framework.runners.session.run_vsknn_recbole --all-samples
 Per-dataset files and the combined sample summary are written to
 `recbole_results/vsknn_audited/`.
 
+Run or resume the compact audited-VSKNN tuning grid with:
+
+```powershell
+python -m src.recbole_framework.tuning.tune_vsknn_audited
+```
+
+The runner reuses validated baseline rows, saves after every configuration, and
+skips successful run IDs when restarted.
+
 The structured evaluation report is generated here:
 
 - `recbole_results/tuning_results/analysis_results/structured_report/recbole_structured_evaluation.md`

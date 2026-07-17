@@ -118,3 +118,45 @@ changed as follows:
 
 The large variation confirms that candidate overlap, rather than reference
 session count alone, determines how much the recency-merge optimization helps.
+
+## Compact audited-parameter tuning
+
+A one-factor-at-a-time grid was evaluated around the reference configuration.
+This design tests the individual effect of each important VSKNN choice without
+the cost and interpretation problems of a full Cartesian product.
+
+The nine configurations per dataset were:
+
+1. the validated `100/500/vec/div/div` baseline;
+2. `neighbor_size: 200`;
+3. `sample_size: 250`;
+4. `sample_size: 1000`;
+5. `similarity: cosine`;
+6. `session_weighting: same`;
+7. `session_weighting: quadratic`;
+8. `score_weighting: same`;
+9. `score_weighting: quadratic`.
+
+The three validated baseline rows were reused and 24 new runs were completed.
+All runs succeeded. Stable run IDs and incremental CSV writes make the process
+resumable; a second invocation correctly reported zero pending configurations.
+
+### Best configuration by MRR@10
+
+| Dataset | Neighbor size | Sample size | Similarity | Session weighting | Score weighting | Hit@10 | NDCG@10 | MRR@10 |
+| --- | ---: | ---: | --- | --- | --- | ---: | ---: | ---: |
+| Yoochoose sample | 100 | 500 | vec | div | quadratic | 0.5377 | 0.3478 | 0.2880 |
+| Globo sample | 100 | 1000 | vec | div | div | 0.3298 | 0.1341 | 0.0751 |
+| Adressa sample | 200 | 500 | vec | div | div | 0.4313 | 0.2312 | 0.1703 |
+
+Relative to each audited baseline, MRR@10 increases by 0.0013 on Yoochoose,
+0.0054 on Globo, and 0.0053 on Adressa. Yoochoose's MRR-optimal quadratic
+score decay slightly lowers Hit@10 (0.5387 to 0.5377), so the selected metric
+must be stated explicitly. Globo mainly benefits from a larger recent-session
+sample, while Adressa benefits from more final neighbors.
+
+Across every dataset, removing positional session weighting (`same`) reduced
+MRR. Vector multiplication also remained preferable to cosine for Globo and
+Adressa. These consistent observations support `vec` plus position-aware
+session weighting as defensible defaults, while neighborhood/sample sizes
+remain dataset-dependent.

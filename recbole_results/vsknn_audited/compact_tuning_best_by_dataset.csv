@@ -1,0 +1,4 @@
+model,dataset,seed,device,neighbor_size,sample_size,sampling,similarity,session_weighting,score_weighting,reference_sessions,runtime_seconds,hit@5,hit@10,ndcg@5,ndcg@10,mrr@5,mrr@10,run_id,status,source,error,logged_at
+VSKNN-audited,adressa_recbole_sample,42,cpu,200,500,recent,vec,div,div,,142.53,0.2885,0.4313,0.1853,0.2312,0.1515,0.1703,adressa_recbole_sample::e0f1f7c33df0,success,compact_tuning,,2026-07-17T14:30:07
+VSKNN-audited,globo_recbole_sample,42,cpu,100,1000,recent,vec,div,div,,143.85,0.1833,0.3298,0.0867,0.1341,0.0555,0.0751,globo_recbole_sample::f243e650f371,success,compact_tuning,,2026-07-17T14:19:23
+VSKNN-audited,yoochoose_recbole_sample,42,cpu,100,500,recent,vec,div,quadratic,,190.56,0.4417,0.5377,0.3165,0.3478,0.275,0.288,yoochoose_recbole_sample::7b5a13f5d310,success,compact_tuning,,2026-07-17T14:13:24

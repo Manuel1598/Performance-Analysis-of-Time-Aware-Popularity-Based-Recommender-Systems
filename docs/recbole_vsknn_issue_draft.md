@@ -63,6 +63,18 @@ The identical smoke-test configuration also completed on Globo and Adressa:
 The mixed cross-domain change relative to the former SKNN-like implementation
 motivates reporting the full benchmark rather than selecting only Yoochoose.
 
+A compact one-factor-at-a-time tuning study (nine configurations per dataset,
+including the validated baseline) subsequently completed without failures. The
+best MRR@10 configurations were:
+
+| Dataset | Key change from default | Hit@10 | NDCG@10 | MRR@10 |
+| --- | --- | ---: | ---: | ---: |
+| Yoochoose sample | `score_weighting: quadratic` | 0.5377 | 0.3478 | 0.2880 |
+| Globo sample | `sample_size: 1000` | 0.3298 | 0.1341 | 0.0751 |
+| Adressa sample | `neighbor_size: 200` | 0.4313 | 0.2312 | 0.1703 |
+
+The complete grid and stable run IDs are retained as reproducibility artifacts.
+
 ## Design question for maintainers
 
 VSKNN has no gradient-based training phase. Is the preferred upstream design to

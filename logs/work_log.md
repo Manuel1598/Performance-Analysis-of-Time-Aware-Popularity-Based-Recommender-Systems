@@ -3649,3 +3649,137 @@ The optimized runtimes are now in a comparable range across all three samples.
 3. Regenerate the structured evaluation report from audited results.
 4. Open the prepared RecBole proposal issue and request maintainer guidance for
    the lifecycle of non-parametric models.
+
+---
+
+## 2026-07-17 - Compact Audited VSKNN Parameter Tuning
+
+### Goal
+
+Replace the obsolete tuning conclusions from the former SKNN-like
+implementation with a small, interpretable tuning study for the audited VSKNN
+algorithm. Only VSKNN had to be rerun; datasets, splits, seeds, GRU4Rec,
+popularity baselines, BPR, and unchanged VSTAN results were not recomputed.
+
+### Why a Compact Grid Was Used
+
+The previous VSKNN grid used legacy parameter names and included the
+thesis-specific popularity correction that is intentionally excluded from the
+upstream-faithful implementation. A full Cartesian product of every weighting
+choice would require many redundant runs and make it difficult to attribute
+changes to individual parameters.
+
+A one-factor-at-a-time design was therefore used around the validated baseline:
+
+```text
+neighbor_size: 100
+sample_size: 500
+sampling: recent
+similarity: vec
+session_weighting: div
+score_weighting: div
+```
+
+The compact grid contained the baseline plus eight variants:
+
+- `neighbor_size: 200`;
+- `sample_size: 250`;
+- `sample_size: 1000`;
+- `similarity: cosine`;
+- `session_weighting: same`;
+- `session_weighting: quadratic`;
+- `score_weighting: same`;
+- `score_weighting: quadratic`.
+
+### Resumable Runner
+
+Added:
+
+```text
+src/recbole_framework/tuning/tune_vsknn_audited.py
+```
+
+Run command:
+
+```powershell
+python -m src.recbole_framework.tuning.tune_vsknn_audited
+```
+
+The runner:
+
+- reuses the three already validated baseline results;
+- creates stable SHA-256-based run IDs;
+- writes the CSV after every configuration;
+- skips successful run IDs after restart;
+- records failures without losing other progress;
+- automatically exports the best MRR@10 row per dataset.
+
+The three baseline rows plus 24 new configurations produced 27 successful
+result rows. No run failed. A second invocation reported zero pending runs,
+confirming resume behavior.
+
+### Best MRR@10 Configuration per Dataset
+
+| Dataset | Neighbor size | Sample size | Similarity | Session weighting | Score weighting | Hit@10 | NDCG@10 | MRR@10 |
+| --- | ---: | ---: | --- | --- | --- | ---: | ---: | ---: |
+| Yoochoose sample | 100 | 500 | vec | div | quadratic | 0.5377 | 0.3478 | 0.2880 |
+| Globo sample | 100 | 1000 | vec | div | div | 0.3298 | 0.1341 | 0.0751 |
+| Adressa sample | 200 | 500 | vec | div | div | 0.4313 | 0.2312 | 0.1703 |
+
+### Change Relative to the Audited Baseline
+
+| Dataset | Baseline MRR@10 | Best MRR@10 | Absolute change |
+| --- | ---: | ---: | ---: |
+| Yoochoose sample | 0.2867 | 0.2880 | +0.0013 |
+| Globo sample | 0.0697 | 0.0751 | +0.0054 |
+| Adressa sample | 0.1650 | 0.1703 | +0.0053 |
+
+Yoochoose's MRR-optimal quadratic score decay slightly reduces Hit@10 from
+0.5387 to 0.5377 while improving NDCG@10 from 0.3470 to 0.3478. The result is
+therefore explicitly described as MRR-optimal rather than universally best.
+
+Globo benefits most from a larger recent candidate sample. Reducing the sample
+to 250 substantially lowers MRR@10 to 0.0592, while increasing it to 1000 raises
+MRR@10 to 0.0751.
+
+Adressa benefits from retaining 200 final neighbors, reaching MRR@10 0.1703.
+Using only 250 candidate sessions offers an efficiency-oriented alternative
+with MRR@10 0.1682 and a runtime of 82.03 seconds.
+
+### Cross-Dataset Interpretation
+
+- `session_weighting: same` reduced MRR on all three datasets, supporting
+  position-aware current-session weighting as a default.
+- cosine was not the best similarity on any dataset; `vec` remains the most
+  defensible reference default.
+- optimal neighborhood/sample capacity is domain-dependent.
+- larger candidate sets do not universally improve results: they help Globo,
+  provide only a small Yoochoose gain, and are weaker than more final neighbors
+  on Adressa.
+- parameter selection must state the optimization metric because MRR, Hit, and
+  runtime can prefer different configurations.
+
+### Output Files
+
+```text
+recbole_results/vsknn_audited/compact_tuning_results.csv
+recbole_results/vsknn_audited/compact_tuning_best_by_dataset.csv
+```
+
+### Validation
+
+- 23 automated algorithm, candidate-order, CLI, grid, run-ID, resume, and
+  best-selection tests passed before tuning;
+- all 24 new RecBole runs completed successfully;
+- baseline rows were not recomputed;
+- result selection was based on MRR@10, matching the thesis primary metric;
+- resume behavior was verified after completion.
+
+### Next Steps
+
+1. Use these compact-grid winners as the audited VSKNN sample results.
+2. Open the prepared official RecBole proposal issue.
+3. Ask maintainers whether the standard Trainer plus zero-loss parameter is
+   acceptable for a non-parametric model.
+4. Only if required for the thesis, run the selected configurations on full
+   datasets using consistent server hardware.
