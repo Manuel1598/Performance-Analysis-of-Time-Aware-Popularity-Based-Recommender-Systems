@@ -3919,6 +3919,72 @@ boundary, precomputed optimization equivalence, and invalid configuration
 handling. The previously completed RecBole adapter, runner, resume, tuning, and
 candidate-order tests remain documented in the VSKNN audit.
 
+### Why the VSKNN Tests Exist
+
+The test suite is not only a regression check. It provides evidence for four
+separate upstream claims:
+
+1. **Reference correctness:** similarity and item scoring follow the reference
+   formulas rather than the former SKNN-like behavior.
+2. **Fair evaluation:** only training rows can enter the neighbor index, so
+   validation and test targets cannot improve recommendations indirectly.
+3. **Optimization equivalence:** precomputation and lazy candidate merging make
+   evaluation faster without changing candidate order or scores.
+4. **Reproducibility:** dataset selection, tuning grids, run IDs, incremental
+   saving, resume behavior, and winner selection behave deterministically.
+
+### Detailed Test Inventory and Results
+
+#### Algorithm and leakage tests (`tests/test_vsknn_core.py`)
+
+| Test | What happens and why it is needed | Result |
+| --- | --- | --- |
+| `test_div_weights_favor_recent_clicks` | Calculates `div` weights for three ordered clicks and checks `1/3, 2/3, 1`; prevents loss or reversal of VSKNN's defining position weighting. | Passed (rerun) |
+| `test_vec_similarity_matches_reference_formula` | Compares vector-multiplication similarity with a hand-calculated overlap; proves the implementation is VSKNN rather than unweighted cosine SKNN. | Passed (rerun) |
+| `test_precomputed_similarity_is_identical` | Compares direct similarity with the optimized precomputed-weight path; ensures optimization cannot change similarities. | Passed (rerun) |
+| `test_cosine_similarity_matches_weighted_formula` | Checks optional weighted cosine against a manual norm calculation; prevents incorrect normalization. | Passed (rerun) |
+| `test_score_decay_uses_most_recent_shared_click` | Moves the shared click through three recency positions and checks its decay; protects the reference neighbor-scoring behavior. | Passed (rerun) |
+| `test_neighbor_item_scores_match_hand_calculation` | Aggregates two known neighbors and checks final item scores; verifies output scores, not only intermediate similarities. | Passed (rerun) |
+| `test_precomputed_score_decay_and_scores_are_identical` | Compares direct scoring with precomputed item-step scoring; proves the scoring optimization preserves behavior. | Passed (rerun) |
+| `test_augmented_rows_are_collapsed_per_session` | Supplies multiple RecBole prefix-target rows and expects one longest reconstructed session; prevents longer sessions being duplicated and over-weighted. | Passed (rerun) |
+| `test_only_passed_training_rows_can_enter_reference_sessions` | Builds from a training row and checks that a later validation target is absent; directly guards against split leakage. | Passed (rerun) |
+| `test_duplicate_click_uses_last_position` | Repeats an item and verifies that its latest position determines its weight; matches recency semantics for repeated clicks. | Passed (rerun) |
+| `test_invalid_strategy_is_rejected` | Passes an unknown weighting and expects `ValueError`; prevents silent unintended algorithm behavior. | Passed (rerun) |
+
+#### Candidate-selection tests (`tests/test_vsknn_model.py`)
+
+| Test | What happens and why it is needed | Result |
+| --- | --- | --- |
+| `test_recency_merge_matches_global_union_sort` | Compares lazy merging with the original global union/sort order; shows the main runtime optimization preserves candidate ranking. | Passed (project environment) |
+| `test_duplicate_sessions_are_returned_once` | Uses overlapping item-session lists and checks uniqueness; prevents duplicate neighbor influence. | Passed (project environment) |
+| `test_zero_sample_size_returns_all_candidates_in_recency_order` | Disables the sample limit and checks the complete order; defines the unlimited-sampling edge case. | Passed (project environment) |
+| `test_unknown_items_return_no_candidates` | Queries an unseen item and expects no candidates; prevents crashes or unrelated candidates. | Passed (project environment) |
+
+#### Runner/CLI tests (`tests/test_vsknn_runner.py`)
+
+| Test | What happens and why it is needed | Result |
+| --- | --- | --- |
+| `test_default_dataset_is_yoochoose_sample` | Parses empty arguments and checks the documented default; keeps the smoke-test command reproducible. | Passed (project environment) |
+| `test_each_session_dataset_is_accepted` | Parses every supported session dataset; prevents documented datasets being unusable through the runner. | Passed (project environment) |
+| `test_all_samples_contains_three_domains` | Checks inclusion of Yoochoose, Globo, and Adressa; protects cross-domain evaluation coverage. | Passed (project environment) |
+| `test_dataset_and_all_samples_are_mutually_exclusive` | Supplies conflicting CLI modes and expects failure; prevents ambiguous or duplicated execution. | Passed (project environment) |
+
+#### Tuning and resume tests (`tests/test_vsknn_tuning.py`)
+
+| Test | What happens and why it is needed | Result |
+| --- | --- | --- |
+| `test_compact_grid_has_unique_baseline_plus_eight_variants` | Checks one baseline, eight one-factor variants, and nine unique run IDs; prevents missing or duplicate configurations. | Passed (project environment) |
+| `test_run_id_is_stable_across_dictionary_order` | Reorders configuration keys and expects the same ID; makes resume/deduplication independent of serialization order. | Passed (project environment) |
+| `test_best_selection_uses_mrr_per_dataset_and_ignores_failures` | Mixes successful and failed rows and selects the highest successful MRR@10 per dataset; prevents invalid winner reporting. | Passed (project environment) |
+| `test_save_result_appends_for_resume` | Saves two results incrementally and reads both back; protects completed work after interruption. | Passed (project environment) |
+
+All 23 tests passed in the dependency-complete project environment used during
+the audit and tuning work. On 2026-07-17, the 11 framework-independent tests
+were rerun and passed again. The bundled documentation runtime does not include
+PyTorch or RecBole, so the remaining 12 tests could not be re-imported there;
+this is a missing-dependency limitation, not a failing assertion. They must be
+rerun in the clean RecBole fork before the later pull request is opened.
+
 ### Next External Action
 
 Publish the contents of `docs/recbole_vsknn_issue_draft.md` in the official
