@@ -3865,3 +3865,64 @@ python -m src.recbole_framework.analysis.build_best_model_overview
 The generator produced exactly 26 model/dataset rows and five dataset winners.
 Two additional automated tests verified malformed-row filtering and the
 MRR@10/runtime tie-breaking rule.
+
+## 2026-07-17: VSKNN Upstream Submission Package Finalized
+
+### Scope Decision
+
+The first official RecBole proposal will contain **VSKNN only**. VSTAN is
+explicitly deferred to a separate future audit and contribution. This keeps the
+proposal focused and ensures that every submitted component has completed the
+same paper/reference audit, leakage review, optimization validation, and test
+preparation.
+
+### Prepared Material
+
+The ready-to-paste proposal is stored in:
+
+```text
+docs/recbole_vsknn_issue_draft.md
+```
+
+A complete two-phase submission checklist was added:
+
+```text
+docs/recbole_vsknn_upstream_checklist.md
+```
+
+It separates the externally visible proposal issue from the later pull request,
+defines the exact files/components intended for upstream, records the local
+evidence, and lists the final acceptance checks.
+
+### Intended Upstream Scope
+
+- one official `VSKNN` sequential model;
+- reference-faithful similarity, position weighting, and neighbor scoring;
+- training-only reconstruction of augmented sessions;
+- deterministic recent candidate sampling and optimized lazy merging;
+- `predict` and `full_sort_predict`;
+- default model YAML;
+- RecBole user documentation and model-index entry;
+- deterministic algorithm, leakage, and integration tests.
+
+Thesis runners, result artifacts, dataset scripts, popularity corrections,
+legacy parameter aliases, the compatibility class alias, and VSTAN are excluded.
+The exact Trainer/lifecycle integration remains intentionally open until the
+RecBole maintainers answer the design question in the proposal issue.
+
+### Current Validation
+
+The 11 framework-independent VSKNN correctness tests were rerun successfully.
+They cover hand-calculated similarities and scores, all core weighting behavior,
+duplicate clicks, augmented-session reconstruction, the training-only leakage
+boundary, precomputed optimization equivalence, and invalid configuration
+handling. The previously completed RecBole adapter, runner, resume, tuning, and
+candidate-order tests remain documented in the VSKNN audit.
+
+### Next External Action
+
+Publish the contents of `docs/recbole_vsknn_issue_draft.md` in the official
+RecBole issue tracker. This is deliberately not automated without explicit user
+approval because opening the issue creates a public external artifact. After
+maintainer feedback, prepare the minimal RecBole fork/PR using only the scope
+listed above.
