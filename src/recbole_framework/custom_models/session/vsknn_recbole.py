@@ -1,6 +1,7 @@
 """RecBole adapter for Vector Multiplication Session-based kNN (VSKNN)."""
 
 from collections import defaultdict
+import heapq
 from typing import Optional
 
 import torch
@@ -12,8 +13,10 @@ from .vsknn_core import (
     SIMILARITIES,
     WEIGHTING_FUNCTIONS,
     collapse_augmented_sessions,
-    score_neighbors,
-    session_similarity,
+    position_weights,
+    recent_item_steps,
+    score_neighbors_from_steps,
+    weighted_session_similarity,
 )
 
 
@@ -54,6 +57,7 @@ class VSKNN(SequentialRecommender):
         self.reference_session_sets: list[set[int]] = []
         self.reference_session_timestamps: list[float] = []
         self.item_sessions: dict[int, set[int]] = defaultdict(set)
+        self.item_sessions_by_recency: dict[int, list[int]] = {}
         self._build_reference_sessions(dataset)
 
     @staticmethod
@@ -111,6 +115,15 @@ class VSKNN(SequentialRecommender):
             for item_id in item_set:
                 self.item_sessions[item_id].add(session_index)
 
+        recency_key = lambda index: (
+            self.reference_session_timestamps[index],
+            index,
+        )
+        self.item_sessions_by_recency = {
+            item_id: sorted(session_indices, key=recency_key, reverse=True)
+            for item_id, session_indices in self.item_sessions.items()
+        }
+
     def forward(self, interaction):
         return self.predict(interaction)
 
@@ -153,20 +166,20 @@ class VSKNN(SequentialRecommender):
             return scores
 
         candidates = self._find_candidate_sessions(set(current_items))
+        weights = position_weights(current_items, self.session_weighting)
         neighbors = []
         for session_index in candidates:
-            similarity = session_similarity(
-                current_items,
+            similarity = weighted_session_similarity(
+                weights,
                 self.reference_session_sets[session_index],
-                self.session_weighting,
                 self.similarity,
             )
             if similarity > 0:
                 neighbors.append((session_index, similarity))
 
         neighbors.sort(key=lambda pair: (-pair[1], pair[0]))
-        item_scores = score_neighbors(
-            current_items,
+        item_scores = score_neighbors_from_steps(
+            recent_item_steps(current_items),
             (
                 (self.reference_session_sets[session_index], similarity)
                 for session_index, similarity in neighbors[: self.neighbor_size]
@@ -177,21 +190,29 @@ class VSKNN(SequentialRecommender):
             scores[item_id] = score
         return scores
 
-    def _find_candidate_sessions(self, current_item_set: set[int]) -> set[int]:
-        candidates: set[int] = set()
-        for item_id in current_item_set:
-            candidates.update(self.item_sessions.get(item_id, set()))
-        if self.sample_size > 0 and len(candidates) > self.sample_size:
-            return set(
-                sorted(
-                    candidates,
-                    key=lambda index: (
-                        self.reference_session_timestamps[index],
-                        index,
-                    ),
-                    reverse=True,
-                )[: self.sample_size]
-            )
+    def _find_candidate_sessions(self, current_item_set: set[int]) -> list[int]:
+        session_lists = [
+            self.item_sessions_by_recency[item_id]
+            for item_id in current_item_set
+            if item_id in self.item_sessions_by_recency
+        ]
+        if not session_lists:
+            return []
+
+        recency_key = lambda index: (
+            self.reference_session_timestamps[index],
+            index,
+        )
+        merged = heapq.merge(*session_lists, key=recency_key, reverse=True)
+        candidates: list[int] = []
+        seen: set[int] = set()
+        for session_index in merged:
+            if session_index in seen:
+                continue
+            seen.add(session_index)
+            candidates.append(session_index)
+            if self.sample_size > 0 and len(candidates) >= self.sample_size:
+                break
         return candidates
 
 

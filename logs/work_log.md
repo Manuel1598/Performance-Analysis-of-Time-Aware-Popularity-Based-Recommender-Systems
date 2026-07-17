@@ -3600,12 +3600,52 @@ reference sessions alone.
 - repeated Yoochoose execution reproduced the same ranking metrics;
 - result files were written separately to prevent accidental overwrites.
 
+### Performance Profiling and Optimization
+
+A deterministic profile was run on the first 2,000 Adressa test queries.
+
+Before optimization:
+
+- elapsed time: 43.321 seconds;
+- throughput: 46.17 queries per second;
+- 36.734 seconds were spent in candidate-session selection;
+- global candidate sorting generated about 59 million key-function calls.
+
+The bottleneck was the construction and complete recency sort of the union of
+all sessions containing any current-session item. Only the newest 500 sessions
+were subsequently used, so most sorting work was discarded.
+
+The implementation was changed to:
+
+- sort each item's session list by recency once during index construction;
+- lazily merge relevant sorted lists with `heapq.merge`;
+- stop after `sample_size` unique candidate sessions;
+- prepare position weights once per query;
+- prepare reverse item positions once per query for score decay.
+
+After optimization, the identical 2,000 queries required 8.076 seconds or
+247.65 queries per second. This is a 5.36x microbenchmark speedup.
+
+Four candidate-order tests and two precomputation-equivalence tests were added.
+All 19 unit and CLI tests passed. Full RecBole reruns produced exactly the same
+Hit, NDCG, and MRR values as before optimization.
+
+### Optimized End-to-End Runtime
+
+| Dataset | Before (s) | After (s) | Reduction | Speedup |
+| --- | ---: | ---: | ---: | ---: |
+| Yoochoose sample | 169.39 | 134.90 | 20.4% | 1.26x |
+| Globo sample | 218.84 | 121.94 | 44.3% | 1.79x |
+| Adressa sample | 2,002.70 | 147.53 | 92.6% | 13.57x |
+
+Adressa benefits most because its query candidate unions were especially large.
+The optimized runtimes are now in a comparable range across all three samples.
+
 ### Next Steps
 
-1. Profile and optimize candidate scoring before full-dataset tuning.
-2. Update the VSKNN tuning grid to use the audited parameter names and weighting
+1. Update the VSKNN tuning grid to use the audited parameter names and weighting
    dimensions.
-3. Run the revised grid on consistent server hardware.
-4. Regenerate the structured evaluation report from audited results.
-5. Open the prepared RecBole proposal issue and request maintainer guidance for
+2. Run the revised grid on consistent server hardware.
+3. Regenerate the structured evaluation report from audited results.
+4. Open the prepared RecBole proposal issue and request maintainer guidance for
    the lifecycle of non-parametric models.

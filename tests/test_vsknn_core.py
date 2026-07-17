@@ -4,9 +4,13 @@ import unittest
 from src.recbole_framework.custom_models.session.vsknn_core import (
     collapse_augmented_sessions,
     position_weights,
+    recent_item_steps,
     score_decay,
+    score_decay_from_steps,
     score_neighbors,
+    score_neighbors_from_steps,
     session_similarity,
+    weighted_session_similarity,
 )
 
 
@@ -17,6 +21,15 @@ class VSKNNCoreTests(unittest.TestCase):
     def test_vec_similarity_matches_reference_formula(self):
         similarity = session_similarity([10, 20, 30], {20, 30, 40}, "div", "vec")
         self.assertAlmostEqual(similarity, (2 / 3 + 1.0) / 3)
+
+    def test_precomputed_similarity_is_identical(self):
+        current = [10, 20, 30]
+        neighbor = {20, 30, 40}
+        expected = session_similarity(current, neighbor, "div", "vec")
+        actual = weighted_session_similarity(
+            position_weights(current, "div"), neighbor, "vec"
+        )
+        self.assertEqual(actual, expected)
 
     def test_cosine_similarity_matches_weighted_formula(self):
         similarity = session_similarity([10, 20], {20, 30}, "div", "cosine")
@@ -38,6 +51,19 @@ class VSKNNCoreTests(unittest.TestCase):
         self.assertAlmostEqual(scores[10], 0.3)
         self.assertAlmostEqual(scores[40], 0.9)
         self.assertAlmostEqual(scores[50], 0.3)
+
+    def test_precomputed_score_decay_and_scores_are_identical(self):
+        current = [10, 20, 10, 30]
+        neighbors = [({30, 40}, 0.6), ({10, 40, 50}, 0.9)]
+        steps = recent_item_steps(current)
+        self.assertEqual(
+            score_decay_from_steps(steps, {10, 40}, "div"),
+            score_decay(current, {10, 40}, "div"),
+        )
+        self.assertEqual(
+            score_neighbors_from_steps(steps, neighbors, "div"),
+            score_neighbors(current, neighbors, "div"),
+        )
 
     def test_augmented_rows_are_collapsed_per_session(self):
         rows = [

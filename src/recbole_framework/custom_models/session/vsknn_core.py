@@ -50,6 +50,20 @@ def session_similarity(
         return 0.0
 
     weights = position_weights(current_items, weighting)
+    return weighted_session_similarity(weights, neighbor_items, similarity)
+
+
+def weighted_session_similarity(
+    weights: dict[int, float],
+    neighbor_items: set[int],
+    similarity: str = "vec",
+) -> float:
+    """Compute similarity from weights prepared once for the current session."""
+    if similarity not in SIMILARITIES:
+        raise ValueError(f"Unsupported similarity: {similarity}")
+    if not weights or not neighbor_items:
+        return 0.0
+
     overlap = set(weights).intersection(neighbor_items)
     numerator = sum(weights[item_id] for item_id in overlap)
 
@@ -89,6 +103,35 @@ def score_decay(
     return 1.0 / (step * step)
 
 
+def recent_item_steps(current_items: Sequence[int]) -> dict[int, int]:
+    """Map each item to its distance from the end (last occurrence wins)."""
+    steps: dict[int, int] = {}
+    for step, item_id in enumerate(reversed(current_items), start=1):
+        steps.setdefault(item_id, step)
+    return steps
+
+
+def score_decay_from_steps(
+    item_steps: dict[int, int], neighbor_items: set[int], weighting: str
+) -> float:
+    """Compute score decay from precomputed current-session recency steps."""
+    if weighting not in WEIGHTING_FUNCTIONS:
+        raise ValueError(f"Unsupported score weighting: {weighting}")
+    shared_steps = (item_steps[item] for item in neighbor_items if item in item_steps)
+    step = min(shared_steps, default=None)
+    if step is None:
+        return 0.0
+    if weighting == "same":
+        return 1.0
+    if weighting == "linear":
+        return 1.0 - 0.1 * step if step <= 100 else 0.0
+    if weighting == "div":
+        return 1.0 / step
+    if weighting == "log":
+        return 1.0 / math.log10(step + 1.7)
+    return 1.0 / (step * step)
+
+
 def score_neighbors(
     current_items: Sequence[int],
     neighbors: Iterable[tuple[set[int], float]],
@@ -99,6 +142,22 @@ def score_neighbors(
     for neighbor_items, similarity in neighbors:
         contribution = float(similarity) * score_decay(
             current_items, neighbor_items, weighting
+        )
+        for item_id in neighbor_items:
+            scores[item_id] = scores.get(item_id, 0.0) + contribution
+    return scores
+
+
+def score_neighbors_from_steps(
+    item_steps: dict[int, int],
+    neighbors: Iterable[tuple[set[int], float]],
+    weighting: str = "div",
+) -> dict[int, float]:
+    """Aggregate scores using current-session recency prepared once."""
+    scores: dict[int, float] = {}
+    for neighbor_items, similarity in neighbors:
+        contribution = float(similarity) * score_decay_from_steps(
+            item_steps, neighbor_items, weighting
         )
         for item_id in neighbor_items:
             scores[item_id] = scores.get(item_id, 0.0) + contribution

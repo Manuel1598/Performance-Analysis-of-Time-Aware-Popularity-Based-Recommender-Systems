@@ -83,9 +83,9 @@ run with the same seed and configuration.
 
 | Dataset | Hit@10 | NDCG@10 | MRR@10 | Reference sessions | Runtime (s) |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Yoochoose sample | 0.5387 | 0.3470 | 0.2867 | 126,496 | 169.39 |
-| Globo sample | 0.2916 | 0.1211 | 0.0697 | 175,715 | 218.84 |
-| Adressa sample | 0.4276 | 0.2259 | 0.1650 | 98,032 | 2,002.70 |
+| Yoochoose sample | 0.5387 | 0.3470 | 0.2867 | 126,496 | 134.90 |
+| Globo sample | 0.2916 | 0.1211 | 0.0697 | 175,715 | 121.94 |
+| Adressa sample | 0.4276 | 0.2259 | 0.1650 | 98,032 | 147.53 |
 
 Compared with the stored legacy `neighbor_size=100`, `sample_size=500` runs,
 the audited implementation improves all three primary metrics on Yoochoose and
@@ -93,7 +93,28 @@ Adressa. Globo decreases from Hit@10 0.3373, NDCG@10 0.1326, and MRR@10 0.0713.
 This mixed result shows that the correction is not merely a universal score
 increase and that multi-domain reporting is necessary.
 
-Adressa is a CPU runtime outlier despite having fewer reconstructed reference
-sessions. Candidate overlap and evaluation workload, not only session count,
-therefore determine the cost. Performance profiling is required before a large
-local hyperparameter grid or full-dataset run.
+### Performance optimization
+
+Profiling 2,000 Adressa test queries showed that the original audited adapter
+spent 36.73 of 43.32 seconds selecting recent candidates. It constructed a
+large union and globally sorted it for every query, producing about 59 million
+sort-key calls.
+
+The optimized adapter pre-sorts the session list for each item once and merges
+only the relevant lists until `sample_size` unique sessions have been found. It
+also prepares current-session position weights and reverse item positions once
+per query instead of once per candidate/neighbor.
+
+The same 2,000-query profile decreased from 43.321 to 8.076 seconds (5.36x),
+while 19 unit and regression tests confirmed identical candidate ordering and
+scores. Full sample metrics remained exactly unchanged. End-to-end runtimes
+changed as follows:
+
+| Dataset | Before (s) | After (s) | Reduction | Speedup |
+| --- | ---: | ---: | ---: | ---: |
+| Yoochoose sample | 169.39 | 134.90 | 20.4% | 1.26x |
+| Globo sample | 218.84 | 121.94 | 44.3% | 1.79x |
+| Adressa sample | 2,002.70 | 147.53 | 92.6% | 13.57x |
+
+The large variation confirms that candidate overlap, rather than reference
+session count alone, determines how much the recency-merge optimization helps.
