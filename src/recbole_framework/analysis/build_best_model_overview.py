@@ -85,6 +85,12 @@ def build_overview(project_root: Path) -> pd.DataFrame:
         pd.read_csv(tuning_dir / "session_full_tuning_results.csv")
     )
     session = session[session["model"].ne("VS-KNN")].copy()
+    if "vstan_popularity_weight" in session:
+        current_vstan_mask = (
+            session["model"].ne("VSTAN")
+            | session["vstan_popularity_weight"].notna()
+        )
+        session = session[current_vstan_mask].copy()
     session["scenario"] = "Session-based"
     session["implementation"] = "existing"
     session["result_source"] = "session_full_tuning_results.csv"

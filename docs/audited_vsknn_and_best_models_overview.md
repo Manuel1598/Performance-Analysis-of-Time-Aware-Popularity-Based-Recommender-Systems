@@ -54,8 +54,8 @@ performance-optimized, compact-tuned **audited VSKNN** rows.
 | Model | Hit@10 | NDCG@10 | MRR@10 | Runtime (s) |
 | --- | --- | --- | --- | --- |
 | GRU4Rec | 0.3614 | 0.1988 | 0.1493 | 27.36 |
-| VSTAN | 0.3644 | 0.1482 | 0.0831 | 287.73 |
 | VSKNN | 0.3298 | 0.1341 | 0.0751 | 143.85 |
+| VSTAN | 0.2361 | 0.0981 | 0.0563 | 340.12 |
 | DecayPop | 0.0626 | 0.0316 | 0.0224 | 8.57 |
 | MostPop | 0.0626 | 0.0316 | 0.0224 | 6.93 |
 | RecentPop | 0.0626 | 0.0316 | 0.0224 | 6.81 |
@@ -67,7 +67,7 @@ performance-optimized, compact-tuned **audited VSKNN** rows.
 | Model | Hit@10 | NDCG@10 | MRR@10 | Runtime (s) |
 | --- | --- | --- | --- | --- |
 | VSKNN | 0.5377 | 0.3478 | 0.2880 | 190.56 |
-| VSTAN | 0.5334 | 0.3384 | 0.2773 | 541.25 |
+| VSTAN | 0.4956 | 0.3221 | 0.2676 | 581.31 |
 | GRU4Rec | 0.4818 | 0.3027 | 0.2469 | 32.13 |
 | DecayPop | 0.0216 | 0.0115 | 0.0084 | 8.91 |
 | MostPop | 0.0215 | 0.0112 | 0.0080 | 7.25 |
