@@ -4,7 +4,9 @@ This runner replaces the exploratory workflow that stored a test result for
 every hyperparameter configuration. During the tuning phase, RecBole's
 ``Trainer.fit`` returns the best validation result and the test loader is never
 evaluated. During the final phase, one configuration per model and dataset is
-selected by validation MRR@10, retrained, and evaluated once on the test split.
+selected by validation MRR@10 and frozen. BPR and GRU4Rec are then refitted with
+three seeds; deterministic models are refitted once. Each resulting model is
+evaluated once on the test split.
 
 Historical result files are left unchanged. New files are written below
 ``recbole_results/validation_first`` and every row records the evaluated split.
@@ -31,6 +33,7 @@ from recbole.data import create_dataset, data_preparation
 from recbole.model.general_recommender import BPR
 from recbole.model.sequential_recommender import GRU4Rec
 from recbole.trainer import Trainer
+from recbole.utils import init_seed
 
 from src.recbole_framework.custom_models.session.popularity_recbole import (
     SessionDecayPopRecBole,
@@ -48,8 +51,22 @@ from tools.measure_selected_session_beyond_accuracy import beyond_accuracy_metri
 OUTPUT_DIR = PROJECT_ROOT / "recbole_results" / "validation_first"
 VALIDATION_FILE = OUTPUT_DIR / "validation_trials.csv"
 FINAL_TEST_FILE = OUTPUT_DIR / "final_test_results.csv"
-PROTOCOL_VERSION = "validation_first_v2"
+FINAL_TEST_SUMMARY_FILE = OUTPUT_DIR / "final_test_summary.csv"
+PROTOCOL_VERSION = "validation_first_v6"
 RANDOM_SEARCH_BUDGET = 12
+FINAL_EVALUATION_SEEDS = (42, 43, 44)
+STOCHASTIC_MODELS = {"BPR", "GRU4Rec"}
+FINAL_AGGREGATE_METRICS = (
+    "hit@5",
+    "hit@10",
+    "ndcg@5",
+    "ndcg@10",
+    "mrr@5",
+    "mrr@10",
+    "coverage@10",
+    "avg_recommendation_popularity@10",
+    "recommendation_frequency_gini@10",
+)
 
 TOPN_DATASETS = ["movielens_recbole", "amazon_recbole"]
 SESSION_DATASETS = [
@@ -108,6 +125,8 @@ def topn_grid(model_name: str) -> list[dict]:
                 "embedding_size": embedding_size,
                 "learning_rate": learning_rate,
                 "epochs": 50,
+                "train_batch_size": 2048,
+                "eval_batch_size": 2048,
                 "train_neg_sample_args": {
                     "distribution": "uniform",
                     "sample_num": 1,
@@ -206,7 +225,7 @@ def session_grid(model_name: str) -> list[dict]:
             "loss_type": "CE",
             "train_neg_sample_args": None,
             "train_batch_size": 2048,
-            "eval_batch_size": 2048,
+            "eval_batch_size": 1024,
         }
         candidates = [
             {
@@ -217,14 +236,15 @@ def session_grid(model_name: str) -> list[dict]:
                 "num_layers": 1,
                 "loss_type": "CE",
                 "train_neg_sample_args": None,
-                "train_batch_size": 2048,
-                "eval_batch_size": 2048,
+                "train_batch_size": train_batch_size,
+                "eval_batch_size": 1024,
             }
-            for hidden_size, learning_rate, dropout, epochs in product(
+            for hidden_size, learning_rate, dropout, epochs, train_batch_size in product(
                 [64, 128, 256, 512],
                 [0.0001, 0.0005, 0.001, 0.003],
                 [0.0, 0.1, 0.2, 0.4],
                 [10, 20, 30],
+                [512, 1024, 2048],
             )
         ]
         return fixed_budget_sample(
@@ -250,6 +270,7 @@ def build_config(
     updates: dict,
     device: str,
     checkpoint_dir: Path | None = None,
+    seed: int = 42,
 ) -> Config:
     config_dict = {
         "model": model_class,
@@ -270,7 +291,7 @@ def build_config(
             "order": "TO",
             "mode": "full",
         },
-        "seed": 42,
+        "seed": seed,
         "reproducibility": True,
         "device": device,
         "show_progress": False,
@@ -346,8 +367,10 @@ def run_validation_trial(
         config = build_config(
             scenario, model_class, dataset_name, updates, device
         )
+        init_seed(config["seed"], config["reproducibility"])
         dataset = create_dataset(config)
         train_data, valid_data, _ = data_preparation(config, dataset)
+        init_seed(config["seed"], config["reproducibility"])
         model = model_class(config, train_data.dataset).to(config["device"])
         trainer = Trainer(config, model)
         best_valid_score, best_valid_result = trainer.fit(
@@ -483,18 +506,33 @@ def ensure_tuning_complete(
         )
 
 
-def final_test_id(scenario: str, dataset: str, model: str) -> str:
-    return "::".join([PROTOCOL_VERSION, "test", scenario, dataset, model])
+def final_seeds(model_name: str) -> tuple[int, ...]:
+    if model_name in STOCHASTIC_MODELS:
+        return FINAL_EVALUATION_SEEDS
+    return (FINAL_EVALUATION_SEEDS[0],)
 
 
-def run_final_test(row: pd.Series, device: str) -> dict:
+def final_test_id(scenario: str, dataset: str, model: str, seed: int) -> str:
+    return "::".join(
+        [PROTOCOL_VERSION, "test", scenario, dataset, model, f"seed={seed}"]
+    )
+
+
+def run_final_test(row: pd.Series, device: str, seed: int) -> dict:
     scenario = str(row["scenario"])
     dataset_name = str(row["dataset"])
     model_name = str(row["model"])
     updates = json.loads(str(row["config_json"]))
     model_class = (TOPN_MODELS if scenario == "topn" else SESSION_MODELS)[model_name]
-    identifier = final_test_id(scenario, dataset_name, model_name)
-    checkpoint_dir = OUTPUT_DIR / "checkpoints" / scenario / dataset_name / model_name
+    identifier = final_test_id(scenario, dataset_name, model_name, seed)
+    checkpoint_dir = (
+        OUTPUT_DIR
+        / "checkpoints"
+        / scenario
+        / dataset_name
+        / model_name
+        / f"seed_{seed}"
+    )
     started = time.perf_counter()
     try:
         config = build_config(
@@ -504,19 +542,30 @@ def run_final_test(row: pd.Series, device: str) -> dict:
             updates,
             device,
             checkpoint_dir=checkpoint_dir,
+            seed=seed,
         )
+        data_preparation_started = time.perf_counter()
+        init_seed(config["seed"], config["reproducibility"])
         dataset = create_dataset(config)
         train_data, valid_data, test_data = data_preparation(config, dataset)
+        data_preparation_runtime = time.perf_counter() - data_preparation_started
+
+        init_seed(config["seed"], config["reproducibility"])
         model = model_class(config, train_data.dataset).to(config["device"])
         trainer = Trainer(config, model)
+        training_started = time.perf_counter()
         best_valid_score, best_valid_result = trainer.fit(
             train_data,
             valid_data,
             saved=True,
             verbose=False,
         )
+        training_runtime = time.perf_counter() - training_started
+
         load_locally_created_checkpoint(trainer, model, config["device"])
+        evaluation_started = time.perf_counter()
         test_result = dict(trainer.evaluate(test_data, load_best_model=False))
+        evaluation_runtime = time.perf_counter() - evaluation_started
         additional_metrics = beyond_accuracy_metrics(
             model, test_data, train_data, config, top_k=10
         )
@@ -528,12 +577,16 @@ def run_final_test(row: pd.Series, device: str) -> dict:
             "scenario": scenario,
             "dataset": dataset_name,
             "model": model_name,
+            "seed": seed,
             "device": device,
             "selection_valid_mrr@10": row["valid_mrr@10"],
             "refit_best_valid_score": best_valid_score,
             **prefixed_metrics("refit_valid", best_valid_result),
             **test_result,
             **additional_metrics,
+            "data_preparation_runtime_seconds": round(data_preparation_runtime, 2),
+            "training_runtime_seconds": round(training_runtime, 2),
+            "evaluation_runtime_seconds": round(evaluation_runtime, 2),
             "runtime_seconds": round(time.perf_counter() - started, 2),
             "config_json": serialise_config(updates),
             "status": "success",
@@ -548,6 +601,7 @@ def run_final_test(row: pd.Series, device: str) -> dict:
             "scenario": scenario,
             "dataset": dataset_name,
             "model": model_name,
+            "seed": seed,
             "device": device,
             "selection_valid_mrr@10": row["valid_mrr@10"],
             "runtime_seconds": round(time.perf_counter() - started, 2),
@@ -557,32 +611,96 @@ def run_final_test(row: pd.Series, device: str) -> dict:
         }
 
 
+def build_final_test_summary(frame: pd.DataFrame) -> pd.DataFrame:
+    rows: list[dict] = []
+    group_columns = ["scenario", "dataset", "model"]
+    for (scenario, dataset, model), group in frame.groupby(
+        group_columns, sort=True
+    ):
+        expected_seeds = final_seeds(str(model))
+        completed_seeds = sorted(set(pd.to_numeric(group["seed"]).astype(int)))
+        row = {
+            "protocol_version": PROTOCOL_VERSION,
+            "scenario": scenario,
+            "dataset": dataset,
+            "model": model,
+            "device": ",".join(sorted(set(group["device"].astype(str)))),
+            "seed_count": len(completed_seeds),
+            "seeds": ",".join(str(seed) for seed in completed_seeds),
+            "expected_seed_count": len(expected_seeds),
+            "status": (
+                "complete"
+                if completed_seeds == list(expected_seeds)
+                else "incomplete"
+            ),
+            "config_json": str(group.iloc[0]["config_json"]),
+        }
+        for metric in FINAL_AGGREGATE_METRICS:
+            values = (
+                pd.to_numeric(group[metric], errors="coerce").dropna()
+                if metric in group.columns
+                else pd.Series(dtype=float)
+            )
+            row[f"{metric}_mean"] = float(values.mean()) if len(values) else None
+            row[f"{metric}_std"] = (
+                float(values.std(ddof=1)) if len(values) > 1 else 0.0
+            )
+        runtimes = pd.to_numeric(group["runtime_seconds"], errors="coerce").dropna()
+        row["runtime_seconds_median"] = (
+            float(runtimes.median()) if len(runtimes) else None
+        )
+        row["runtime_seconds_min"] = float(runtimes.min()) if len(runtimes) else None
+        row["runtime_seconds_max"] = float(runtimes.max()) if len(runtimes) else None
+        rows.append(row)
+    return pd.DataFrame(rows)
+
+
+def write_final_test_summary() -> None:
+    if not FINAL_TEST_FILE.exists():
+        return
+    frame = pd.read_csv(FINAL_TEST_FILE, low_memory=False)
+    frame = frame[
+        frame["protocol_version"].eq(PROTOCOL_VERSION)
+        & frame["evaluated_split"].eq("test")
+        & frame["status"].eq("success")
+    ].copy()
+    if frame.empty:
+        return
+    summary = build_final_test_summary(frame)
+    FINAL_TEST_SUMMARY_FILE.parent.mkdir(parents=True, exist_ok=True)
+    summary.to_csv(FINAL_TEST_SUMMARY_FILE, index=False)
+
+
 def run_final_tests(
     scenarios: list[str],
     datasets: set[str] | None,
     models: set[str] | None,
-    device: str,
 ) -> None:
     ensure_tuning_complete(scenarios, datasets, models)
     winners = select_validation_winners(scenarios, datasets, models)
     completed = successful_ids(FINAL_TEST_FILE, "final_test_id")
     for _, row in winners.iterrows():
-        identifier = final_test_id(row["scenario"], row["dataset"], row["model"])
-        if identifier in completed:
-            print(f"Skipping completed final test: {identifier}", flush=True)
-            continue
-        print(
-            f"Final test: {row['scenario']}, {row['dataset']}, {row['model']}",
-            flush=True,
-        )
-        result = run_final_test(row, device)
-        upsert_result(FINAL_TEST_FILE, result, "final_test_id")
-        print(
-            f"Finished final test: status={result['status']}, "
-            f"test_mrr@10={result.get('mrr@10')}",
-            flush=True,
-        )
-
+        model_name = str(row["model"])
+        for seed in final_seeds(model_name):
+            identifier = final_test_id(
+                str(row["scenario"]), str(row["dataset"]), model_name, seed
+            )
+            if identifier in completed:
+                print(f"Skipping completed final test: {identifier}", flush=True)
+                continue
+            print(
+                f"Final test: {row['scenario']}, {row['dataset']}, "
+                f"{model_name}, seed={seed}",
+                flush=True,
+            )
+            result = run_final_test(row, "cpu", seed)
+            upsert_result(FINAL_TEST_FILE, result, "final_test_id")
+            print(
+                f"Finished final test: status={result['status']}, "
+                f"test_mrr@10={result.get('mrr@10')}",
+                flush=True,
+            )
+    write_final_test_summary()
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -602,14 +720,23 @@ def parse_args() -> argparse.Namespace:
         nargs="+",
         choices=sorted(set(TOPN_MODELS) | set(SESSION_MODELS)),
     )
-    parser.add_argument("--device", choices=["cpu", "cuda"], default="cpu")
+    parser.add_argument(
+        "--device",
+        choices=["cpu", "cuda"],
+        default="cpu",
+        help="device used for validation tuning; final test runs always use CPU",
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    if args.device == "cuda" and not torch.cuda.is_available():
-        raise RuntimeError("CUDA was requested but is not available in this environment.")
+    if (
+        args.phase in {"tune", "all"}
+        and args.device == "cuda"
+        and not torch.cuda.is_available()
+    ):
+        raise RuntimeError("CUDA was requested for tuning but is not available.")
     scenarios = (
         ["topn", "session"] if args.scenario == "both" else [args.scenario]
     )
@@ -619,7 +746,7 @@ def main() -> None:
     if args.phase in {"tune", "all"}:
         run_tuning(scenarios, datasets, models, args.device)
     if args.phase in {"test", "all"}:
-        run_final_tests(scenarios, datasets, models, args.device)
+        run_final_tests(scenarios, datasets, models)
 
 
 if __name__ == "__main__":

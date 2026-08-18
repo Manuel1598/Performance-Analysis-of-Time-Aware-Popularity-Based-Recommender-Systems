@@ -19,6 +19,7 @@ from recbole.config import Config
 from recbole.data import create_dataset, data_preparation
 from recbole.model.sequential_recommender import GRU4Rec
 from recbole.trainer import Trainer
+from recbole.utils import init_seed
 
 from src.recbole_framework.custom_models.session.popularity_recbole import (
     SessionDecayPopRecBole,
@@ -181,6 +182,19 @@ def interaction_and_history(batch_data):
     return batch_data, None
 
 
+def gini_coefficient(counts: torch.Tensor) -> float:
+    """Measure concentration over all catalogue items, including zero counts."""
+    values = counts.detach().to(dtype=torch.float64, device="cpu").flatten()
+    total = values.sum()
+    if values.numel() == 0 or total <= 0:
+        return 0.0
+    values, _ = torch.sort(values)
+    n_values = values.numel()
+    ranks = torch.arange(1, n_values + 1, dtype=torch.float64)
+    coefficient = ((2 * ranks - n_values - 1) * values).sum()
+    return float(coefficient / (n_values * total))
+
+
 def beyond_accuracy_metrics(model, test_data, train_data, config, top_k: int = 10):
     model.eval()
     item_field = config["ITEM_ID_FIELD"]
@@ -190,6 +204,7 @@ def beyond_accuracy_metrics(model, test_data, train_data, config, top_k: int = 1
     popularity = torch.bincount(train_ids, minlength=n_items_with_padding).float()
 
     recommended_items: set[int] = set()
+    recommendation_frequency = torch.zeros(n_items_with_padding, dtype=torch.long)
     popularity_sum = 0.0
     recommendation_count = 0
 
@@ -209,6 +224,9 @@ def beyond_accuracy_metrics(model, test_data, train_data, config, top_k: int = 1
             top_items = torch.topk(scores, k=top_k, dim=1).indices.cpu()
             flat_items = top_items.reshape(-1)
             recommended_items.update(int(item) for item in flat_items.tolist())
+            recommendation_frequency.index_add_(
+                0, flat_items, torch.ones_like(flat_items, dtype=torch.long)
+            )
             popularity_sum += float(popularity[flat_items].sum().item())
             recommendation_count += int(flat_items.numel())
 
@@ -218,6 +236,9 @@ def beyond_accuracy_metrics(model, test_data, train_data, config, top_k: int = 1
         ),
         f"avg_recommendation_popularity@{top_k}": (
             popularity_sum / recommendation_count if recommendation_count else 0.0
+        ),
+        f"recommendation_frequency_gini@{top_k}": gini_coefficient(
+            recommendation_frequency[1:]
         ),
         "unique_recommended_items@10": len(recommended_items),
         "catalogue_size": catalogue_size,
@@ -230,8 +251,10 @@ def run_selected(dataset_name: str, model_name: str, device: str) -> dict:
     model_class = MODEL_CLASSES[model_name]
     updates = SELECTED_CONFIGS[dataset_name][model_name]
     config = build_config(model_class, dataset_name, updates, device)
+    init_seed(config["seed"], config["reproducibility"])
     dataset = create_dataset(config)
     train_data, valid_data, test_data = data_preparation(config, dataset)
+    init_seed(config["seed"], config["reproducibility"])
     model = model_class(config, train_data.dataset).to(config["device"])
     trainer = Trainer(config, model)
 
