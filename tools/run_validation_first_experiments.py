@@ -8,8 +8,10 @@ selected by validation MRR@10 and frozen. BPR and GRU4Rec are then refitted with
 three seeds; deterministic models are refitted once. Each resulting model is
 evaluated once on the test split.
 
-Historical result files are left unchanged. New files are written below
-``recbole_results/validation_first`` and every row records the evaluated split.
+Historical result files are left unchanged. By default, new files are written
+below ``recbole_results/validation_first`` and every row records the evaluated
+split. ``--output-dir`` can isolate a worker on another computer so that its
+rows can be merged after both writers have stopped.
 """
 
 from __future__ import annotations
@@ -90,6 +92,22 @@ SESSION_MODELS = {
     "VSTAN": VSTANRecBole,
 }
 
+
+def configure_output_dir(output_dir: Path | None) -> None:
+    """Redirect all result files while preserving the historical default."""
+    if output_dir is None:
+        return
+
+    resolved = output_dir
+    if not resolved.is_absolute():
+        resolved = PROJECT_ROOT / resolved
+    resolved = resolved.resolve()
+
+    global OUTPUT_DIR, VALIDATION_FILE, FINAL_TEST_FILE, FINAL_TEST_SUMMARY_FILE
+    OUTPUT_DIR = resolved
+    VALIDATION_FILE = OUTPUT_DIR / "validation_trials.csv"
+    FINAL_TEST_FILE = OUTPUT_DIR / "final_test_results.csv"
+    FINAL_TEST_SUMMARY_FILE = OUTPUT_DIR / "final_test_summary.csv"
 
 
 def fixed_budget_sample(
@@ -726,11 +744,20 @@ def parse_args() -> argparse.Namespace:
         default="cpu",
         help="device used for validation tuning; final test runs always use CPU",
     )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        help=(
+            "separate result directory, relative to the project root unless "
+            "an absolute path is supplied"
+        ),
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
+    configure_output_dir(args.output_dir)
     if (
         args.phase in {"tune", "all"}
         and args.device == "cuda"
