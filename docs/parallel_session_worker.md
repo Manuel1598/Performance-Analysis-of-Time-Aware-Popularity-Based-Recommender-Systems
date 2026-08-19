@@ -8,13 +8,18 @@ runtimes use the same hardware.
 ## Prepare the second computer
 
 1. Check out the same Git commit as the main computer.
-2. Create the Python environment from requirements.txt. The launcher uses
-   .venv-vsknn\Scripts\python.exe when it exists and otherwise uses python.
-3. Copy these processed dataset directories to the same relative location:
+2. Install Python 3.11; the validated environment uses Python 3.11.9.
+3. Create the worker environment from the dedicated CPU requirements:
+
+       py -3.11 -m venv .venv-vsknn
+       .\.venv-vsknn\Scripts\python.exe -m pip install -r requirements-session-worker.txt
+
+   The launcher uses .venv-vsknn\Scripts\python.exe when it exists.
+4. Copy these processed dataset directories to the same relative location:
    - data\recbole\adressa_recbole_sample
    - data\recbole\globo_recbole_sample
    - data\recbole\yoochoose_recbole_sample
-4. Do not copy the main computer's active validation_trials.csv into the worker
+5. Do not copy the main computer's active validation_trials.csv into the worker
    output directory.
 
 ## Start the worker
