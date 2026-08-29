@@ -72,6 +72,12 @@ def weighted_session_similarity(
 
     current_norm = math.sqrt(sum(weight * weight for weight in weights.values()))
     neighbor_norm = math.sqrt(len(neighbor_items))
+    # Linear position weighting can produce an all-zero vector for sessions
+    # whose surviving (last) item positions all receive weight zero. Cosine
+    # similarity is undefined for that vector; treating it as no similarity
+    # keeps the scorer finite and matches the existing empty-overlap behavior.
+    if current_norm == 0.0 or neighbor_norm == 0.0:
+        return 0.0
     return numerator / (current_norm * neighbor_norm)
 
 

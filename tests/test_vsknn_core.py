@@ -36,6 +36,10 @@ class VSKNNCoreTests(unittest.TestCase):
         expected = 1.0 / (math.sqrt(0.5**2 + 1.0**2) * math.sqrt(2))
         self.assertAlmostEqual(similarity, expected)
 
+    def test_cosine_similarity_with_zero_weight_norm_returns_zero(self):
+        similarity = session_similarity([10] * 11, {10, 20}, "linear", "cosine")
+        self.assertEqual(similarity, 0.0)
+
     def test_score_decay_uses_most_recent_shared_click(self):
         self.assertEqual(score_decay([10, 20, 30], {10, 40}, "div"), 1 / 3)
         self.assertEqual(score_decay([10, 20, 30], {20, 40}, "div"), 1 / 2)
