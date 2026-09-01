@@ -4,9 +4,10 @@ This runner replaces the exploratory workflow that stored a test result for
 every hyperparameter configuration. During the tuning phase, RecBole's
 ``Trainer.fit`` returns the best validation result and the test loader is never
 evaluated. During the final phase, one configuration per model and dataset is
-selected by validation MRR@10 and frozen. BPR and GRU4Rec are then refitted with
-three seeds; deterministic models are refitted once. Each resulting model is
-evaluated once on the test split.
+selected by validation MRR@10 and frozen. Every model is refitted with the
+primary seed 42. For BPR and GRU4Rec, seed 43 can be added as an optional
+robustness check; it is not required for protocol completion and does not change
+the primary seed-42 result.
 
 Historical result files are left unchanged. By default, new files are written
 below ``recbole_results/validation_first`` and every row records the evaluated
@@ -56,7 +57,9 @@ FINAL_TEST_FILE = OUTPUT_DIR / "final_test_results.csv"
 FINAL_TEST_SUMMARY_FILE = OUTPUT_DIR / "final_test_summary.csv"
 PROTOCOL_VERSION = "validation_first_v6"
 RANDOM_SEARCH_BUDGET = 12
-FINAL_EVALUATION_SEEDS = (42, 43, 44)
+MAX_BPR_EMBEDDING_SIZE = 256
+PRIMARY_FINAL_EVALUATION_SEEDS = (42,)
+OPTIONAL_ROBUSTNESS_SEEDS = (43,)
 STOCHASTIC_MODELS = {"BPR", "GRU4Rec"}
 FINAL_AGGREGATE_METRICS = (
     "hit@5",
@@ -154,7 +157,8 @@ def topn_grid(model_name: str) -> list[dict]:
                 },
             }
             for embedding_size, learning_rate in product(
-                [32, 64, 128, 256, 512], [0.001, 0.0005, 0.0001]
+                [32, 64, 128, MAX_BPR_EMBEDDING_SIZE],
+                [0.001, 0.0005, 0.0001],
             )
         ]
     raise KeyError(model_name)
@@ -490,6 +494,14 @@ def select_validation_winners(
         frame = frame[frame["dataset"].isin(datasets)]
     if models:
         frame = frame[frame["model"].isin(models)]
+    eligible_ids = {
+        run_id(scenario, dataset_name, model_name, updates)
+        for scenario, dataset_name, model_name, updates in expected_trials(
+            scenarios, datasets, models
+        )
+    }
+    frame = frame[frame["run_id"].isin(eligible_ids)]
+
     frame["valid_mrr@10"] = pd.to_numeric(frame["valid_mrr@10"], errors="coerce")
     frame["runtime_seconds"] = pd.to_numeric(
         frame["runtime_seconds"], errors="coerce"
@@ -524,10 +536,19 @@ def ensure_tuning_complete(
         )
 
 
-def final_seeds(model_name: str) -> tuple[int, ...]:
-    if model_name in STOCHASTIC_MODELS:
-        return FINAL_EVALUATION_SEEDS
-    return (FINAL_EVALUATION_SEEDS[0],)
+def final_seeds(
+    model_name: str, include_optional_robustness: bool = False
+) -> tuple[int, ...]:
+    """Return required primary seeds and, when requested, one robustness seed."""
+    seeds = PRIMARY_FINAL_EVALUATION_SEEDS
+    if include_optional_robustness and model_name in STOCHASTIC_MODELS:
+        seeds += OPTIONAL_ROBUSTNESS_SEEDS
+    return seeds
+
+
+def optional_final_seeds(model_name: str) -> tuple[int, ...]:
+    """Return non-required seeds that may be run as a sensitivity check."""
+    return OPTIONAL_ROBUSTNESS_SEEDS if model_name in STOCHASTIC_MODELS else ()
 
 
 def final_test_id(scenario: str, dataset: str, model: str, seed: int) -> str:
@@ -636,7 +657,13 @@ def build_final_test_summary(frame: pd.DataFrame) -> pd.DataFrame:
         group_columns, sort=True
     ):
         expected_seeds = final_seeds(str(model))
+        optional_seeds = optional_final_seeds(str(model))
         completed_seeds = sorted(set(pd.to_numeric(group["seed"]).astype(int)))
+        numeric_seeds = pd.to_numeric(group["seed"], errors="coerce")
+        primary_group = group[numeric_seeds.isin(expected_seeds)]
+        optional_group = group[numeric_seeds.isin(optional_seeds)]
+        completed_primary = sorted(set(completed_seeds).intersection(expected_seeds))
+        completed_optional = sorted(set(completed_seeds).intersection(optional_seeds))
         row = {
             "protocol_version": PROTOCOL_VERSION,
             "scenario": scenario,
@@ -646,29 +673,54 @@ def build_final_test_summary(frame: pd.DataFrame) -> pd.DataFrame:
             "seed_count": len(completed_seeds),
             "seeds": ",".join(str(seed) for seed in completed_seeds),
             "expected_seed_count": len(expected_seeds),
+            "primary_seed_count": len(completed_primary),
+            "primary_seeds": ",".join(str(seed) for seed in completed_primary),
+            "optional_seed_count": len(completed_optional),
+            "optional_seeds": ",".join(str(seed) for seed in completed_optional),
             "status": (
                 "complete"
-                if completed_seeds == list(expected_seeds)
+                if completed_primary == list(expected_seeds)
                 else "incomplete"
             ),
             "config_json": str(group.iloc[0]["config_json"]),
         }
         for metric in FINAL_AGGREGATE_METRICS:
             values = (
-                pd.to_numeric(group[metric], errors="coerce").dropna()
-                if metric in group.columns
+                pd.to_numeric(primary_group[metric], errors="coerce").dropna()
+                if metric in primary_group.columns
                 else pd.Series(dtype=float)
             )
             row[f"{metric}_mean"] = float(values.mean()) if len(values) else None
             row[f"{metric}_std"] = (
                 float(values.std(ddof=1)) if len(values) > 1 else 0.0
             )
-        runtimes = pd.to_numeric(group["runtime_seconds"], errors="coerce").dropna()
+            optional_values = (
+                pd.to_numeric(optional_group[metric], errors="coerce").dropna()
+                if metric in optional_group.columns
+                else pd.Series(dtype=float)
+            )
+            row[f"{metric}_optional_mean"] = (
+                float(optional_values.mean()) if len(optional_values) else None
+            )
+            row[f"{metric}_optional_difference_from_primary"] = (
+                float(optional_values.mean() - values.mean())
+                if len(optional_values) and len(values)
+                else None
+            )
+        runtimes = pd.to_numeric(
+            primary_group["runtime_seconds"], errors="coerce"
+        ).dropna()
         row["runtime_seconds_median"] = (
             float(runtimes.median()) if len(runtimes) else None
         )
         row["runtime_seconds_min"] = float(runtimes.min()) if len(runtimes) else None
         row["runtime_seconds_max"] = float(runtimes.max()) if len(runtimes) else None
+        optional_runtimes = pd.to_numeric(
+            optional_group["runtime_seconds"], errors="coerce"
+        ).dropna()
+        row["runtime_seconds_optional_mean"] = (
+            float(optional_runtimes.mean()) if len(optional_runtimes) else None
+        )
         rows.append(row)
     return pd.DataFrame(rows)
 
@@ -693,13 +745,14 @@ def run_final_tests(
     scenarios: list[str],
     datasets: set[str] | None,
     models: set[str] | None,
+    include_optional_robustness: bool = False,
 ) -> None:
     ensure_tuning_complete(scenarios, datasets, models)
     winners = select_validation_winners(scenarios, datasets, models)
     completed = successful_ids(FINAL_TEST_FILE, "final_test_id")
     for _, row in winners.iterrows():
         model_name = str(row["model"])
-        for seed in final_seeds(model_name):
+        for seed in final_seeds(model_name, include_optional_robustness):
             identifier = final_test_id(
                 str(row["scenario"]), str(row["dataset"]), model_name, seed
             )
@@ -752,6 +805,14 @@ def parse_args() -> argparse.Namespace:
             "an absolute path is supplied"
         ),
     )
+    parser.add_argument(
+        "--include-optional-robustness-seed",
+        action="store_true",
+        help=(
+            "also run seed 43 for BPR and GRU4Rec; seed 42 remains the primary "
+            "result and seed 43 is not required for protocol completion"
+        ),
+    )
     return parser.parse_args()
 
 
@@ -773,7 +834,12 @@ def main() -> None:
     if args.phase in {"tune", "all"}:
         run_tuning(scenarios, datasets, models, args.device)
     if args.phase in {"test", "all"}:
-        run_final_tests(scenarios, datasets, models)
+        run_final_tests(
+            scenarios,
+            datasets,
+            models,
+            include_optional_robustness=args.include_optional_robustness_seed,
+        )
 
 
 if __name__ == "__main__":

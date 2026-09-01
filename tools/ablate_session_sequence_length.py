@@ -3,8 +3,9 @@
 The script starts from the configuration selected by validation MRR@10 in the
 main validation-first protocol. It refits that frozen configuration with maximum
 prefix lengths 10, 20, and 50 and evaluates the test split once per final seed.
-GRU4Rec is repeated with seeds 42, 43, and 44; deterministic neighbourhood
-models are run once with seed 42. All runs use CPU so their recorded runtimes
+Every required ablation uses seed 42. GRU4Rec is not repeated automatically;
+this keeps the ablation within the same primary one-seed budget. All runs use CPU
+so their recorded runtimes
 follow the same hardware protocol as the main final comparison.
 """
 
