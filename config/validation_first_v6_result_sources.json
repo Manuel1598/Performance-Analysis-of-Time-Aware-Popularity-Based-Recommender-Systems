@@ -1,0 +1,27 @@
+{
+  "protocol_version": "validation_first_v6",
+  "validation_inputs": [
+    {
+      "label": "main_validation",
+      "path": "recbole_results/validation_first/validation_trials.csv"
+    },
+    {
+      "label": "amazon_pc2",
+      "path": "recbole_results/topn_pc2_pinned/validation_trials.csv"
+    },
+    {
+      "label": "session_pc2",
+      "path": "recbole_results/session_pc2_pinned/validation_trials.csv"
+    },
+    {
+      "label": "amazon_pc1_last",
+      "path": "recbole_results/validation_first_workers/topn_pc1_amazon_last/validation_trials.csv"
+    }
+  ],
+  "final_inputs": [
+    {
+      "label": "main_final_tests",
+      "path": "recbole_results/validation_first/final_test_results.csv"
+    }
+  ]
+}
