@@ -1,0 +1,15 @@
+Output: F:\TimeAware Popularity Models and Fair Evaluation\recbole_results\session_sequence_length_ablation\session_sequence_length_metrics.csv
+Completed successful configurations: 0
+Running configuration: ('adressa_recbole_sample', 'GRU4Rec', 10)
+Finished ('adressa_recbole_sample', 'GRU4Rec', 10): success after 591.53 seconds
+Running configuration: ('adressa_recbole_sample', 'GRU4Rec', 20)
+Finished ('adressa_recbole_sample', 'GRU4Rec', 20): success after 1199.84 seconds
+Running configuration: ('adressa_recbole_sample', 'GRU4Rec', 50)
+Finished ('adressa_recbole_sample', 'GRU4Rec', 50): success after 2954.05 seconds
+Running configuration: ('adressa_recbole_sample', 'VS-KNN', 10)
+Finished ('adressa_recbole_sample', 'VS-KNN', 10): success after 227.70 seconds
+Running configuration: ('adressa_recbole_sample', 'VS-KNN', 20)
+Finished ('adressa_recbole_sample', 'VS-KNN', 20): success after 234.08 seconds
+Running configuration: ('adressa_recbole_sample', 'VS-KNN', 50)
+Finished ('adressa_recbole_sample', 'VS-KNN', 50): success after 235.24 seconds
+Running configuration: ('adressa_recbole_sample', 'VSTAN', 10)

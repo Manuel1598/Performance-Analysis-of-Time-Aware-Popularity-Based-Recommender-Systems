@@ -1,0 +1,8 @@
+﻿{
+    "protocol":  "validation_first_v6",
+    "phase":  "topn_tuning",
+    "state":  "movielens_complete_waiting_for_amazon_worker",
+    "message":  "MovieLens Top-N validation completed with 31 successful rows. Amazon should finish on PC 2, then its worker results can be merged.",
+    "process_id":  null,
+    "updated_at":  "2026-08-29T17:16:01.0868335+02:00"
+}

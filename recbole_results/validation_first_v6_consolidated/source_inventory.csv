@@ -1,0 +1,5 @@
+source_order,source_label,source_path,file_name,exists,sha256,total_rows,protocol_rows,success_rows,failed_rows,state,stage
+0.0,main_validation,F:\TimeAware Popularity Models and Fair Evaluation\recbole_results\validation_first\validation_trials.csv,validation_trials.csv,True,a248a8fdffd8fd0741e78c882b050ae8c63c8ab7b6097adf872b8e3ce6852936,203.0,203.0,200.0,3.0,loaded,validation
+1.0,amazon_pc2,F:\TimeAware Popularity Models and Fair Evaluation\recbole_results\topn_pc2_pinned\validation_trials.csv,validation_trials.csv,True,3effe30e0eec16ebc93d20bf5f11ffcce4be6d8596abac883bad525f5479741a,31.0,31.0,28.0,3.0,loaded,validation
+2.0,session_pc2,F:\TimeAware Popularity Models and Fair Evaluation\recbole_results\session_pc2_pinned\validation_trials.csv,validation_trials.csv,True,6fa9daa858b76841b0acafdc596f8dd1259bb265cd81ee3c8df19a74f01a01a8,141.0,141.0,141.0,0.0,loaded,validation
+3.0,amazon_pc1_last,F:\TimeAware Popularity Models and Fair Evaluation\recbole_results\validation_first_workers\topn_pc1_amazon_last\validation_trials.csv,validation_trials.csv,False,,0.0,0.0,0.0,0.0,missing,validation

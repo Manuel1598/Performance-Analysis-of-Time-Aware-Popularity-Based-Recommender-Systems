@@ -1,0 +1,48 @@
+{
+  "protocol_version": "validation_first_v6",
+  "generated_at": "2026-09-01T14:08:16.671372+02:00",
+  "state": "incomplete",
+  "allow_incomplete": true,
+  "source_config": "C:\\Users\\mweil\\AppData\\Local\\Temp\\validation_first_v6_reporting_4euzzomy\\sources.json",
+  "selection_policy": {
+    "max_bpr_embedding_size": 256,
+    "primary_final_seeds": [
+      42
+    ],
+    "optional_robustness_seeds": [
+      43
+    ]
+  },
+  "validation": {
+    "expected": 197,
+    "successful": 197,
+    "all_merged_successful": 200,
+    "excluded_by_budget_rows": 6,
+    "excluded_by_budget_successful": 3,
+    "failed_retained": 0,
+    "missing_successes": 0,
+    "unexpected_ids": [],
+    "selected_config_count": 26,
+    "expected_selected_config_count": 26,
+    "complete": true
+  },
+  "final_tests": {
+    "expected": 26,
+    "successful": 0,
+    "all_successful": 0,
+    "optional_expected": 5,
+    "optional_successful": 0,
+    "failed_retained": 0,
+    "missing_successes": 26,
+    "unexpected_ids": [],
+    "summary_group_count": 0,
+    "expected_summary_group_count": 26,
+    "complete": false
+  },
+  "merge_decisions": {
+    "unique": 31,
+    "multiple_failures_prefer_first_source": 3,
+    "exact_duplicate": 169
+  },
+  "requested_source_config": "F:\\TimeAware Popularity Models and Fair Evaluation\\config\\validation_first_v6_result_sources.json"
+}

@@ -1,0 +1,14 @@
+device=cpu
+output=F:\TimeAware Popularity Models and Fair Evaluation\recbole_results\selected_session_beyond_accuracy\selected_session_metrics.csv
+run adressa_recbole_sample / GRU4Rec
+status=success mrr@10=0.2183 coverage@10=0.1356137797185832
+run adressa_recbole_sample / VSTAN
+status=success mrr@10=0.162 coverage@10=0.2210092188258127
+run globo_recbole_sample / GRU4Rec
+status=success mrr@10=0.1493 coverage@10=0.21110051901281643
+run globo_recbole_sample / VSTAN
+status=success mrr@10=0.0563 coverage@10=0.48506514140451223
+run yoochoose_recbole_sample / GRU4Rec
+status=success mrr@10=0.2471 coverage@10=0.6735676673117602
+run yoochoose_recbole_sample / VSTAN
+status=success mrr@10=0.2676 coverage@10=0.7752824159503128
