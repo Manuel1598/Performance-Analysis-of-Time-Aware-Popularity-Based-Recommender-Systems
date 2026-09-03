@@ -51,7 +51,10 @@ def logical_column(columns: list[str], name: str) -> str:
     raise KeyError(f"Missing RecBole column {name!r}: {columns}")
 
 
-def read_profile(data_root: Path, dataset: str, label: str, entity_type: str) -> DatasetProfile:
+def read_profile(
+    data_root: Path, dataset: str, label: str, entity_type: str,
+    temporal_only: bool = False,
+) -> DatasetProfile:
     path = data_root / dataset / f"{dataset}.inter"
     if not path.exists():
         raise FileNotFoundError(path)
@@ -63,14 +66,16 @@ def read_profile(data_root: Path, dataset: str, label: str, entity_type: str) ->
     timestamp_min = math.inf
     timestamp_max = -math.inf
 
-    for chunk in pd.read_csv(path, sep="\t", chunksize=1_000_000):
+    usecols = (lambda column: column.split(":", 1)[0] == "timestamp") if temporal_only else None
+    for chunk in pd.read_csv(path, sep="\t", chunksize=1_000_000, usecols=usecols):
         columns = list(chunk.columns)
-        entity_col = logical_column(columns, "user_id")
-        item_col = logical_column(columns, "item_id")
         timestamp_col = logical_column(columns, "timestamp")
 
-        entity_counter.update(chunk[entity_col].astype(str).value_counts().to_dict())
-        item_counter.update(chunk[item_col].astype(str).value_counts().to_dict())
+        if not temporal_only:
+            entity_col = logical_column(columns, "user_id")
+            item_col = logical_column(columns, "item_id")
+            entity_counter.update(chunk[entity_col].astype(str).value_counts().to_dict())
+            item_counter.update(chunk[item_col].astype(str).value_counts().to_dict())
 
         timestamps = pd.to_numeric(chunk[timestamp_col], errors="coerce").dropna()
         if not timestamps.empty:
@@ -344,11 +349,11 @@ def bin_width_label(hours: float) -> str:
 
 
 def create_temporal_activity(profiles: list[DatasetProfile], path: Path) -> None:
-    width, height = 520.0, 610.0
+    width, height = 520.0, 690.0
     c = canvas.Canvas(str(path), pagesize=(width, height))
     draw_header(c, "Interaction activity across each observation period", width, height)
     left, plot_width = 76.0, 400.0
-    panel_height, gap = 78.0, 22.0
+    panel_height, gap = 78.0, 38.0
     top = height - 63.0
     bins = 24
 
@@ -362,13 +367,13 @@ def create_temporal_activity(profiles: list[DatasetProfile], path: Path) -> None
         shares = histogram / histogram.sum()
         y_max = max(float(shares.max()) * 1.08, 0.01)
 
-        c.setFont("Helvetica-Bold", 8)
+        c.setFont("Helvetica-Bold", 9)
         c.setFillColor(colors.black)
         start = datetime.fromtimestamp(profile.timestamp_min, tz=timezone.utc).date().isoformat()
         end = datetime.fromtimestamp(profile.timestamp_max, tz=timezone.utc).date().isoformat()
         span_hours = (profile.timestamp_max - profile.timestamp_min) / bins / 3600.0
         c.drawString(left, bottom + panel_height + 6, profile.label)
-        c.setFont("Helvetica", 6.8)
+        c.setFont("Helvetica", 8)
         c.drawRightString(
             left + plot_width,
             bottom + panel_height + 6,
@@ -391,9 +396,34 @@ def create_temporal_activity(profiles: list[DatasetProfile], path: Path) -> None
         c.setStrokeColor(colors.black)
         c.rect(left, bottom, plot_width, panel_height, stroke=1, fill=0)
 
+        # Show actual time coordinates. Adressa needs hours as well as dates.
+        c.setFont("Helvetica", 9)
+        c.setFillColor(colors.black)
+        span_seconds = profile.timestamp_max - profile.timestamp_min
+        for fraction in (0.0, 0.25, 0.5, 0.75, 1.0):
+            x = left + fraction * plot_width
+            instant = datetime.fromtimestamp(
+                profile.timestamp_min + fraction * span_seconds, tz=timezone.utc
+            )
+            c.line(x, bottom, x, bottom - 3)
+            if span_seconds < 2 * 86400:
+                labels = (instant.strftime("%d %b"), instant.strftime("%H:%M"))
+            elif span_seconds < 366 * 86400:
+                labels = (instant.strftime("%d %b"),)
+            else:
+                labels = (instant.strftime("%Y-%m"),)
+            for row, label in enumerate(labels):
+                y = bottom - 12 - row * 10
+                if fraction == 0.0:
+                    c.drawString(x, y, label)
+                elif fraction == 1.0:
+                    c.drawRightString(x, y, label)
+                else:
+                    c.drawCentredString(x, y, label)
+
     c.setFont("Helvetica", 7.5)
     c.setFillColor(colors.black)
-    c.drawCentredString(width / 2, 23, "Equal-duration bins from the start to the end of each dataset")
+    c.drawCentredString(width / 2, 23, "Date within each observation period (UTC)")
     c.setFont("Helvetica", 6.8)
     c.setFillColor(colors.HexColor("#444444"))
     c.drawString(76, 10, "Bars show each bin's share of all interactions in that dataset.")
@@ -402,6 +432,10 @@ def create_temporal_activity(profiles: list[DatasetProfile], path: Path) -> None
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--temporal-only", action="store_true",
+        help="Regenerate only the activity figure, reading timestamp columns only.",
+    )
     project_root = Path(__file__).resolve().parents[1]
     parser.add_argument(
         "--data-root",
@@ -421,9 +455,13 @@ def main() -> None:
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
     profiles = [
-        read_profile(args.data_root, dataset, label, entity_type)
+        read_profile(args.data_root, dataset, label, entity_type, args.temporal_only)
         for dataset, label, entity_type in DATASETS
     ]
+    if args.temporal_only:
+        create_temporal_activity(profiles, args.output_dir / "temporal_activity.pdf")
+        print(f"Wrote temporal activity figure to {args.output_dir}")
+        return
     statistics = pd.DataFrame(statistics_row(profile) for profile in profiles)
     statistics.to_csv(args.output_dir / "dataset_descriptive_statistics.csv", index=False)
 
