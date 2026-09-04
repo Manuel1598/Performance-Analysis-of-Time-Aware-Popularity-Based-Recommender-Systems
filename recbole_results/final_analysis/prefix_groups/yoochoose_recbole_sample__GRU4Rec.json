@@ -1,0 +1,33 @@
+{
+  "status": "success",
+  "fingerprint": {
+    "checkpoint_sha256": "8569294135a2923e9a8a301e04688b07b50e8faeb8e0f1211a94991486848797",
+    "data_sha256": "65c63db1511af94f8e2093e2d941d2a82f0432d19ef509fe7afb338310b3e3ed",
+    "final_test_id": "validation_first_v6::test::session::yoochoose_recbole_sample::GRU4Rec::seed=42",
+    "config_json": "{\"dropout_prob\":0.4,\"epochs\":20,\"eval_batch_size\":1024,\"hidden_size\":256,\"learning_rate\":0.003,\"loss_type\":\"CE\",\"num_layers\":1,\"train_batch_size\":2048,\"train_neg_sample_args\":null}",
+    "evaluator_sha256": "c9d1dcb583b3df5b60e921ebad433482eea65e556ef00e72a986ea1e0587c3fb"
+  },
+  "query_count": 71475,
+  "test_queries_sha256": "cdc1d8471d6a1a419ca11d527a74b523dd33945384077509d1f46248a10b97f0",
+  "metrics": {
+    "hit@5": 0.4032458901713886,
+    "mrr@5": 0.24834067855893666,
+    "ndcg@5": 0.2868452674012233,
+    "hit@10": 0.5083175935641833,
+    "mrr@10": 0.26252661325693855,
+    "ndcg@10": 0.3209878788276564
+  },
+  "original_metrics": {
+    "hit@5": 0.4032,
+    "mrr@5": 0.2483,
+    "ndcg@5": 0.2868,
+    "hit@10": 0.5083,
+    "mrr@10": 0.2625,
+    "ndcg@10": 0.321
+  },
+  "max_absolute_difference": 4.5890171388618395e-05,
+  "runtime_seconds": 22.651966899999934,
+  "training_performed": false,
+  "torch_threads": 2,
+  "prediction_workers": 1
+}

@@ -1,0 +1,5 @@
+dataset,model,prefix_group,query_count,query_share,final_test_id,hit@5,mrr@5,ndcg@5,hit@10,mrr@10,ndcg@10
+globo_recbole_sample,VS-KNN,1,0,0.0,validation_first_v6::test::session::globo_recbole_sample::VS-KNN::seed=42,,,,,,
+globo_recbole_sample,VS-KNN,2,37530,0.5345544667274384,validation_first_v6::test::session::globo_recbole_sample::VS-KNN::seed=42,0.2611244337863043,0.08151167954525267,0.1254795205575067,0.4324540367705835,0.10448834583127149,0.1809948689974377
+globo_recbole_sample,VS-KNN,3,15553,0.2215274612579763,validation_first_v6::test::session::globo_recbole_sample::VS-KNN::seed=42,0.1952677939947277,0.058833236888917465,0.0920809258027226,0.36301678132836107,0.08132805491514422,0.1464356194512334
+globo_recbole_sample,VS-KNN,4+,17125,0.24391807201458524,validation_first_v6::test::session::globo_recbole_sample::VS-KNN::seed=42,0.12157664233576643,0.036797080291970805,0.057445068483778505,0.2564671532846715,0.05462926659714981,0.10089546845459106

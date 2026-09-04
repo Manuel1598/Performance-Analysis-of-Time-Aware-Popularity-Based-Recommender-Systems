@@ -1,0 +1,5 @@
+dataset,model,prefix_group,query_count,query_share,final_test_id,hit@5,mrr@5,ndcg@5,hit@10,mrr@10,ndcg@10
+globo_recbole_sample,VSTAN,1,0,0.0,validation_first_v7_vstan_collapsed::test::session::globo_recbole_sample::VSTAN::seed=42,,,,,,
+globo_recbole_sample,VSTAN,2,37530,0.5345544667274384,validation_first_v7_vstan_collapsed::test::session::globo_recbole_sample::VSTAN::seed=42,0.24732214228617105,0.07086242117417177,0.11378309987697535,0.42539301891819875,0.09485527979732616,0.17159361789741076
+globo_recbole_sample,VSTAN,3,15553,0.2215274612579763,validation_first_v7_vstan_collapsed::test::session::globo_recbole_sample::VSTAN::seed=42,0.16582009901626696,0.043381769862191645,0.07283860310093013,0.34507811997685334,0.06733019404208243,0.13083299709097132
+globo_recbole_sample,VSTAN,4+,17125,0.24391807201458524,validation_first_v7_vstan_collapsed::test::session::globo_recbole_sample::VSTAN::seed=42,0.08035036496350365,0.020714355231143552,0.0350131318025232,0.22271532846715328,0.03937217008457884,0.08070949134212783

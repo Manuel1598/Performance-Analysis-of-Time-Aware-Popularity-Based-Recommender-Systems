@@ -1,0 +1,33 @@
+{
+  "status": "success",
+  "fingerprint": {
+    "checkpoint_sha256": "3b261ea9ed79a051dd1b27a5eb0b9763c817f3fc8a0fa438d779aabdd17335f4",
+    "data_sha256": "9ce18ac384e0b48d106f44dd2a3e649d5b92620ae9a24bd7cb5f929a12830277",
+    "final_test_id": "validation_first_v7_vstan_collapsed::test::session::adressa_recbole_sample::VSTAN::seed=42",
+    "config_json": "{\"vstan_idf_weighting\":true,\"vstan_k\":1500,\"vstan_popularity_weight\":0.0,\"vstan_position_decay\":0.05,\"vstan_sample_size\":2500}",
+    "evaluator_sha256": "c9d1dcb583b3df5b60e921ebad433482eea65e556ef00e72a986ea1e0587c3fb"
+  },
+  "query_count": 64332,
+  "test_queries_sha256": "3de48b3c4504a64b316735775c9706f540b5a2d95953aaaff84dbb25e52e0cb0",
+  "metrics": {
+    "hit@5": 0.28180376795373996,
+    "mrr@5": 0.14065757839540716,
+    "ndcg@5": 0.17527801292078635,
+    "hit@10": 0.46006652987626684,
+    "mrr@10": 0.16423778583123855,
+    "ndcg@10": 0.2327155878347022
+  },
+  "original_metrics": {
+    "hit@5": 0.2818,
+    "mrr@5": 0.1407,
+    "ndcg@5": 0.1753,
+    "hit@10": 0.4601,
+    "mrr@10": 0.1642,
+    "ndcg@10": 0.2327
+  },
+  "max_absolute_difference": 4.242160459283495e-05,
+  "runtime_seconds": 1201.6568547999996,
+  "training_performed": false,
+  "torch_threads": 4,
+  "prediction_workers": 4
+}

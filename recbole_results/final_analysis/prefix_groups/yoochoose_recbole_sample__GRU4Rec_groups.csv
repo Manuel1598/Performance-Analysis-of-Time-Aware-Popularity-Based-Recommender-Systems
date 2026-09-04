@@ -1,0 +1,5 @@
+dataset,model,prefix_group,query_count,query_share,final_test_id,hit@5,mrr@5,ndcg@5,hit@10,mrr@10,ndcg@10
+yoochoose_recbole_sample,GRU4Rec,1,0,0.0,validation_first_v6::test::session::yoochoose_recbole_sample::GRU4Rec::seed=42,,,,,,
+yoochoose_recbole_sample,GRU4Rec,2,25438,0.35590066456803077,validation_first_v6::test::session::yoochoose_recbole_sample::GRU4Rec::seed=42,0.44193725921849203,0.27414563513903084,0.31588973474253923,0.5453652016667977,0.28818549801134913,0.34957315583207005
+yoochoose_recbole_sample,GRU4Rec,3,14679,0.20537250786988456,validation_first_v6::test::session::yoochoose_recbole_sample::GRU4Rec::seed=42,0.4263914435588255,0.266572427731226,0.3063252892214802,0.538660671707882,0.28173127143084226,0.3428075350909835
+yoochoose_recbole_sample,GRU4Rec,4+,31358,0.43872682756208464,validation_first_v6::test::session::yoochoose_recbole_sample::GRU4Rec::seed=42,0.3610243000191339,0.21887290856134536,0.2541652367701899,0.46406020792142355,0.23272190990476596,0.28758514234166715

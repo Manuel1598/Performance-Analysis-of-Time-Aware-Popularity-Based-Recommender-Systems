@@ -1,0 +1,33 @@
+{
+  "status": "success",
+  "fingerprint": {
+    "checkpoint_sha256": "fd2f65811bd777abf3b4cb3428e4753c6e890a3ac0ad17ec39a08ed8fb565cbf",
+    "data_sha256": "65c63db1511af94f8e2093e2d941d2a82f0432d19ef509fe7afb338310b3e3ed",
+    "final_test_id": "validation_first_v6::test::session::yoochoose_recbole_sample::MostPop::seed=42",
+    "config_json": "{}",
+    "evaluator_sha256": "c9d1dcb583b3df5b60e921ebad433482eea65e556ef00e72a986ea1e0587c3fb"
+  },
+  "query_count": 71475,
+  "test_queries_sha256": "cdc1d8471d6a1a419ca11d527a74b523dd33945384077509d1f46248a10b97f0",
+  "metrics": {
+    "hit@5": 0.01385099685204617,
+    "mrr@5": 0.007015273405619682,
+    "ndcg@5": 0.008708821953601252,
+    "hit@10": 0.021545995103182933,
+    "mrr@10": 0.00802187467035316,
+    "ndcg@10": 0.011176018611385738
+  },
+  "original_metrics": {
+    "hit@5": 0.0139,
+    "mrr@5": 0.007,
+    "ndcg@5": 0.0087,
+    "hit@10": 0.0215,
+    "mrr@10": 0.008,
+    "ndcg@10": 0.0112
+  },
+  "max_absolute_difference": 4.9003147953828596e-05,
+  "runtime_seconds": 15.534470800000236,
+  "training_performed": false,
+  "torch_threads": 2,
+  "prediction_workers": 1
+}

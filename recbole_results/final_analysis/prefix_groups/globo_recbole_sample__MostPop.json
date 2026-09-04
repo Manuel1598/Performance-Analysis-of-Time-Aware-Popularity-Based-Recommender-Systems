@@ -1,0 +1,33 @@
+{
+  "status": "success",
+  "fingerprint": {
+    "checkpoint_sha256": "936440c9bf59fb5b4b2e42ce0d25c78b95010fd47f2dc32e63b716349f20aec2",
+    "data_sha256": "d5ffba818bc14f6b0fedb7e7bf3eba6933b7f15e23d48dcefdf31ef0086c831a",
+    "final_test_id": "validation_first_v6::test::session::globo_recbole_sample::MostPop::seed=42",
+    "config_json": "{}",
+    "evaluator_sha256": "c9d1dcb583b3df5b60e921ebad433482eea65e556ef00e72a986ea1e0587c3fb"
+  },
+  "query_count": 70208,
+  "test_queries_sha256": "e27e745f32ff7931ba1e0c1adc35f6bdd6de622ec31bcbd2029f128fb981e2df",
+  "metrics": {
+    "hit@5": 0.03463992707383774,
+    "mrr@5": 0.018765667730173203,
+    "ndcg@5": 0.022645402125947706,
+    "hit@10": 0.06259970373746582,
+    "mrr@10": 0.02243813959608456,
+    "ndcg@10": 0.03162695793539886
+  },
+  "original_metrics": {
+    "hit@5": 0.0346,
+    "mrr@5": 0.0188,
+    "ndcg@5": 0.0226,
+    "hit@10": 0.0626,
+    "mrr@10": 0.0224,
+    "ndcg@10": 0.0316
+  },
+  "max_absolute_difference": 4.540212594770707e-05,
+  "runtime_seconds": 14.928067799999553,
+  "training_performed": false,
+  "torch_threads": 2,
+  "prediction_workers": 1
+}

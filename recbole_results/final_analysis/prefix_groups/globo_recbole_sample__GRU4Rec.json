@@ -1,0 +1,33 @@
+{
+  "status": "success",
+  "fingerprint": {
+    "checkpoint_sha256": "c50ba6a65fed193c51ece785462ad0f0277fa0da1dd0fb39e0f9e8907ff918b3",
+    "data_sha256": "d5ffba818bc14f6b0fedb7e7bf3eba6933b7f15e23d48dcefdf31ef0086c831a",
+    "final_test_id": "validation_first_v6::test::session::globo_recbole_sample::GRU4Rec::seed=42",
+    "config_json": "{\"dropout_prob\":0.1,\"epochs\":20,\"eval_batch_size\":1024,\"hidden_size\":256,\"learning_rate\":0.003,\"loss_type\":\"CE\",\"num_layers\":1,\"train_batch_size\":2048,\"train_neg_sample_args\":null}",
+    "evaluator_sha256": "c9d1dcb583b3df5b60e921ebad433482eea65e556ef00e72a986ea1e0587c3fb"
+  },
+  "query_count": 70208,
+  "test_queries_sha256": "e27e745f32ff7931ba1e0c1adc35f6bdd6de622ec31bcbd2029f128fb981e2df",
+  "metrics": {
+    "hit@5": 0.26542559252506837,
+    "mrr@5": 0.15484939987845642,
+    "ndcg@5": 0.18218012066195396,
+    "hit@10": 0.37578338650866,
+    "mrr@10": 0.1694777581535501,
+    "ndcg@10": 0.21776714639477854
+  },
+  "original_metrics": {
+    "hit@5": 0.2654,
+    "mrr@5": 0.1548,
+    "ndcg@5": 0.1822,
+    "hit@10": 0.3758,
+    "mrr@10": 0.1695,
+    "ndcg@10": 0.2178
+  },
+  "max_absolute_difference": 4.939987845642424e-05,
+  "runtime_seconds": 21.948810400000184,
+  "training_performed": false,
+  "torch_threads": 2,
+  "prediction_workers": 1
+}

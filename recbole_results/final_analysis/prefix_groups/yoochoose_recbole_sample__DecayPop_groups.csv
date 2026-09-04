@@ -1,0 +1,5 @@
+dataset,model,prefix_group,query_count,query_share,final_test_id,hit@5,mrr@5,ndcg@5,hit@10,mrr@10,ndcg@10
+yoochoose_recbole_sample,DecayPop,1,0,0.0,validation_first_v6::test::session::yoochoose_recbole_sample::DecayPop::seed=42,,,,,,
+yoochoose_recbole_sample,DecayPop,2,25438,0.35590066456803077,validation_first_v6::test::session::yoochoose_recbole_sample::DecayPop::seed=42,0.01615693057630317,0.008234399979033991,0.010175398394893577,0.023311581099143015,0.009130150867905407,0.012429326558791831
+yoochoose_recbole_sample,DecayPop,3,14679,0.20537250786988456,validation_first_v6::test::session::yoochoose_recbole_sample::DecayPop::seed=42,0.014783023366714354,0.007920612212457706,0.00960532328113808,0.022549219974112678,0.008885736777623146,0.012044561710916436
+yoochoose_recbole_sample,DecayPop,4+,31358,0.43872682756208464,validation_first_v6::test::session::yoochoose_recbole_sample::DecayPop::seed=42,0.011703552522482301,0.005978803920318048,0.007374123853215702,0.01811340008929141,0.006801193488003872,0.009413557777779746

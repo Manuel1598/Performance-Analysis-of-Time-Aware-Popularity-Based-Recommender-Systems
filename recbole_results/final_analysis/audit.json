@@ -1,0 +1,33 @@
+{
+  "policy": "Keep v6 unchanged-model rows; replace all VSTAN validation/final rows with v7. Preserve original identifiers.",
+  "validation_successes": 197,
+  "final_successes": 26,
+  "sources": [
+    {
+      "source": "pc2",
+      "file": "recbole_results\\validation_first_workers\\final_pc2\\validation_trials.csv",
+      "sha256": "a248a8fdffd8fd0741e78c882b050ae8c63c8ab7b6097adf872b8e3ce6852936"
+    },
+    {
+      "source": "pc2",
+      "file": "recbole_results\\validation_first_workers\\final_pc2\\final_test_results.csv",
+      "sha256": "c64026d5a31716374e8b18251696dfbd4bb818cea8fd741ae71f788954172c58"
+    },
+    {
+      "source": "pc1_vstan",
+      "file": "recbole_results\\validation_first_workers\\vstan_collapsed_v7\\validation_trials.csv",
+      "sha256": "94eb44363f80051b832f654fe901c2082ab1e53ff679300e7817a9e7cbf1b832"
+    },
+    {
+      "source": "pc1_vstan",
+      "file": "recbole_results\\validation_first_workers\\vstan_collapsed_v7\\final_test_results.csv",
+      "sha256": "390277a3026c28ae3f487fba069ebd329f59583e1adeb3b947dd6816161be3fa"
+    }
+  ],
+  "excluded": [
+    "v1 legacy final row",
+    "v6 VSTAN rows superseded by v7",
+    "BPR embedding_size=512 outside eligible grid"
+  ],
+  "runtime_caveat": "VSTAN ran on PC1; other final results ran on PC2. Do not pool host-specific runtime comparisons."
+}

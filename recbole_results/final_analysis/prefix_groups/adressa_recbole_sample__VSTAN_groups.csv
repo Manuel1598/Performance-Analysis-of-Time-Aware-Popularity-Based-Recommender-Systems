@@ -1,0 +1,5 @@
+dataset,model,prefix_group,query_count,query_share,final_test_id,hit@5,mrr@5,ndcg@5,hit@10,mrr@10,ndcg@10
+adressa_recbole_sample,VSTAN,1,0,0.0,validation_first_v7_vstan_collapsed::test::session::adressa_recbole_sample::VSTAN::seed=42,,,,,,
+adressa_recbole_sample,VSTAN,2,19498,0.3030840017409687,validation_first_v7_vstan_collapsed::test::session::adressa_recbole_sample::VSTAN::seed=42,0.32531541696584265,0.17583256402366057,0.21266058919241349,0.4881526310390809,0.19739181633606703,0.26514502783669447
+adressa_recbole_sample,VSTAN,3,12677,0.19705589753155506,validation_first_v7_vstan_collapsed::test::session::adressa_recbole_sample::VSTAN::seed=42,0.2930504062475349,0.14390760169335542,0.18049320954375914,0.47534905734795296,0.16812208962362785,0.23932774088352057
+adressa_recbole_sample,VSTAN,4+,32157,0.4998601007274762,validation_first_v7_vstan_collapsed::test::session::adressa_recbole_sample::VSTAN::seed=42,0.25098734334670525,0.11804842906158326,0.15055560350033007,0.4370121590944429,0.14260397030244962,0.21044574035643254

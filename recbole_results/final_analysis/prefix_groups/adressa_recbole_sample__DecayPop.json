@@ -1,0 +1,33 @@
+{
+  "status": "success",
+  "fingerprint": {
+    "checkpoint_sha256": "306692105c60ee8af0214e99c6c94108aa33fb0146f39052e729af09f47d08dd",
+    "data_sha256": "9ce18ac384e0b48d106f44dd2a3e649d5b92620ae9a24bd7cb5f929a12830277",
+    "final_test_id": "validation_first_v6::test::session::adressa_recbole_sample::DecayPop::seed=42",
+    "config_json": "{\"decay_half_life_days\":0.25}",
+    "evaluator_sha256": "c9d1dcb583b3df5b60e921ebad433482eea65e556ef00e72a986ea1e0587c3fb"
+  },
+  "query_count": 64332,
+  "test_queries_sha256": "3de48b3c4504a64b316735775c9706f540b5a2d95953aaaff84dbb25e52e0cb0",
+  "metrics": {
+    "hit@5": 0.2622178698004104,
+    "mrr@5": 0.1491352152376215,
+    "ndcg@5": 0.17701346220140582,
+    "hit@10": 0.40463532922962137,
+    "mrr@10": 0.16821351589818292,
+    "ndcg@10": 0.22314818521252966
+  },
+  "original_metrics": {
+    "hit@5": 0.2622,
+    "mrr@5": 0.1491,
+    "ndcg@5": 0.177,
+    "hit@10": 0.4046,
+    "mrr@10": 0.1682,
+    "ndcg@10": 0.2231
+  },
+  "max_absolute_difference": 4.818521252966668e-05,
+  "runtime_seconds": 9.102308800000174,
+  "training_performed": false,
+  "torch_threads": 4,
+  "prediction_workers": 1
+}

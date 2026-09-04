@@ -1,0 +1,33 @@
+{
+  "status": "success",
+  "fingerprint": {
+    "checkpoint_sha256": "14b2e165319f7a898533db62d85fcc0c3fff41a3feea9bfd59cc630f43c11c1d",
+    "data_sha256": "65c63db1511af94f8e2093e2d941d2a82f0432d19ef509fe7afb338310b3e3ed",
+    "final_test_id": "validation_first_v7_vstan_collapsed::test::session::yoochoose_recbole_sample::VSTAN::seed=42",
+    "config_json": "{\"vstan_idf_weighting\":true,\"vstan_k\":100,\"vstan_popularity_weight\":0.0,\"vstan_position_decay\":0.5,\"vstan_sample_size\":1000}",
+    "evaluator_sha256": "c9d1dcb583b3df5b60e921ebad433482eea65e556ef00e72a986ea1e0587c3fb"
+  },
+  "query_count": 71475,
+  "test_queries_sha256": "cdc1d8471d6a1a419ca11d527a74b523dd33945384077509d1f46248a10b97f0",
+  "metrics": {
+    "hit@5": 0.44317593564183283,
+    "mrr@5": 0.27370549143057016,
+    "ndcg@5": 0.31594504403984747,
+    "hit@10": 0.5343546694648479,
+    "mrr@10": 0.2861348734433729,
+    "ndcg@10": 0.34569151587459707
+  },
+  "original_metrics": {
+    "hit@5": 0.4432,
+    "mrr@5": 0.2737,
+    "ndcg@5": 0.3159,
+    "hit@10": 0.5344,
+    "mrr@10": 0.2861,
+    "ndcg@10": 0.3457
+  },
+  "max_absolute_difference": 4.5330535152099394e-05,
+  "runtime_seconds": 177.95736450000004,
+  "training_performed": false,
+  "torch_threads": 4,
+  "prediction_workers": 1
+}

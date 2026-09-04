@@ -1,0 +1,33 @@
+{
+  "status": "success",
+  "fingerprint": {
+    "checkpoint_sha256": "a21d53e53f2d14814658162ceab0ff49f32cbaaa42af688d590638cfa0d79c66",
+    "data_sha256": "65c63db1511af94f8e2093e2d941d2a82f0432d19ef509fe7afb338310b3e3ed",
+    "final_test_id": "validation_first_v6::test::session::yoochoose_recbole_sample::VS-KNN::seed=42",
+    "config_json": "{\"neighbor_size\":100,\"sample_size\":1000,\"sampling\":\"recent\",\"score_weighting\":\"quadratic\",\"session_weighting\":\"quadratic\",\"similarity\":\"vec\"}",
+    "evaluator_sha256": "c9d1dcb583b3df5b60e921ebad433482eea65e556ef00e72a986ea1e0587c3fb"
+  },
+  "query_count": 71475,
+  "test_queries_sha256": "cdc1d8471d6a1a419ca11d527a74b523dd33945384077509d1f46248a10b97f0",
+  "metrics": {
+    "hit@5": 0.44243441762854147,
+    "mrr@5": 0.2746347207648362,
+    "ndcg@5": 0.3164649444573955,
+    "hit@10": 0.54030080447709,
+    "mrr@10": 0.28789162599865636,
+    "ndcg@10": 0.34830916956941965
+  },
+  "original_metrics": {
+    "hit@5": 0.4424,
+    "mrr@5": 0.2746,
+    "ndcg@5": 0.3165,
+    "hit@10": 0.5403,
+    "mrr@10": 0.2879,
+    "ndcg@10": 0.3483
+  },
+  "max_absolute_difference": 3.505554260452293e-05,
+  "runtime_seconds": 44.79595040000004,
+  "training_performed": false,
+  "torch_threads": 4,
+  "prediction_workers": 3
+}

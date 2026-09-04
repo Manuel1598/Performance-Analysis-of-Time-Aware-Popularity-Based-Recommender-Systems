@@ -1,0 +1,5 @@
+dataset,model,prefix_group,query_count,query_share,final_test_id,hit@5,mrr@5,ndcg@5,hit@10,mrr@10,ndcg@10
+adressa_recbole_sample,GRU4Rec,1,0,0.0,validation_first_v6::test::session::adressa_recbole_sample::GRU4Rec::seed=42,,,,,,
+adressa_recbole_sample,GRU4Rec,2,19498,0.3030840017409687,validation_first_v6::test::session::adressa_recbole_sample::GRU4Rec::seed=42,0.37321776592471023,0.2134509522344172,0.2529505591927574,0.5357985434403528,0.23485410388041428,0.30522899587680186
+adressa_recbole_sample,GRU4Rec,3,12677,0.19705589753155506,validation_first_v6::test::session::adressa_recbole_sample::GRU4Rec::seed=42,0.37382661512976256,0.21387683731692567,0.2534709904740962,0.5382977045042202,0.2356063537139501,0.3064366198914886
+adressa_recbole_sample,GRU4Rec,4+,32157,0.4998601007274762,validation_first_v6::test::session::adressa_recbole_sample::GRU4Rec::seed=42,0.39639891780949715,0.2273325662634367,0.26913691669531564,0.5642317380352645,0.24974651893907424,0.3234257159675689

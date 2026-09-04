@@ -1,0 +1,5 @@
+dataset,model,prefix_group,query_count,query_share,final_test_id,hit@5,mrr@5,ndcg@5,hit@10,mrr@10,ndcg@10
+adressa_recbole_sample,RecentPop,1,0,0.0,validation_first_v6::test::session::adressa_recbole_sample::RecentPop::seed=42,,,,,,
+adressa_recbole_sample,RecentPop,2,19498,0.3030840017409687,validation_first_v6::test::session::adressa_recbole_sample::RecentPop::seed=42,0.24576879679967176,0.12565134885629295,0.15543281147187976,0.3762437173043389,0.14209332825344725,0.19664226848555857
+adressa_recbole_sample,RecentPop,3,12677,0.19705589753155506,validation_first_v6::test::session::adressa_recbole_sample::RecentPop::seed=42,0.2656779995267019,0.13399858010570323,0.16671354041203837,0.4061686518892482,0.15204598128594343,0.21143495184836553
+adressa_recbole_sample,RecentPop,4+,32157,0.4998601007274762,validation_first_v6::test::session::adressa_recbole_sample::RecentPop::seed=42,0.27082750256553784,0.12467580931057001,0.1610101791265506,0.42124576297540195,0.14424212605712744,0.2091263948876645
