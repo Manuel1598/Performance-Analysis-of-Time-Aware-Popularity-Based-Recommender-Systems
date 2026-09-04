@@ -34,13 +34,13 @@ def main():
                 winners.append(r.model)
         pareto_rows.append(NAMES[dataset]+" & "+", ".join(m for m in ORDER if m in winners)+r" \\")
     efficiency.to_csv(SOURCE / "runtime_efficiency.csv", index=False)
-    table("runtime_pareto.tex", "Non-dominated PC2 models for MRR@10 and recorded total runtime.", "tab:final-pareto", ["Dataset", "Non-dominated models"], "lp{0.65\\textwidth}", pareto_rows, "A model is excluded if another PC2 model on the same dataset has at least as high MRR@10 and at most as much total runtime, with one strict improvement. VSTAN is not assessed across hosts. This is a descriptive frontier, not a repeated timing benchmark.")
+    table("runtime_pareto.tex", "Non-dominated models for MRR@10 and comparable recorded total runtimes.", "tab:final-pareto", ["Dataset", "Non-dominated models"], "lp{0.65\\textwidth}", pareto_rows, "A model is dominated if another eligible model on the same dataset has at least as high MRR@10 and at most as much total runtime, with one strict improvement. VSTAN is excluded because its runtime was measured on different hardware. This is a descriptive frontier, not a repeated timing benchmark.")
     for scenario in ("topn", "session"):
         subset = frame[frame.scenario == scenario]
         quality, exposure, runtime = [], [], []
         for dataset, group in subset.groupby("dataset", sort=True):
             group = group.set_index("model").reindex([m for m in ORDER if m in set(group.model)]).reset_index()
-            for rows, n in ((quality,7),(exposure,5),(runtime,5)):
+            for rows, n in ((quality,7),(exposure,5),(runtime,4)):
                 rows += [r"\multicolumn{"+str(n)+r"}{l}{\textit{"+NAMES[dataset]+r"}} \\"]
             best = group["mrr@10"].max()
             for _, r in group.iterrows():
@@ -49,14 +49,18 @@ def main():
                     vals[-1] = r"\textbf{"+vals[-1]+"}"
                 quality.append(" & ".join([r.model]+vals)+r" \\")
                 exposure.append(" & ".join([r.model, f"{100*r['coverage@10']:.3f}", f"{int(r['unique_recommended_items@10']):,}", f"{r['avg_recommendation_popularity@10']:,.1f}", f"{r['recommendation_frequency_gini@10']:.4f}"])+r" \\")
-                runtime.append(" & ".join([r.model, "PC1" if r.model == "VSTAN" else "PC2", f"{r.runtime_seconds:.2f}", f"{r.evaluation_runtime_seconds:.2f}", f"{r.extra_metrics_runtime_seconds:.2f}"])+r" \\")
+                runtime_model = r.model + (r"$^{\dagger}$" if r.model == "VSTAN" else "")
+                runtime.append(" & ".join([runtime_model, f"{r.runtime_seconds:.2f}", f"{r.evaluation_runtime_seconds:.2f}", f"{r.extra_metrics_runtime_seconds:.2f}"])+r" \\")
             quality.append(r"\addlinespace")
             exposure.append(r"\addlinespace")
             runtime.append(r"\addlinespace")
         name = "Top-N" if scenario == "topn" else "Session"
         table(f"{scenario}_quality.tex", f"{name} ranking quality on the held-out test partition (seed 42).", f"tab:final-{scenario}-quality", ["Model","Hit@5","Hit@10","NDCG@5","NDCG@10","MRR@5","MRR@10"], "lrrrrrr", quality, "Bold marks the highest MRR@10 within each dataset. All entries are decimal values, not percentages.")
         table(f"{scenario}_exposure.tex", f"{name} catalogue exposure at cutoff ten.", f"tab:final-{scenario}-exposure", ["Model", "Coverage (\\%)", "Items", "Avg. count", "Gini"], "lrrrr", exposure, "Items is the number of distinct recommended items. Avg. count is their mean training-target frequency, weighted by recommendation occurrences. Gini includes catalogue items never recommended.")
-        table(f"{scenario}_runtime.tex", f"{name} recorded final-run times in seconds.", f"tab:final-{scenario}-runtime", ["Model", "Host", "Total", "Ranking", "Extra metrics"], "llrrr", runtime, "Total also includes data preparation, model construction, fitting, validation and checkpoint handling. Ranking and extra metrics are separate test-prediction passes. PC1 VSTAN times must not be ranked against PC2 times as a controlled hardware comparison.")
+        runtime_note = "Total also includes data preparation, model construction, fitting, validation and checkpoint handling. Ranking and extra metrics are separate test-prediction passes."
+        if scenario == "session":
+            runtime_note += r" $^{\dagger}$VSTAN used different CPU hardware; its times are not directly comparable with those of the other models."
+        table(f"{scenario}_runtime.tex", f"{name} recorded final-run times in seconds.", f"tab:final-{scenario}-runtime", ["Model", "Total", "Ranking", "Extra metrics"], "lrrr", runtime, runtime_note)
     chart = [r"\begin{figure}[htbp]", r"\centering", r"\begin{tikzpicture}", r"\begin{axis}[thesisbar,width=0.96\textwidth,height=6.8cm,bar width=6pt,ymin=0,ymax=0.34,ylabel={MRR@10},symbolic x coords={Adressa,Globo,Yoochoose},xtick=data,legend columns=3,legend style={at={(0.5,-0.18)},anchor=north,font=\footnotesize},enlarge x limits=0.25]"]
     colors = ["gray!35", "gray!65", "black!80", "blue!65", "cyan!65", "orange!85"]
     models = [m for m in ORDER if m != "BPR"]
