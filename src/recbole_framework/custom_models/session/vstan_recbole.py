@@ -6,6 +6,8 @@ import torch
 from recbole.model.abstract_recommender import SequentialRecommender
 from recbole.utils import InputType
 
+from .vsknn_core import collapse_augmented_sessions
+
 
 class VSTANRecBole(SequentialRecommender):
     input_type = InputType.POINTWISE
@@ -33,9 +35,9 @@ class VSTANRecBole(SequentialRecommender):
         self.reference_session_timestamps: list[float] = []
         self.item_sessions: dict[int, set[int]] = defaultdict(set)
         self.item_idf: dict[int, float] = {}
-        self.item_popularity = self._compute_item_popularity(dataset)
 
         self._build_reference_sessions(dataset)
+        self.item_popularity = self._compute_item_popularity()
         self._compute_idf_weights()
 
     @staticmethod
@@ -45,10 +47,14 @@ class VSTANRecBole(SequentialRecommender):
         except KeyError:
             return default
 
-    def _compute_item_popularity(self, dataset) -> torch.Tensor:
-        item_ids = dataset.inter_feat[self.ITEM_ID].long()
+    def _compute_item_popularity(self) -> torch.Tensor:
+        item_ids = [
+            item_id
+            for session_items in self.reference_sessions
+            for item_id in session_items
+        ]
         item_counts = torch.bincount(
-            item_ids,
+            torch.tensor(item_ids, dtype=torch.long),
             minlength=self.n_items,
         ).float()
 
@@ -58,28 +64,21 @@ class VSTANRecBole(SequentialRecommender):
         return item_popularity.clamp_min(1.0 / interaction_count)
 
     def _build_reference_sessions(self, dataset) -> None:
-        item_seq_data = dataset.inter_feat[self.ITEM_SEQ]
-        item_seq_len_data = dataset.inter_feat[self.ITEM_SEQ_LEN]
-        target_items = dataset.inter_feat[self.ITEM_ID]
-        timestamps = dataset.inter_feat[self.time_field]
+        inter_feat = dataset.inter_feat
+        rows = zip(
+            inter_feat[self.USER_ID].cpu().tolist(),
+            inter_feat[self.ITEM_SEQ].cpu().tolist(),
+            inter_feat[self.ITEM_SEQ_LEN].cpu().tolist(),
+            inter_feat[self.ITEM_ID].cpu().tolist(),
+            inter_feat[self.time_field].cpu().tolist(),
+        )
+        sessions = collapse_augmented_sessions(rows)
 
-        for row_idx in range(len(item_seq_data)):
-            seq_len = int(item_seq_len_data[row_idx])
-            item_seq = item_seq_data[row_idx][:seq_len].cpu().tolist()
-            target_item = int(target_items[row_idx])
-
-            session_items = [int(item_id) for item_id in item_seq if int(item_id) > 0]
-
-            if target_item > 0:
-                session_items.append(target_item)
-
-            if not session_items:
-                continue
-
+        for _, session_items, timestamp in sessions:
             session_index = len(self.reference_sessions)
 
             self.reference_sessions.append(session_items)
-            self.reference_session_timestamps.append(float(timestamps[row_idx]))
+            self.reference_session_timestamps.append(timestamp)
 
             session_item_set = set(session_items)
             self.reference_session_sets.append(session_item_set)
