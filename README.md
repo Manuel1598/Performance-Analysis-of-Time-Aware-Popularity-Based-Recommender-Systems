@@ -1,377 +1,285 @@
-# Performance Analysis of Time-Aware Popularity-Based Recommender Systems
+# Temporal Effects in Recommender Systems
 
-**Master thesis project**  
-Author: Manuel Weilguni  
-University: AAU  
-Year: 2026
+**A Comparative Evaluation Across Top-N and Session-Based Recommendation**
 
-## Overview
+Master thesis project by Manuel Weilguni, Alpen-Adria-Universitaet Klagenfurt,
+2026.
 
-This repository contains the implementation, tuning runs, and analysis pipeline
-for the thesis project:
+## Project status
 
-**Performance Analysis of Time-Aware Popularity-Based Recommender Systems**
+The experimental code and the primary evaluation are complete. The repository
+contains the RecBole integrations, validation-first experiment runner, audited
+result consolidation, final analysis, and tests used for the thesis.
 
-The project studies whether simple popularity-based recommender systems become
-stronger and more informative baselines when temporal information is included.
-The main focus is on:
+The final result set contains:
 
-- ranking quality
-- temporal popularity dynamics
-- popularity bias
-- runtime and computational efficiency
-- differences between Top-N and session-based recommendation
+- 197 successful and selection-eligible validation trials;
+- 26 final model--dataset evaluations on the held-out test partitions;
+- one primary final seed (`42`) per model--dataset pair;
+- 8 Top-N results and 18 session results;
+- a verified supplementary analysis by available session-prefix length.
 
-The final experimental system is based on **RecBole**. Earlier prototype code is
-kept in the repository for traceability, but the main results are produced with
-the RecBole framework.
+The 26 final configurations were selected by validation MRR@10 before their
+test scores were evaluated. Test results were not used for model selection.
 
-## Current Project Status
+## Experimental scope
 
-The project has moved beyond the prototype phase. The current state includes:
+### Top-N recommendation
 
-- RecBole-native custom Top-N models:
-  - `MostPop`
-  - `RecentPop`
-  - `DecayPop`
-- RecBole-compatible session models:
-  - `VS-KNN`
-  - `VSTAN`
-  - `GRU4Rec`
-- RecBole Top-N baseline:
-  - `BPR`
-- prepared RecBole datasets in `.inter` format
-- full tuning result files for Top-N and session experiments
-- structured analysis reports, comparison tables, runtime summaries, and plots
-- Docker-based server execution for reproducible full-dataset reruns
-- a dedicated reproducibility guide for thesis result replication
+Datasets:
 
-The current full-tuning result files are:
+- `amazon_recbole` (Amazon Video Games)
+- `movielens_recbole` (MovieLens 20M)
 
-- `recbole_results/tuning_results/session_full_tuning_results.csv`
-- `recbole_results/tuning_results/topn_full_tuning_results.csv`
-- `recbole_results/experiment_logs/session_full_tuning_experiment_log.csv`
-- `recbole_results/experiment_logs/topn_full_tuning_experiment_log.csv`
+Models:
 
-The VSKNN upstream audit and RecBole proposal draft are documented in:
+- `MostPop`: global popularity
+- `RecentPop`: popularity in a recent time window
+- `DecayPop`: exponentially time-decayed popularity
+- `BPR`: personalised Bayesian pairwise ranking
 
-- `docs/recbole_vsknn_audit.md`
-- `docs/recbole_vsknn_issue_draft.md`
+### Session-based recommendation
 
-For a local CPU smoke test, use Python 3.11 with RecBole 1.2.1 and run:
+Prepared 500,000-event samples:
 
-```powershell
-python -m src.recbole_framework.runners.session.run_vsknn_recbole
-```
-
-Select one session dataset or run all three local samples:
-
-```powershell
-python -m src.recbole_framework.runners.session.run_vsknn_recbole --dataset globo_recbole_sample
-python -m src.recbole_framework.runners.session.run_vsknn_recbole --all-samples
-```
-
-Per-dataset files and the combined sample summary are written to
-`recbole_results/vsknn_audited/`.
-
-Run or resume the compact audited-VSKNN tuning grid with:
-
-```powershell
-python -m src.recbole_framework.tuning.tune_vsknn_audited
-```
-
-The runner reuses validated baseline rows, saves after every configuration, and
-skips successful run IDs when restarted.
-
-The structured evaluation report is generated here:
-
-- `recbole_results/tuning_results/analysis_results/structured_report/recbole_structured_evaluation.md`
-
-## Research Questions
-
-The central research question is:
-
-> How does incorporating temporal information affect the performance and
-> behavior of popularity-based recommender systems?
-
-Sub-questions:
-
-- Do time-aware popularity models improve ranking performance compared with
-  standard popularity baselines?
-- How do popularity-based models compare with model-based recommender systems?
-- How much popularity bias is visible in the recommendations?
-- Do results differ across domains and datasets?
-- How do Top-N and session-based recommendation results differ?
-- Are quality improvements computationally efficient when runtime is included?
-
-## Datasets
-
-The project uses RecBole-formatted datasets under `data/recbole/`.
-
-### Top-N Recommendation
-
-- `movielens_recbole`
-- `amazon_recbole`
-
-### Session-Based Recommendation
-
-- `yoochoose_recbole`
-- `globo_recbole`
-- `adressa_recbole`
-
-The current checked-in structured report is based on the available local
-session sample results:
-
-- `yoochoose_recbole_sample`
-- `globo_recbole_sample`
 - `adressa_recbole_sample`
+- `globo_recbole_sample`
+- `yoochoose_recbole_sample`
 
-The Docker server runner is configured for the full session datasets by default.
+Models:
 
-The structured analysis computes dataset characteristics directly from the
-`.inter` files, including:
+- `MostPop`
+- `RecentPop`
+- `DecayPop`
+- `VS-KNN`: session-neighbourhood recommendation
+- `VSTAN`: sequence- and time-aware session-neighbourhood recommendation
+- `GRU4Rec`: recurrent next-item recommendation
 
-- number of interactions
-- number of users or sessions
-- number of items
-- average interactions per user/session
-- average interactions per item
-- interaction matrix density
-- timestamp range
+Only these prepared session samples contribute to the thesis results. Full
+session datasets and earlier prototype runs are not part of the final tables.
 
-## Models
+## Final evaluation protocol
 
-### Top-N Models
+The primary runner is `tools.run_validation_first_experiments`.
 
-Custom RecBole models:
+- Interactions are ordered chronologically (`TO`).
+- RecBole applies an 80/10/10 ratio split within each persistent user or
+  retained sequence identity.
+- Sequential datasets are first converted into prefix--target examples.
+- Hyperparameters are selected separately for every model--dataset pair by
+  validation MRR@10.
+- Exact validation ties are resolved by lower validation runtime and then by
+  the stable run identifier.
+- The selected configuration is refitted and evaluated once with seed `42`.
+- Every primary final run uses CPU.
+- BPR configurations above 256 embedding dimensions are retained in the audit
+  trail but excluded from selection because of the declared resource limit.
+- Corrected VSTAN results reconstruct one historical training reference per
+  original sequence. They replace the superseded VSTAN rows from protocol v6.
 
-- `MostPop`: global popularity baseline
-- `RecentPop`: popularity within a recent time window
-- `DecayPop`: popularity with time-decayed interaction weights
+VS-KNN and VSTAN do not insert every RecBole training prefix as a separate
+historical neighbour. Their adapters collapse the augmented rows into one
+reference per original training sequence. This prevents longer sequences from
+receiving extra neighbour weight only because they generate more prefixes.
 
-Baseline:
+The corrected VSTAN runs were recorded on different CPU hardware from the
+other final runs. Their quality values belong to the final comparison, but
+their runtimes are excluded from direct cross-model speed comparisons and the
+quality--runtime Pareto frontier.
 
-- `BPR`: Bayesian Personalized Ranking
+## Environment and data
 
-### Session-Based Models
+Python 3.11 is the supported project environment. A compact CPU environment
+can be created with:
 
-Custom session models:
+```powershell
+py -3.11 -m venv .venv-vsknn
+.\.venv-vsknn\Scripts\python.exe -m pip install -r requirements-session-worker.txt
+```
 
-- `VS-KNN`: session-neighborhood baseline
-- `VSTAN`: time-aware session-neighborhood model
+Prepared data is expected below `data/recbole/` in RecBole `.inter` format:
 
-Baseline:
+```text
+data/recbole/<dataset>/<dataset>.inter
+```
 
-- `GRU4Rec`: neural session recommendation model
+Raw and prepared datasets are intentionally not committed. Reproduction
+requires the same processed `.inter` files, dependency versions, configurations
+and code revision, not only the same random seed.
 
-## Evaluation Metrics
+## Running the validation-first experiments
 
-The main evaluation metric for model quality is:
+Run or resume all validation trials:
+
+```powershell
+.\.venv-vsknn\Scripts\python.exe -m tools.run_validation_first_experiments `
+  --phase tune `
+  --scenario both `
+  --device cpu
+```
+
+Run the final test phase after all required validation trials are complete:
+
+```powershell
+.\.venv-vsknn\Scripts\python.exe -m tools.run_validation_first_experiments `
+  --phase test `
+  --scenario both
+```
+
+The runner also accepts `--datasets`, `--models`, and `--output-dir`. A separate
+output directory can isolate a worker process. Successful stable identifiers
+are skipped when a stopped run is resumed.
+
+By default, the runner writes incrementally to:
+
+- `recbole_results/validation_first/validation_trials.csv`
+- `recbole_results/validation_first/final_test_results.csv`
+- `recbole_results/validation_first/checkpoints/`
+
+Seed `43` is available only as an optional robustness check for BPR and
+GRU4Rec through `--include-optional-robustness-seed`. It is not required for
+completion and does not replace the primary seed-42 result.
+
+## Consolidating the final results
+
+The immutable worker sources expected by the final consolidation are:
+
+- `recbole_results/validation_first_workers/final_pc2/`
+- `recbole_results/validation_first_workers/vstan_collapsed_v7/`
+
+Their directory names preserve the execution provenance. Run:
+
+```powershell
+.\.venv-vsknn\Scripts\python.exe -m tools.consolidate_final_results
+```
+
+The command verifies the complete eligible grids, the validation winners, the
+frozen final configurations, seed 42, checkpoint uniqueness, result metrics,
+and expected totals. It writes only to `recbole_results/final_analysis/` and
+does not modify the source files.
+
+Important final files are:
+
+- `recbole_results/final_analysis/audit.json`
+- `recbole_results/final_analysis/validation_trials.csv`
+- `recbole_results/final_analysis/selected_validation.csv`
+- `recbole_results/final_analysis/final_results.csv`
+- `recbole_results/final_analysis/runtime_efficiency.csv`
+
+The source policy keeps protocol-v6 rows for unchanged models and replaces all
+VSTAN validation and final rows with the corrected protocol-v7 results. Legacy
+final rows, superseded VSTAN rows, and ineligible 512-dimensional BPR trials are
+excluded explicitly rather than silently rewritten.
+
+## Session-prefix analysis
+
+The supplementary analysis groups the existing session test queries by one,
+two, three, and at least four available input clicks:
+
+```powershell
+.\.venv-vsknn\Scripts\python.exe -m tools.evaluate_session_prefix_groups
+```
+
+This command performs inference only. It reloads the frozen final checkpoints
+and never calls `fit`. A group is published only if all six aggregate ranking
+metrics reproduce the original rounded final result, query counts match, and
+all models use identical query fingerprints and group sizes.
+
+The final split contains no one-click test queries, so that group is recorded
+as empty rather than assigned a score of zero. The groups contain different
+queries and targets; they are descriptive subgroups, not a controlled test of
+what happens when another click is added to the same query.
+
+Outputs are stored below:
+
+```text
+recbole_results/final_analysis/prefix_groups/
+```
+
+## Metrics
+
+Primary selection metric:
 
 - `MRR@10`
 
-`MRR@10` is used as the primary metric because it rewards models that rank the
-first relevant item very high. This is especially important for session-based
-recommendation, where the next useful item should appear near the top.
+Additional ranking metrics:
 
-Supporting ranking metrics:
-
-- `Hit@5`
-- `Hit@10`
-- `NDCG@5`
-- `NDCG@10`
+- `Hit@5`, `Hit@10`
+- `NDCG@5`, `NDCG@10`
 - `MRR@5`
 
-Popularity-bias and recommendation-diversity metrics:
+Catalogue and recommendation-distribution metrics:
 
 - `coverage@10`
+- `unique_recommended_items@10`
 - `avg_recommendation_popularity@10`
+- `recommendation_frequency_gini@10`
 
-Runtime and efficiency metrics:
+Runtime fields separate total execution, ranking evaluation, and the additional
+catalogue-metric pass. Recorded totals are descriptive single-run measurements,
+not repeated hardware benchmarks or per-request serving latency.
 
-- `runtime_seconds`
-- `train_runtime_seconds`
-- `eval_runtime_seconds`
-- `extra_metrics_runtime_seconds`
-- `runtime_minutes`
-- `mrr@10_per_minute`
-- `ndcg@10_per_minute`
-- `hit@10_per_minute`
-- `runtime_relative_to_dataset_fastest`
-- `quality_runtime_pareto_efficient`
+## Generating final thesis tables
 
-The final analysis should not rely on ranking metrics alone. For this project,
-the most important combined view is:
-
-1. `MRR@10` for primary quality
-2. `NDCG@10` for ranked relevance quality
-3. `Hit@10` for intuitive top-k success
-4. `coverage@10` for recommendation breadth
-5. `avg_recommendation_popularity@10` for popularity bias
-6. `runtime_seconds` and `mrr@10_per_minute` for efficiency
-
-## Project Structure
-
-```text
-data/
-  raw/                         raw downloaded datasets
-  processed/                   prototype-stage processed data
-  recbole/                     RecBole .inter datasets
-
-docs/                          additional project documentation
-logs/                          work log
-notebooks/                     exploratory notebooks
-recbole_results/               RecBole tuning logs, result CSVs, reports, plots
-results_prototype/             prototype-stage outputs
-
-src/
-  prototype/                   initial standalone implementation
-  recbole_framework/
-    analysis/                  comparison and structured evaluation scripts
-    custom_models/             custom RecBole and session model implementations
-    datasets/                  dataset preparation scripts
-    measurement/               extra metrics and experiment logging
-    runners/                   single-model runner scripts
-    tuning/                    tuning and full-experiment scripts
-```
-
-## Important Scripts
-
-### Dataset Preparation
-
-Top-N:
-
-- `src/recbole_framework/datasets/topn/prepare_recbole_movielens.py`
-- `src/recbole_framework/datasets/topn/prepare_recbole_amazon.py`
-
-Session:
-
-- `src/recbole_framework/datasets/session/prepare_yoochoose_recbole.py`
-- `src/recbole_framework/datasets/session/prepare_yoochoose_recbole_sample.py`
-- `src/recbole_framework/datasets/session/prepare_globo_recbole.py`
-- `src/recbole_framework/datasets/session/prepare_adressa_recbole.py`
-
-### Full Tuning
-
-- `src/recbole_framework/tuning/tune_session_models_full.py`
-- `src/recbole_framework/tuning/evaluate_session_models_final.py`
-- `src/recbole_framework/tuning/tune_topn_models_full.py`
-- `src/recbole_framework/tuning/run_all_full_tuning.py`
-- `src/recbole_framework/tuning/run_server_full_experiments.py`
-
-### Docker And Reproducibility
-
-- `Dockerfile`
-- `docker/requirements-server.txt`
-- `docs/server_docker_run.md`
-- `docs/reproducibility.md`
-
-### Analysis
-
-- `src/recbole_framework/analysis/analyze_session_tuning_results.py`
-- `src/recbole_framework/analysis/analyze_topn_tuning_results.py`
-- `src/recbole_framework/analysis/compare_recbole_session_models.py`
-- `src/recbole_framework/analysis/compare_recbole_topn_models.py`
-- `src/recbole_framework/analysis/evaluate_recbole_results.py`
-
-The main analysis entry point is:
+After consolidation and prefix replay, generate the LaTeX tables with:
 
 ```powershell
-python src\recbole_framework\analysis\evaluate_recbole_results.py --scope full
+.\.venv-vsknn\Scripts\python.exe -m tools.build_final_results_tables
 ```
 
-If the local virtual environment launcher is broken, use a valid Python 3.12
-interpreter and make sure the project environment packages are available.
+The table builder reads only the audited final analysis. It never creates a
+thesis result from a validation score. The optional table export expects the
+separate thesis checkout at `overleaf-thesis-project/`; that nested repository
+is intentionally not tracked by this code repository.
 
-## Structured Result Analysis
+## Tests
 
-The structured evaluator reads the full tuning results and creates:
+Run the complete test suite with the Python standard library:
 
-- `dataset_summary.csv`
-- `model_summary.csv`
-- `tuning_summary.csv`
-- `best_overall.csv`
-- `best_per_model.csv`
-- `comparative_summary.csv`
-- `runtime_summary.csv`
-- `efficiency_summary.csv`
-- plots under `structured_report/plots/`
-- `recbole_structured_evaluation.md`
+```powershell
+.\.venv-vsknn\Scripts\python.exe -m unittest discover -s tests -v
+```
 
-The `comparative_summary.csv` file is the most useful compact table for thesis
-interpretation because it combines quality, bias-related metrics, runtime, and
-efficiency.
+The current suite contains 52 tests covering, among other things:
 
-## Current Full-Tuning Scope
+- stable validation identifiers and resumable result writing;
+- conflict-safe consolidation of distributed result files;
+- grid completeness, resource exclusions, and winner selection;
+- final-result and prefix-group reconciliation;
+- VS-KNN scoring and candidate retrieval;
+- collapse of RecBole prefixes for VS-KNN and VSTAN;
+- protection against validation/test rows entering the neighbour index.
 
-The currently checked-in structured report is based on the latest local full
-tuning files and contains:
+## Repository structure
 
-- 356 cleaned result rows
-- 355 successful result rows
-- 5 datasets
-- 7 evaluated models
+```text
+config/                       declared result sources and protocol settings
+data/recbole/                 local prepared datasets (not committed)
+docs/                         detailed audit and reproduction notes
+logs/                         retained execution evidence and work log
+recbole_results/final_analysis/
+                              audited compact final results
+src/recbole_framework/        models, dataset preparation, runners and analysis
+tests/                        unit and protocol tests
+tools/                        final experiment, consolidation and replay tools
+```
 
-Evaluated datasets:
+Earlier prototype and exploratory code is retained for traceability. The
+validation-first runner and `recbole_results/final_analysis/` are authoritative
+for the thesis results.
 
-- `adressa_recbole_sample`
-- `amazon_recbole`
-- `globo_recbole_sample`
-- `movielens_recbole`
-- `yoochoose_recbole_sample`
+## Detailed documentation
 
-For a new server-side reproduction run, the Docker runner uses the full session
-datasets by default:
-
-- `adressa_recbole`
-- `globo_recbole`
-- `yoochoose_recbole`
-
-and the Top-N datasets:
-
-- `amazon_recbole`
-- `movielens_recbole`
-
-Evaluated models:
-
-- `BPR`
-- `DecayPop`
-- `GRU4Rec`
-- `MostPop`
-- `RecentPop`
-- `VS-KNN`
-- `VSTAN`
-
-## Reproducibility Notes
-
-The project is designed around reproducible experiment stages:
-
-1. prepare raw datasets into RecBole `.inter` files
-2. run RecBole model tuning
-3. store experiment logs and result CSVs
-4. generate structured reports and plots from result CSVs
-
-The generated result directories are experiment artifacts and may be ignored by
-Git depending on local settings. The code required to reproduce the analysis is
-kept under `src/recbole_framework/`.
-
-For a complete step-by-step reproduction workflow, including Docker server runs,
-dataset placement, output files, result archiving, and structured evaluation,
-see:
-
+- `docs/final_results_and_prefix_analysis.md`
+- `docs/validation_first_v6_reporting_pipeline.md`
+- `docs/recbole_vsknn_audit.md`
+- `docs/recbole_vsknn_upstream_checklist.md`
 - `docs/reproducibility.md`
-- `docs/server_docker_run.md`
 
-## Summary
+## Reproducibility boundaries
 
-This repository now contains both the historical prototype pipeline and the
-current RecBole-based experimental system. The current project focus is no
-longer basic model integration, but systematic comparison of Top-N and
-session-based recommender models with respect to:
-
-- ranking performance
-- time-aware popularity effects
-- popularity bias
-- dataset differences
-- runtime and efficiency
-
+The primary results use one seed and one temporal split. Small score differences
+therefore do not establish statistical significance or stability across time
+periods. The session experiments use prepared samples, and VSTAN runtime was
+measured on different hardware. These limits are part of the documented result
+interpretation, not hidden post-processing choices.

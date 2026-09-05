@@ -29,6 +29,13 @@ src/**/artifacts/
 *.pth
 *.zip
 
+# Local generated, transferred, and nested workspaces
+/output/
+/outputs/
+/tmp/
+/recbole_results/validation_first_workers/
+/overleaf-thesis-project/
+
 # OS files
 Thumbs.db
 .DS_Store
