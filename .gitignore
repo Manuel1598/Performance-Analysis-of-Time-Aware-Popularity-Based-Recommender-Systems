@@ -26,6 +26,8 @@ results_prototype/
 src/**/log_tensorboard/
 log_tensorboard/
 src/**/artifacts/
+/logs/full_runs/
+/logs/night_runs/
 *.pth
 *.zip
 

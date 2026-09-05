@@ -3,7 +3,7 @@
   "generated_at": "2026-09-01T14:08:16.671372+02:00",
   "state": "incomplete",
   "allow_incomplete": true,
-  "source_config": "C:\\Users\\mweil\\AppData\\Local\\Temp\\validation_first_v6_reporting_4euzzomy\\sources.json",
+  "source_config": "TEMP_DIR\\validation_first_v6_reporting_4euzzomy\\sources.json",
   "selection_policy": {
     "max_bpr_embedding_size": 256,
     "primary_final_seeds": [
@@ -44,5 +44,5 @@
     "multiple_failures_prefer_first_source": 3,
     "exact_duplicate": 169
   },
-  "requested_source_config": "F:\\TimeAware Popularity Models and Fair Evaluation\\config\\validation_first_v6_result_sources.json"
+  "requested_source_config": "PROJECT_ROOT\\config\\validation_first_v6_result_sources.json"
 }

@@ -1,8 +1,0 @@
-{
-  "protocol": "validation_first_v6",
-  "phase": "topn_tuning",
-  "state": "stopped_resource_budget",
-  "message": "Planned stop: BPR configurations above embedding_size=256 were excluded from selection because the full Amazon 512-dimensional trials exceeded the available CPU budget.",
-  "process_id": null,
-  "updated_at": "2026-09-01T13:38:44+02:00"
-}
