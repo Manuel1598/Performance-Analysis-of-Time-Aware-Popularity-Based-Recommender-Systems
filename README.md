@@ -82,9 +82,12 @@ historical neighbour. Their adapters collapse the augmented rows into one
 reference per original training sequence. This prevents longer sequences from
 receiving extra neighbour weight only because they generate more prefixes.
 
-The corrected VSTAN runs were recorded on different CPU hardware from the
-other final runs. Their quality values belong to the final comparison, but
-their runtimes are excluded from direct cross-model speed comparisons and the
+The corrected VSTAN runs were recorded on PC1 (Intel Core i5-13600KF,
+32 GB DDR4). The other final runs were recorded on PC2 (AMD Ryzen 9 9950X,
+128 GB DDR5). PC1 contained an NVIDIA GeForce RTX 2070 Super and PC2 an NVIDIA
+GeForce RTX 5090, but every reported experiment used CPU and did not use either
+GPU. VSTAN quality values belong to the final comparison, while its runtimes
+are excluded from direct cross-model speed comparisons and the
 quality--runtime Pareto frontier.
 
 ## Environment and data
@@ -103,9 +106,16 @@ Prepared data is expected below `data/recbole/` in RecBole `.inter` format:
 data/recbole/<dataset>/<dataset>.inter
 ```
 
-Raw and prepared datasets are intentionally not committed. Reproduction
-requires the same processed `.inter` files, dependency versions, configurations
-and code revision, not only the same random seed.
+Raw and prepared datasets are intentionally not committed because access and
+redistribution conditions differ by source. Reproduction requires the same
+processed `.inter` files, dependency versions, configurations and code revision,
+not only the same random seed. `docs/prepared_dataset_manifest.csv` publishes the
+byte size, interaction count and SHA-256 checksum of each evaluated file. Rebuild
+that manifest locally with:
+
+```powershell
+.\.venv-vsknn\Scripts\python.exe tools\build_dataset_manifest.py
+```
 
 ## Running the validation-first experiments
 
@@ -139,6 +149,17 @@ By default, the runner writes incrementally to:
 Seed `43` is available only as an optional robustness check for BPR and
 GRU4Rec through `--include-optional-robustness-seed`. It is not required for
 completion and does not replace the primary seed-42 result.
+
+The paired query-level session sensitivity analysis can be regenerated with:
+
+```powershell
+.\.venv-vsknn\Scripts\python.exe tools\analyze_session_pairwise_significance.py
+```
+
+It writes `recbole_results/final_analysis/session_pairwise_significance.csv`.
+The test is paired by replay-query order and uses Holm correction. Because more
+than one query can originate from the same sequence, it is not an
+independent-session significance test.
 
 ## Consolidating the final results
 
