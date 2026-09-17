@@ -150,24 +150,29 @@ JSONL format (e.g., `Video_Games.jsonl`)
 
 - `user_id`
 - `asin` → mapped to `item_id`
+- `rating`
 - `timestamp`
 
 ---
 
 ### Preprocessing
 
-- conversion to implicit interaction format  
-- mapping to `user_id`, `item_id`, `timestamp`  
-- chronological sorting  
-- filtering of users with insufficient interactions  
+- retain only ratings greater than or equal to `4.0`
+- map retained records to `user_id`, `item_id`, `timestamp`
+- remove users with fewer than 2 retained positive interactions
+- sort retained interactions chronologically per user
+
+The rating threshold is applied before the user-history filter. The numerical
+rating is then removed, so each retained row represents one positive implicit
+interaction.
 
 ---
 
 ### Data Splitting
 
-Same as MovieLens:
-
-- chronological leave-one-out split  
+The validation-first runner applies RecBole's ordered 80/10/10 split within
+each retained user history. Hyperparameters are selected with validation data;
+the test partition is evaluated only after the configuration is fixed.
 
 ---
 
@@ -175,6 +180,13 @@ Same as MovieLens:
 
 - conversion into `.inter` format  
 - alignment with RecBole input requirements  
+
+The final file is:
+
+`data/recbole/amazon_positive_recbole/amazon_positive_recbole.inter`
+
+The earlier `amazon_recbole` file and its results are legacy artefacts based
+on all rating values. They must not be merged with the positive-feedback runs.
 
 ---
 

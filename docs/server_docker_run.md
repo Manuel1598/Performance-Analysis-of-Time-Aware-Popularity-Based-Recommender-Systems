@@ -8,7 +8,7 @@ The Docker setup runs the thesis experiments on prepared RecBole datasets. The d
 
 Default Top-N experiments:
 
-- Datasets: `movielens_positive_recbole`, `amazon_recbole`
+- Datasets: `movielens_positive_recbole`, `amazon_positive_recbole`
 - Models: `MostPop`, `RecentPop`, `DecayPop`
 - Optional model: `BPR` with `--include-bpr`
 
@@ -87,8 +87,8 @@ Inside that folder, the structure must look like this:
     yoochoose_recbole.inter
   movielens_positive_recbole/
     movielens_positive_recbole.inter
-  amazon_recbole/
-    amazon_recbole.inter
+  amazon_positive_recbole/
+    amazon_positive_recbole.inter
 ```
 
 The exact RecBole files can include additional generated files, but each dataset folder must at least contain the matching `.inter` file.
@@ -100,7 +100,7 @@ adressa_recbole/adressa_recbole.inter
 globo_recbole/globo_recbole.inter
 yoochoose_recbole/yoochoose_recbole.inter
 movielens_positive_recbole/movielens_positive_recbole.inter
-amazon_recbole/amazon_recbole.inter
+amazon_positive_recbole/amazon_positive_recbole.inter
 ```
 
 When Docker starts, this server folder is mounted to:
@@ -116,7 +116,7 @@ That means the container will see:
 /app/data/recbole/globo_recbole/
 /app/data/recbole/yoochoose_recbole/
 /app/data/recbole/movielens_positive_recbole/
-/app/data/recbole/amazon_recbole/
+/app/data/recbole/amazon_positive_recbole/
 ```
 
 ## 5. Where Results Will Be Written

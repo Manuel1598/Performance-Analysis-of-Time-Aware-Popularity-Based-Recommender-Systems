@@ -76,35 +76,39 @@ Expected Top-N datasets:
 
 ```text
 data/recbole/movielens_positive_recbole/movielens_positive_recbole.inter
-data/recbole/amazon_recbole/amazon_recbole.inter
+data/recbole/amazon_positive_recbole/amazon_positive_recbole.inter
 ```
 
-Prepare the positive-feedback MovieLens dataset with:
+Prepare the two positive-feedback Top-N datasets with:
 
 ```bash
 python -m src.prototype.datapipeline.preprocessing_movielens
 python -m src.recbole_framework.datasets.topn.prepare_recbole_movielens
+python -m src.prototype.datapipeline.preprocessing_amazon
+python -m src.recbole_framework.datasets.topn.prepare_recbole_amazon
 ```
 
 The first command retains ratings of at least `4.0`, removes users with fewer
 than two retained interactions, and writes
 `data/processed/movielens_positive_interactions.csv`. The second command writes
-the RecBole `.inter` file shown above.
+the RecBole `.inter` file shown above. The two Amazon commands apply the same
+rating threshold and minimum positive-history rule to the Video Games records.
 
-Run the complete MovieLens validation-first protocol in a fresh output
+Run the complete positive-feedback Top-N protocol in a fresh output
 directory:
 
 ```bash
 python -m tools.run_validation_first_experiments \
   --phase all \
   --scenario topn \
-  --datasets movielens_positive_recbole \
+  --datasets movielens_positive_recbole amazon_positive_recbole \
   --device cpu \
-  --output-dir recbole_results/validation_first_v8_movielens_positive
+  --output-dir recbole_results/validation_first_v8_positive_feedback
 ```
 
-Do not merge these rows with legacy `movielens_recbole` results. The new
-protocol version and dataset name deliberately produce distinct run identifiers.
+Do not merge these rows with legacy `movielens_recbole` or `amazon_recbole`
+results. The new protocol version and dataset names deliberately produce
+distinct run identifiers.
 
 Expected session-based datasets:
 
