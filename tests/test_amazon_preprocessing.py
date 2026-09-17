@@ -1,8 +1,13 @@
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import pandas as pd
 
-from src.prototype.datapipeline.preprocessing_amazon import preprocess_amazon
+from src.prototype.datapipeline.preprocessing_amazon import (
+    preprocess_amazon,
+    resolve_amazon_input,
+)
 
 
 class AmazonPreprocessingTests(unittest.TestCase):
@@ -66,6 +71,19 @@ class AmazonPreprocessingTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "at least 2"):
             preprocess_amazon(reviews, min_interactions_per_user=1)
+
+    def test_finds_direct_or_nested_video_games_file(self):
+        with TemporaryDirectory() as temporary_directory:
+            raw_directory = Path(temporary_directory)
+            direct_file = raw_directory / "Video_Games.jsonl"
+            direct_file.touch()
+            self.assertEqual(resolve_amazon_input(raw_directory), direct_file)
+
+            direct_file.unlink()
+            nested_file = raw_directory / "Video_Games.jsonl" / "Video_Games.jsonl"
+            nested_file.parent.mkdir()
+            nested_file.touch()
+            self.assertEqual(resolve_amazon_input(raw_directory), nested_file)
 
 
 if __name__ == "__main__":

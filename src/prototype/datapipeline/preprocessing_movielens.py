@@ -8,6 +8,26 @@ MIN_POSITIVE_RATING = 4.0
 MIN_INTERACTIONS_PER_USER = 2
 
 
+def resolve_movielens_input(raw_directory: Path) -> Path:
+    """Find ratings.csv below the MovieLens raw-data folder."""
+    direct_file = raw_directory / "ratings.csv"
+    if direct_file.is_file():
+        return direct_file
+
+    nested_files = sorted(raw_directory.glob("*/ratings.csv"))
+    if len(nested_files) == 1:
+        return nested_files[0]
+    if len(nested_files) > 1:
+        raise FileNotFoundError(
+            "Multiple MovieLens ratings.csv files found below "
+            f"{raw_directory}: {nested_files}"
+        )
+    raise FileNotFoundError(
+        "MovieLens ratings.csv not found. Expected it directly in "
+        f"{raw_directory} or in one immediate subdirectory."
+    )
+
+
 def prepare_movielens_interactions(
     ratings: pd.DataFrame,
     min_rating: float = MIN_POSITIVE_RATING,
@@ -68,7 +88,8 @@ def main() -> None:
     args = parse_args()
     project_root = Path(__file__).resolve().parents[3]
 
-    input_file = project_root / "data" / "raw" / "movielens" / "ratings.csv"
+    raw_directory = project_root / "data" / "raw" / "movielens"
+    input_file = resolve_movielens_input(raw_directory)
     output_file = (
         project_root
         / "data"
@@ -76,13 +97,7 @@ def main() -> None:
         / "movielens_positive_interactions.csv"
     )
 
-    if not input_file.exists():
-        raise FileNotFoundError(
-            f"Input file not found: {input_file}\n"
-            "Please make sure MovieLens ratings.csv is located in data/raw/movielens/."
-        )
-
-    print("Loading MovieLens ratings data...")
+    print(f"Loading MovieLens ratings data from {input_file}...")
     ratings = pd.read_csv(input_file)
     total_users = ratings["userId"].nunique() if "userId" in ratings else 0
 

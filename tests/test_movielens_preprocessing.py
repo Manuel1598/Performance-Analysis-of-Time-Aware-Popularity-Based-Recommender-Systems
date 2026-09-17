@@ -1,9 +1,12 @@
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import pandas as pd
 
 from src.prototype.datapipeline.preprocessing_movielens import (
     prepare_movielens_interactions,
+    resolve_movielens_input,
 )
 
 
@@ -70,6 +73,19 @@ class MovieLensPreprocessingTests(unittest.TestCase):
             prepare_movielens_interactions(
                 ratings, min_interactions_per_user=1
             )
+
+    def test_finds_direct_or_nested_ratings_file(self):
+        with TemporaryDirectory() as temporary_directory:
+            raw_directory = Path(temporary_directory)
+            direct_file = raw_directory / "ratings.csv"
+            direct_file.touch()
+            self.assertEqual(resolve_movielens_input(raw_directory), direct_file)
+
+            direct_file.unlink()
+            nested_file = raw_directory / "ml-20m" / "ratings.csv"
+            nested_file.parent.mkdir()
+            nested_file.touch()
+            self.assertEqual(resolve_movielens_input(raw_directory), nested_file)
 
 
 if __name__ == "__main__":

@@ -9,6 +9,21 @@ MIN_POSITIVE_RATING = 4.0
 MIN_INTERACTIONS_PER_USER = 2
 
 
+def resolve_amazon_input(raw_directory: Path) -> Path:
+    """Find the Video Games review file below the Amazon raw-data folder."""
+    candidates = [
+        raw_directory / "Video_Games.jsonl",
+        raw_directory / "Video_Games.jsonl" / "Video_Games.jsonl",
+    ]
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    raise FileNotFoundError(
+        "Amazon Video Games file not found. Expected one of:\n"
+        + "\n".join(str(path) for path in candidates)
+    )
+
+
 def load_amazon_reviews(file_path: Path) -> pd.DataFrame:
     if not file_path.exists():
         raise FileNotFoundError(f"Amazon file not found: {file_path}")
@@ -104,14 +119,8 @@ def main() -> None:
     args = parse_args()
     project_root = Path(__file__).resolve().parents[3]
 
-    input_file = (
-        project_root
-        / "data"
-        / "raw"
-        / "amazon"
-        / "Video_Games.jsonl"
-        / "Video_Games.jsonl"
-    )
+    raw_directory = project_root / "data" / "raw" / "amazon"
+    input_file = resolve_amazon_input(raw_directory)
     output_file = (
         project_root
         / "data"
