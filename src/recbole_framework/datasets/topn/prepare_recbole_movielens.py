@@ -43,13 +43,18 @@ def save_recbole_inter_file(
 def main() -> None:
     project_root = Path(__file__).resolve().parents[4]
 
-    input_file = project_root / "data" / "processed" / "movielens_interactions.csv"
+    input_file = (
+        project_root
+        / "data"
+        / "processed"
+        / "movielens_positive_interactions.csv"
+    )
     output_file = (
         project_root
         / "data"
         / "recbole"
-        / "movielens_recbole"
-        / "movielens_recbole.inter"
+        / "movielens_positive_recbole"
+        / "movielens_positive_recbole.inter"
     )
 
     interactions_df = load_data(
