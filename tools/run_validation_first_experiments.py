@@ -55,7 +55,7 @@ OUTPUT_DIR = PROJECT_ROOT / "recbole_results" / "validation_first"
 VALIDATION_FILE = OUTPUT_DIR / "validation_trials.csv"
 FINAL_TEST_FILE = OUTPUT_DIR / "final_test_results.csv"
 FINAL_TEST_SUMMARY_FILE = OUTPUT_DIR / "final_test_summary.csv"
-PROTOCOL_VERSION = "validation_first_v8_movielens_positive"
+PROTOCOL_VERSION = "validation_first_v8_positive_feedback"
 RANDOM_SEARCH_BUDGET = 12
 MAX_BPR_EMBEDDING_SIZE = 256
 PRIMARY_FINAL_EVALUATION_SEEDS = (42,)
@@ -73,7 +73,7 @@ FINAL_AGGREGATE_METRICS = (
     "recommendation_frequency_gini@10",
 )
 
-TOPN_DATASETS = ["movielens_positive_recbole", "amazon_recbole"]
+TOPN_DATASETS = ["movielens_positive_recbole", "amazon_positive_recbole"]
 SESSION_DATASETS = [
     "adressa_recbole_sample",
     "globo_recbole_sample",

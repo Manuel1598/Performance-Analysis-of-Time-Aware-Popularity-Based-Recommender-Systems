@@ -48,13 +48,18 @@ def save_recbole_inter_file(recbole_df: pd.DataFrame, output_file: Path) -> None
 def main() -> None:
     project_root = Path(__file__).resolve().parents[3]
 
-    input_file = project_root / "data" / "processed" / "amazon_interactions.csv"
+    input_file = (
+        project_root
+        / "data"
+        / "processed"
+        / "amazon_positive_interactions.csv"
+    )
     output_file = (
         project_root
         / "data"
         / "recbole"
-        / "amazon_recbole"
-        / "amazon_recbole.inter"
+        / "amazon_positive_recbole"
+        / "amazon_positive_recbole.inter"
     )
 
     amazon_df = load_amazon_interactions(input_file)
