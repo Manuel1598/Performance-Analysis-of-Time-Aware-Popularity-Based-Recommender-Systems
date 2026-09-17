@@ -48,28 +48,31 @@ GroupLens Research
 
 - `userId`
 - `movieId`
+- `rating`
 - `timestamp`
 
 ---
 
 ### Preprocessing
 
-The dataset is transformed into a unified implicit feedback format:
+The dataset is transformed into a positive implicit-feedback format:
 
+- retain only ratings greater than or equal to `4.0`
 - mapping to: `user_id`, `item_id`, `timestamp`
 - chronological sorting per user
-- removal of users with fewer than 2 interactions
+- removal of users with fewer than 2 retained positive interactions
+
+The rating threshold is applied before the user-history filter. The numerical
+rating is then removed, so every retained row represents one positive implicit
+interaction.
 
 ---
 
 ### Data Splitting
 
-A chronological leave-one-out split is applied:
-
-- last interaction per user → test set  
-- all previous interactions → training set  
-
-This ensures a realistic temporal evaluation scenario.
+The validation-first runner applies RecBole's ordered 80/10/10 split within
+each retained user history. Hyperparameters are selected with validation data;
+the test partition is evaluated only after the configuration is fixed.
 
 ---
 
@@ -82,7 +85,7 @@ The dataset is converted into RecBole format:
 
 Example:
 
-`data/recbole/movielens_recbole/movielens_recbole.inter`
+`data/recbole/movielens_positive_recbole/movielens_positive_recbole.inter`
 
 ---
 
@@ -104,6 +107,9 @@ MovieLens is used as:
 
 Initial experiments were conducted using a custom evaluation pipeline.  
 In the final setup, all models are integrated and evaluated within the RecBole framework to ensure consistency and reproducibility.
+
+The earlier `movielens_recbole` file and its results are legacy artefacts based
+on all rating values. They must not be merged with the positive-feedback runs.
 
 ---
 
@@ -302,4 +308,4 @@ The project is structured into two main phases:
 - Top-N pipeline implemented and validated  
 - Amazon dataset integrated  
 - RecBole integration started  
-- transition towards fully framework-based implementation ongoing  
+- transition towards fully framework-based implementation ongoing

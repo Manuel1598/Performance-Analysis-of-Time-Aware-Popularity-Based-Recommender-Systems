@@ -75,9 +75,36 @@ data/recbole/
 Expected Top-N datasets:
 
 ```text
-data/recbole/movielens_recbole/movielens_recbole.inter
+data/recbole/movielens_positive_recbole/movielens_positive_recbole.inter
 data/recbole/amazon_recbole/amazon_recbole.inter
 ```
+
+Prepare the positive-feedback MovieLens dataset with:
+
+```bash
+python -m src.prototype.datapipeline.preprocessing_movielens
+python -m src.recbole_framework.datasets.topn.prepare_recbole_movielens
+```
+
+The first command retains ratings of at least `4.0`, removes users with fewer
+than two retained interactions, and writes
+`data/processed/movielens_positive_interactions.csv`. The second command writes
+the RecBole `.inter` file shown above.
+
+Run the complete MovieLens validation-first protocol in a fresh output
+directory:
+
+```bash
+python -m tools.run_validation_first_experiments \
+  --phase all \
+  --scenario topn \
+  --datasets movielens_positive_recbole \
+  --device cpu \
+  --output-dir recbole_results/validation_first_v8_movielens_positive
+```
+
+Do not merge these rows with legacy `movielens_recbole` results. The new
+protocol version and dataset name deliberately produce distinct run identifiers.
 
 Expected session-based datasets:
 

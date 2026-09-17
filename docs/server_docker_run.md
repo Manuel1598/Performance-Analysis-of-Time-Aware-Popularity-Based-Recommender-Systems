@@ -8,7 +8,7 @@ The Docker setup runs the thesis experiments on prepared RecBole datasets. The d
 
 Default Top-N experiments:
 
-- Datasets: `movielens_recbole`, `amazon_recbole`
+- Datasets: `movielens_positive_recbole`, `amazon_recbole`
 - Models: `MostPop`, `RecentPop`, `DecayPop`
 - Optional model: `BPR` with `--include-bpr`
 
@@ -85,8 +85,8 @@ Inside that folder, the structure must look like this:
     globo_recbole.inter
   yoochoose_recbole/
     yoochoose_recbole.inter
-  movielens_recbole/
-    movielens_recbole.inter
+  movielens_positive_recbole/
+    movielens_positive_recbole.inter
   amazon_recbole/
     amazon_recbole.inter
 ```
@@ -99,7 +99,7 @@ For example:
 adressa_recbole/adressa_recbole.inter
 globo_recbole/globo_recbole.inter
 yoochoose_recbole/yoochoose_recbole.inter
-movielens_recbole/movielens_recbole.inter
+movielens_positive_recbole/movielens_positive_recbole.inter
 amazon_recbole/amazon_recbole.inter
 ```
 
@@ -115,7 +115,7 @@ That means the container will see:
 /app/data/recbole/adressa_recbole/
 /app/data/recbole/globo_recbole/
 /app/data/recbole/yoochoose_recbole/
-/app/data/recbole/movielens_recbole/
+/app/data/recbole/movielens_positive_recbole/
 /app/data/recbole/amazon_recbole/
 ```
 
@@ -182,7 +182,7 @@ docker run --rm --gpus all \
   -v /server/results/timeaware/recbole_results:/app/recbole_results \
   timeaware-recbole \
   python3 src/recbole_framework/tuning/run_server_full_experiments.py \
-  --topn-datasets movielens_recbole \
+  --topn-datasets movielens_positive_recbole \
   --session-datasets adressa_recbole \
   --topn-models MostPop \
   --session-models MostPop \

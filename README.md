@@ -22,6 +22,12 @@ The final result set contains:
 The 26 final configurations were selected by validation MRR@10 before their
 test scores were evaluated. Test results were not used for model selection.
 
+The archived MovieLens results were produced before the positive-rating filter
+was introduced. They remain available for traceability but must not be combined
+with results from `movielens_positive_recbole`. The positive-feedback protocol
+uses a new dataset name, protocol version, and run identifiers and requires a
+complete MovieLens validation and final-test rerun.
+
 ## Experimental scope
 
 ### Top-N recommendation
@@ -29,7 +35,7 @@ test scores were evaluated. Test results were not used for model selection.
 Datasets:
 
 - `amazon_recbole` (Amazon Video Games)
-- `movielens_recbole` (MovieLens 20M)
+- `movielens_positive_recbole` (MovieLens 20M ratings of at least 4 stars)
 
 Models:
 
