@@ -11,6 +11,7 @@ NAMES = {
     "globo_recbole_sample": "Globo",
     "yoochoose_recbole_sample": "Yoochoose",
     "amazon_recbole": "Amazon",
+    "amazon_positive_recbole": "Amazon",
     "movielens_recbole": "MovieLens",
     "movielens_positive_recbole": "MovieLens",
 }

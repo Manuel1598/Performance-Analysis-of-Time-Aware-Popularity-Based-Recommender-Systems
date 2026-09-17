@@ -160,7 +160,7 @@ def main() -> None:
 
     datasets = [
         "movielens_positive_recbole",
-        "amazon_recbole",
+        "amazon_positive_recbole",
     ]
 
     for dataset_name in datasets:

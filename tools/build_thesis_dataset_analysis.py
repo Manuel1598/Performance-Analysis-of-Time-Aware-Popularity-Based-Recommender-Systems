@@ -15,7 +15,7 @@ from reportlab.pdfgen import canvas
 
 DATASETS = (
     ("movielens_positive_recbole", "MovieLens", "User history"),
-    ("amazon_recbole", "Amazon", "User history"),
+    ("amazon_positive_recbole", "Amazon", "User history"),
     ("adressa_recbole_sample", "Adressa", "Sequence"),
     ("globo_recbole_sample", "Globo", "Session"),
     ("yoochoose_recbole_sample", "Yoochoose", "Session"),

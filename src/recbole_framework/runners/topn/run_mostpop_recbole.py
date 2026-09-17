@@ -14,7 +14,7 @@ DATASETS = {
         "output_prefix": "movielens",
     },
     "amazon": {
-        "recbole_name": "amazon_recbole",
+        "recbole_name": "amazon_positive_recbole",
         "output_prefix": "amazon",
     },
     "yoochoose_sample": {

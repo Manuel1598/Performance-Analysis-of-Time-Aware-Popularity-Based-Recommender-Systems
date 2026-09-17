@@ -11,7 +11,10 @@ ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "docs" / "prepared_dataset_manifest.csv"
 DATASETS = (
     ("Adressa sample", "data/recbole/adressa_recbole_sample/adressa_recbole_sample.inter"),
-    ("Amazon Video Games", "data/recbole/amazon_recbole/amazon_recbole.inter"),
+    (
+        "Amazon Video Games (ratings >= 4)",
+        "data/recbole/amazon_positive_recbole/amazon_positive_recbole.inter",
+    ),
     ("Globo sample", "data/recbole/globo_recbole_sample/globo_recbole_sample.inter"),
     (
         "MovieLens 20M (ratings >= 4)",

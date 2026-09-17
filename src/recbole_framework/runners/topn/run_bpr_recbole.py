@@ -16,7 +16,7 @@ DATASETS = {
         "eval_batch_size": 2048,
     },
     "amazon": {
-        "recbole_name": "amazon_recbole",
+        "recbole_name": "amazon_positive_recbole",
         "output_prefix": "amazon",
         "epochs": 3,
         "train_batch_size": 4096,
