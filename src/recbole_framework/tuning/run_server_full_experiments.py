@@ -29,7 +29,7 @@ from src.recbole_framework.tuning.tune_topn_models_full import (
 )
 
 
-TOPN_DATASETS = ["movielens_recbole", "amazon_recbole"]
+TOPN_DATASETS = ["movielens_positive_recbole", "amazon_recbole"]
 SESSION_DATASETS = ["adressa_recbole", "globo_recbole", "yoochoose_recbole"]
 
 TOPN_MODELS = ["MostPop", "RecentPop", "DecayPop"]

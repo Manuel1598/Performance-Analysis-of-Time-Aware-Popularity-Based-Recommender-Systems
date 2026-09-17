@@ -6,7 +6,14 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "recbole_results/final_analysis"
 DEST = ROOT / "overleaf-thesis-project/tables/final"
-NAMES = {"adressa_recbole_sample": "Adressa", "globo_recbole_sample": "Globo", "yoochoose_recbole_sample": "Yoochoose", "amazon_recbole": "Amazon", "movielens_recbole": "MovieLens"}
+NAMES = {
+    "adressa_recbole_sample": "Adressa",
+    "globo_recbole_sample": "Globo",
+    "yoochoose_recbole_sample": "Yoochoose",
+    "amazon_recbole": "Amazon",
+    "movielens_recbole": "MovieLens",
+    "movielens_positive_recbole": "MovieLens",
+}
 ORDER = ["MostPop", "RecentPop", "DecayPop", "BPR", "VS-KNN", "VSTAN", "GRU4Rec"]
 
 

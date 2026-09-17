@@ -13,7 +13,7 @@ from src.recbole_framework.custom_models.topn.decaypop_recbole import DecayPopRe
 # =========================
 DATASETS = {
     "movielens": {
-        "recbole_name": "movielens_recbole",
+        "recbole_name": "movielens_positive_recbole",
         "output_prefix": "movielens",
     },
     "amazon": {

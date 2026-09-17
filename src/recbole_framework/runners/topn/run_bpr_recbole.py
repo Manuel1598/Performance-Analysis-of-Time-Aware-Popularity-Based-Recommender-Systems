@@ -9,7 +9,7 @@ from recbole.trainer import Trainer
 
 DATASETS = {
     "movielens": {
-        "recbole_name": "movielens_recbole",
+        "recbole_name": "movielens_positive_recbole",
         "output_prefix": "movielens",
         "epochs": 10,
         "train_batch_size": 2048,

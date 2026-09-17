@@ -258,7 +258,7 @@ def main() -> None:
     print(f"Already completed runs: {len(completed_run_ids)}")
 
     datasets = [
-        "movielens_recbole",
+        "movielens_positive_recbole",
         "amazon_recbole",
     ]
 

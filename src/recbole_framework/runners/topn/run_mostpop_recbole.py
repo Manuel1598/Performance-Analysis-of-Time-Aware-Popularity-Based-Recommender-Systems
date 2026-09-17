@@ -10,7 +10,7 @@ from src.recbole_framework.custom_models.topn.mostpop_recbole import MostPopRecB
 
 DATASETS = {
     "movielens": {
-        "recbole_name": "movielens_recbole",
+        "recbole_name": "movielens_positive_recbole",
         "output_prefix": "movielens",
     },
     "amazon": {

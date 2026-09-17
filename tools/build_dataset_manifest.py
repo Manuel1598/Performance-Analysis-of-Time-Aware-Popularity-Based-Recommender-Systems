@@ -13,7 +13,10 @@ DATASETS = (
     ("Adressa sample", "data/recbole/adressa_recbole_sample/adressa_recbole_sample.inter"),
     ("Amazon Video Games", "data/recbole/amazon_recbole/amazon_recbole.inter"),
     ("Globo sample", "data/recbole/globo_recbole_sample/globo_recbole_sample.inter"),
-    ("MovieLens 20M", "data/recbole/movielens_recbole/movielens_recbole.inter"),
+    (
+        "MovieLens 20M (ratings >= 4)",
+        "data/recbole/movielens_positive_recbole/movielens_positive_recbole.inter",
+    ),
     ("YOOCHOOSE sample", "data/recbole/yoochoose_recbole_sample/yoochoose_recbole_sample.inter"),
 )
 
