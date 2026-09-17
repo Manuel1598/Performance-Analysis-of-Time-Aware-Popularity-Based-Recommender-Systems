@@ -46,7 +46,7 @@ def save_recbole_inter_file(recbole_df: pd.DataFrame, output_file: Path) -> None
 
 
 def main() -> None:
-    project_root = Path(__file__).resolve().parents[3]
+    project_root = Path(__file__).resolve().parents[4]
 
     input_file = (
         project_root
